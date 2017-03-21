@@ -91,7 +91,11 @@ way up to the joint decryption and signing of plaintexts.
 You can inspect the results of the demo by browsing through the
 files produced in the repository. There should be plaintexts files if
 the process has ended correctly. To restart the process, simply execute
-the setup script again.
+the setup script again. One way to inspect what's going on during execution is
+
+```while :; do tree datastore/repo --noreport; sleep 3; done```
+
+which will show you the contents of the repository periodically.
 
 Although the demo is set up for 2 trustees and 3 ballot sets, you can extend
 to run with more authorities and ballot sets. Note that if you run a large
