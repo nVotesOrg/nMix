@@ -29,8 +29,8 @@ yielding the following properties (besides the crypto specification)
 
 ## Demo setup
 
-The demo directory contains data and scripts to run a full election cycle on
-a single machine, from key generation all the way to joint ballot decryption.
+The demo directory contains data and scripts to run a full election cycle on a single machine,
+from key generation all the way to joint ballot decryption.
 
 * Set up the machine as a git server, you can do this with this command
 
@@ -39,9 +39,9 @@ a single machine, from key generation all the way to joint ballot decryption.
 this allows serving requests via ssh, but will block attempts at login. This
 command needs to be executed as root.
 
-Once the user has been created, the setup.sh script will initialize the
-repository and add files necessary to start the demo. To re-run a demo you
-can simply execute setup.sh again to reset everything.
+Once the user has been created, the setup.sh script will initialize the repository and add
+files necessary to start the demo. To re-run a demo you can simply execute setup.sh
+again to reset everything.
 
 ```./setup.sh```
 
@@ -49,6 +49,10 @@ can simply execute setup.sh again to reset everything.
 you run the demo must have their public key added to that file. For example
 
 ```cat $HOME/.ssh/id_rsa.pub >> /srv/data/git/.ssh/authorized_keys```
+
+NOTE: you should NOT use the keys in the 'keys' subfolder for anything,
+these keys are used merely for the DEMO and should be removed after
+you've finished testing it.
 
 * Compile the project, using this command from the project root
 
@@ -67,16 +71,13 @@ runs the first trustee. And
 
 ```./run2.sh```
 
-runs the second trustee. The protocol is reactive, the trustees will
-execute operations whenever they detect work needs to be done on the bulletin
-board. Note that trustees can be stopped and  started at will, they will
-automatically pick up work wherever it was left off. They also don't need to
-run simultaneously or overlap at any moment, it is enough that they run
-at _some_ point.
+runs the second trustee. The protocol is reactive, the trustees will execute operations whenever
+they detect work needs to be done on the bulletin board. Note that trustees can be stopped and started
+at will, they will automatically pick up work wherever it was left off. They also don't need to
+run simultaneously or overlap at any moment, it is enough that they run at _some_ point.
 
-When they are first run, the trustees will execute operations
-for config signing, key share generation, public key creation, and
-public key signing. Once these phases are complete, the trustees will
+When they are first run, the trustees will execute operations for config signing, key share generation,
+public key creation, and public key signing. Once these phases are complete, the trustees will
 idle, as they have no work to do.
 
 It is then time to simulate the voting process by adding ballots to the
@@ -84,23 +85,20 @@ bulletin board. This is done with
 
 ```./ballots.sh <number of ballots>```
 
-Once the ballots are on the bulletin board, the trustees will automatically
-pick up the work, and begin the mixing process and continue operating all the
-way up to the joint decryption and signing of plaintexts.
+Once the ballots are on the bulletin board, the trustees will automatically begin the mixing process
+and continue operating all the way up to the joint decryption and signing of plaintexts.
 
-You can inspect the results of the demo by browsing through the
-files produced in the repository. There should be plaintexts files if
-the process has ended correctly. To restart the process, simply execute
-the setup script again. One way to inspect what's going on during execution is
+You can inspect the results of the demo by browsing through the files produced in the repository.
+There should be plaintexts files if the process has ended correctly. To restart the process, simply
+execute the setup script again. One way to inspect what's going on during execution is
 
 ```while :; do tree datastore/repo --noreport; sleep 3; done```
 
 which will show you the contents of the repository periodically.
 
-Although the demo is set up for 2 trustees and 3 ballot sets, you can extend
-to run with more authorities and ballot sets. Note that if you run a large
-number of ballots through the demo you may require large amounts of processing
-time and memory. This could require adjusting the jvm options.
+Although the demo is set up for 2 trustees and 3 ballot sets, you can extend it to run with more
+authorities and ballot sets. Note that if you run a large number of ballots through the demo you may
+require large amounts of processing time and memory. This could require adjusting the jvm options.
 
 ### Randomness
 To speed up HybridRandomByteSequence under linux install rng-tools.
