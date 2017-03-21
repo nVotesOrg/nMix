@@ -48,7 +48,7 @@ can simply execute setup.sh again to reset everything.
 * Add necessary public keys to git's authorized_keys. The user under which
 you run the demo must have their public key added to that file. For example
 
-```cat $HOME/.ssh/id_rsa.pub >> /srv/data/git/.ssh/authorized_keys
+```cat $HOME/.ssh/id_rsa.pub >> /srv/data/git/.ssh/authorized_keys```
 
 * Compile the project, using this command from the project root
 
