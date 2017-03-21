@@ -8,10 +8,10 @@ of the core [univote](https://e-voting.bfh.ch/projects/univote/) specification, 
 nMix follows a minimal design, composed of
 
 * An append-only bulletin board backed by Git
-* A reactive, data-driven election protocol specified by boolean expression rules
-* A minimal rule engine
+* A reactive, data-driven election protocol specified declaratively
+* A minimal rule engine for boolean expression conditions
 * Fully stateless, choreographed trustees
-* nMixlib (including [unicrypt](https://github.com/bfh-evg/univote2)) libraries
+* [nMixlib](https://github.com/ruescasd/https://github.com/ruescasd/nMixlib) (including [unicrypt](https://github.com/bfh-evg/univote2)) libraries
 
 yielding the following properties (besides the crypto specification)
 
