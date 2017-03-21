@@ -85,10 +85,10 @@ bulletin board. This is done with
 ```./ballots.sh <number of ballots>```
 
 Once the ballots are on the bulletin board, the trustees will automatically
-pick up the work, and begin the mixing process and continue work all the
+pick up the work, and begin the mixing process and continue operating all the
 way up to the joint decryption and signing of plaintexts.
 
-You can inspect the results of the demo easily by browsing through the
+You can inspect the results of the demo by browsing through the
 files produced in the repository. There should be plaintexts files if
 the process has ended correctly. To restart the process, simply execute
 the setup script again.
