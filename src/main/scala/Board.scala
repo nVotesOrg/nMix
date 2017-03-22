@@ -551,14 +551,20 @@ case class GitRepo(val repoPath: Path) {
  	 *
  	 */
 	def send(message: String) = {
+		val t0 = System.nanoTime()
 
 		val repository = buildRepo
 		val git = new Git(repository)
 
 	  try {
+		  val add0 = System.nanoTime()
+
 		  git.add()
 			.addFilepattern(".")
 			.call()
+
+			val add1 = System.nanoTime()
+    	logger.info("Send time: " + ((add1 - add0) / 1000000000.0) + " s")
 
 			val status = git.status().call()
 			val added = status.getAdded()
@@ -611,6 +617,9 @@ case class GitRepo(val repoPath: Path) {
 			repository.close()
 			git.close()
 		}
+
+		val t1 = System.nanoTime()
+    logger.info("Send time: " + ((t1 - t0) / 1000000000.0) + " s")
 	}
 
 	/** Sync's the repository and working copy with remote
