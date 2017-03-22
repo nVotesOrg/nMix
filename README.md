@@ -32,7 +32,11 @@ yielding the following properties (besides the crypto specification)
 The demo directory contains data and scripts to run a full election cycle on a single machine,
 from key generation all the way to joint ballot decryption.
 
-* Set up the machine as a git server, you can do this with this command
+* Set up the machine as a git server. First create the /srv/data directory if it does not exist
+
+```mkdir /srv/data```
+
+then create the git user
 
 ```useradd --create-home --skel /dev/null --home-dir /srv/data/git --shell /usr/bin/git-shell git```
 
@@ -46,7 +50,12 @@ again to reset everything.
 ```./setup.sh```
 
 * Add necessary public keys to git's authorized_keys. The user under which
-you run the demo must have their public key added to that file. For example
+you run the demo must have their public key added to that file. First create the
+.ssh directory for the git user.
+
+```mkdir /srv/data/git/.ssh```
+
+Then add a key, for example
 
 ```cat $HOME/.ssh/id_rsa.pub >> /srv/data/git/.ssh/authorized_keys```
 
@@ -54,9 +63,11 @@ NOTE: you should NOT use the keys in the 'keys' subfolder for anything,
 these keys are used merely for the DEMO and should be removed after
 you've finished testing it.
 
-* Compile the project, using this command from the project root
+* Compile the project (see [here](http://www.scala-sbt.org/0.13/docs/Installing-sbt-on-Linux.html) to install sbt)
 
-```sbt assembly assemblyPackageDependency```
+```sbt
+assembly
+assemblyPackageDependency```
 
 which will create the necessary jars in the target directory. These jars are
 referenced by the scripts below.
@@ -101,4 +112,9 @@ authorities and ballot sets. Note that if you run a large number of ballots thro
 require large amounts of processing time and memory. This could require adjusting the jvm options.
 
 ### Randomness
+
 To speed up HybridRandomByteSequence under linux install rng-tools.
+
+##### Misc
+
+git config --global core.autocrlf input
