@@ -557,14 +557,13 @@ case class GitRepo(val repoPath: Path) {
 		val git = new Git(repository)
 
 	  try {
-		  val add0 = System.nanoTime()
-
+		  var start = System.nanoTime()
 		  git.add()
 			.addFilepattern(".")
 			.call()
+			var end = System.nanoTime()
+			logger.info("Add time: " + ((end - start) / 1000000000.0) + " s")
 
-			val add1 = System.nanoTime()
-    	logger.info("Send time: " + ((add1 - add0) / 1000000000.0) + " s")
 
 			val status = git.status().call()
 			val added = status.getAdded()
@@ -574,20 +573,27 @@ case class GitRepo(val repoPath: Path) {
 
 				logger.info(s"committing ${added.size} additions and ${changed.size} modifications")
 
+			  start = System.nanoTime()
 			  val commit = git.commit()
 			  .setAll(true)
 				.setMessage(message)
 				.call()
+				end = System.nanoTime()
+				logger.info("Commit time: " + ((end - start) / 1000000000.0) + " s")
 
 				logger.info(commit.toString)
 
 				val attempt = () => {
+					start = System.nanoTime()
 					val pushCommand = git.push()
 					pushCommand.setTransportConfigCallback(GitRepo.sshTransportCallback)
 
 					// requires git 2.4+ on server
 					pushCommand.setAtomic(true)
 					val results = pushCommand.call()
+					end = System.nanoTime()
+					logger.info("Push time: " + ((end - start) / 1000000000.0) + " s")
+
 					val status = getPushStatus(results)
 					logger.info(s"push status: $status")
 
@@ -596,9 +602,12 @@ case class GitRepo(val repoPath: Path) {
 						logger.warn(s"push status was not OK: $status")
 						if(status == RemoteRefUpdate.Status.REJECTED_NONFASTFORWARD) {
 							logger.warn(s"attempting to recover non fast forward")
+							start = System.nanoTime()
 							val pullCommand = git.pull()
 							pullCommand.setTransportConfigCallback(GitRepo.sshTransportCallback)
 							val result = pullCommand.call()
+							end = System.nanoTime()
+							logger.info("Pull (recover) time: " + ((end - start) / 1000000000.0) + " s")
 							logger.info(s"pull command, fetch: ${result.getFetchResult.toString}, merge ${result.getMergeResult.toString}")
 						}
 					}
@@ -635,14 +644,25 @@ case class GitRepo(val repoPath: Path) {
 	  val git = new Git(repository)
 
 		try {
+			var start = System.nanoTime()
+
 			val fetchCommand = git.fetch().setCheckFetchedObjects(true)
 			fetchCommand.setTransportConfigCallback(GitRepo.sshTransportCallback)
 			fetchCommand.setRemote("origin")
 			val result = fetchCommand.call()
 
-			git.reset().setMode(ResetType.HARD).setRef("origin/master").call()
+			var end = System.nanoTime()
+			logger.info("Fetch time: " + ((end - start) / 1000000000.0) + " s")
 
+			start = System.nanoTime()
+			git.reset().setMode(ResetType.HARD).setRef("origin/master").call()
+			end = System.nanoTime()
+			logger.info("Reset time: " + ((end - start) / 1000000000.0) + " s")
+
+			start = System.nanoTime()
 			git.clean().setCleanDirectories(true).call()
+			end = System.nanoTime()
+			logger.info("Clean time: " + ((end - start) / 1000000000.0) + " s")
 		}
 		finally {
 			repository.close()
