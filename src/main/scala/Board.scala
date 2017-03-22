@@ -17,6 +17,7 @@ import org.eclipse.jgit.api.TransportConfigCallback
 import org.eclipse.jgit.api.ResetCommand.ResetType
 import org.eclipse.jgit.transport.RemoteRefUpdate
 import org.eclipse.jgit.transport.PushResult
+import org.eclipse.jgit.storage.file.WindowCacheConfig
 
 import java.io.File
 import java.io.InputStream
@@ -722,6 +723,16 @@ case class GitRepo(val repoPath: Path) {
  	 *  TODO: exceptions
  	 */
 	private def buildRepo: Repository = {
+		val cfg = new WindowCacheConfig()
+
+    println("WindowCacheConfig *********************")
+    println(cfg.getDeltaBaseCacheLimit())
+		println(cfg.getPackedGitLimit())
+		println(cfg.getPackedGitOpenFiles())
+		println(cfg.getPackedGitWindowSize())
+		println(cfg.getStreamFileThreshold())
+		println("***************************************")
+
 		val builder = new FileRepositoryBuilder()
 	  builder.setGitDir(repoPath.resolve(".git").toFile)
 	    .readEnvironment()
