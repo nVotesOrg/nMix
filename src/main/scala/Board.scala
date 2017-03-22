@@ -591,9 +591,10 @@ case class GitRepo(val repoPath: Path) {
 
 			  start = System.nanoTime()
 			  val commit = git.commit()
-			  .setAll(true)
-				.setMessage(message)
-				.call()
+			  // .setAll(true)
+			  files.foreach(commit.setOnly(_))
+				commit.setMessage(message)
+				commit.call()
 				end = System.nanoTime()
 				logger.info("Commit time: " + ((end - start) / 1000000000.0) + " s")
 
