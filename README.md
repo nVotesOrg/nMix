@@ -43,11 +43,12 @@ then create the git user
 this allows serving requests via ssh, but will block attempts at login. This
 command needs to be executed as root.
 
-Once the user has been created, the setup.sh script will initialize the repository and add
-files necessary to start the demo. To re-run a demo you can simply execute setup.sh
-again to reset everything.
+Once the user has been created, the setup.sh script (as root) will initialize the repository
+and add files necessary to start the demo.
 
 ```./setup.sh```
+
+To re-run a demo you can simply execute setup.sh again to reset everything.
 
 * Add necessary public keys to git's authorized_keys. The user under which
 you run the demo must have their public key added to that file. First create the
@@ -65,9 +66,9 @@ you've finished testing it.
 
 * Compile the project (see [here](http://www.scala-sbt.org/0.13/docs/Installing-sbt-on-Linux.html) to install sbt)
 
-```sbt
-assembly
-assemblyPackageDependency```
+```sbt```
+```assembly```
+```assemblyPackageDependency```
 
 which will create the necessary jars in the target directory. These jars are
 referenced by the scripts below.
