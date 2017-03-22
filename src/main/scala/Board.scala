@@ -598,8 +598,6 @@ case class GitRepo(val repoPath: Path) {
 				end = System.nanoTime()
 				logger.info("Commit time: " + ((end - start) / 1000000000.0) + " s")
 
-				logger.info(commit.toString)
-
 				val attempt = () => {
 					start = System.nanoTime()
 					val pushCommand = git.push()

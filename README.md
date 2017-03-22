@@ -64,6 +64,10 @@ NOTE: you should NOT use the keys in the 'keys' subfolder for anything,
 these keys are used merely for the DEMO and should be removed after
 you've finished testing it.
 
+* Install rng-tools
+
+```apt-get install rng-tools```
+
 * Compile the project (see [here](http://www.scala-sbt.org/0.13/docs/Installing-sbt-on-Linux.html) to install sbt)
 
 ```sbt```
@@ -111,6 +115,8 @@ which will show you the contents of the repository periodically.
 Although the demo is set up for 2 trustees and 3 ballot sets, you can extend it to run with more
 authorities and ballot sets. Note that if you run a large number of ballots through the demo you may
 require large amounts of processing time and memory. This could require adjusting the jvm options.
+
+It is also straightforward to run the demo with remoting, just adjust application.conf accordingly.
 
 ### Randomness
 
