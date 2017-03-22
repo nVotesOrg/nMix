@@ -454,6 +454,21 @@ case class GitRepo(val repoPath: Path) {
 		throw new IllegalArgumentException(s"repoPath '$repoPath' is not a directory")
 	}
 
+	val cfg = new WindowCacheConfig()
+
+  println("WindowCacheConfig *********************")
+  println(cfg.isPackedGitMMAP())
+  println(cfg.getDeltaBaseCacheLimit())
+	println(cfg.getPackedGitLimit())
+	println(cfg.getPackedGitOpenFiles())
+	println(cfg.getPackedGitWindowSize())
+	println(cfg.getStreamFileThreshold())
+	println("***************************************")
+	cfg.setPackedGitMMAP(true)
+	cfg.setPackedGitWindowSize(1048576)
+	cfg.setPackedGitLimit(104857600)
+	cfg.install()
+
 	/** Returns the file input stream for matching file, if it exists
  	 *
  	 *  The caller is responsible for
@@ -723,21 +738,6 @@ case class GitRepo(val repoPath: Path) {
  	 *  TODO: exceptions
  	 */
 	private def buildRepo: Repository = {
-		val cfg = new WindowCacheConfig()
-
-    println("WindowCacheConfig *********************")
-    println(cfg.isPackedGitMMAP())
-    println(cfg.getDeltaBaseCacheLimit())
-		println(cfg.getPackedGitLimit())
-		println(cfg.getPackedGitOpenFiles())
-		println(cfg.getPackedGitWindowSize())
-		println(cfg.getStreamFileThreshold())
-		println("***************************************")
-		cfg.setPackedGitMMAP(true)
-		cfg.setPackedGitWindowSize(1048576)
-		cfg.setPackedGitLimit(104857600)
-		cfg.install()
-
 		val builder = new FileRepositoryBuilder()
 	  builder.setGitDir(repoPath.resolve(".git").toFile)
 	    .readEnvironment()
