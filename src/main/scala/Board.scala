@@ -211,14 +211,14 @@ case class BoardSection (val gitRepo: GitRepo) extends Names {
 	def addConfig(config: Path): Unit = synchronized {
 		gitRepo.sync()
 		gitRepo.addToWorkingCopy(config, CONFIG)
-		gitRepo.send("added config")
+		gitRepo.send("added config", CONFIG)
 	}
 
 	/** Syncs the repository, adds the configuration signature, and sends */
 	def addConfigSig(sig: Path, position: Int): Unit = synchronized {
 		gitRepo.sync()
 		gitRepo.addToWorkingCopy(sig, CONFIG_SIG(position))
-		gitRepo.send("added config signature")
+		gitRepo.send("added config signature", CONFIG_SIG(position))
 	}
 
 	/** Syncs the repository, adds a share triple (Share, Statement, Signature), and sends */
@@ -227,7 +227,7 @@ case class BoardSection (val gitRepo: GitRepo) extends Names {
 		gitRepo.addToWorkingCopy(share, SHARE(item, position))
 		gitRepo.addToWorkingCopy(stmt, SHARE_STMT(item, position))
 		gitRepo.addToWorkingCopy(sig, SHARE_SIG(item, position))
-		gitRepo.send("added share")
+		gitRepo.send("added share", SHARE(item, position), SHARE_STMT(item, position), SHARE_SIG(item, position))
 	}
 
 	/** Returns a share if it exists */
@@ -251,14 +251,14 @@ case class BoardSection (val gitRepo: GitRepo) extends Names {
 		gitRepo.addToWorkingCopy(publicKey, PUBLIC_KEY(item))
 		gitRepo.addToWorkingCopy(stmt, PUBLIC_KEY_STMT(item))
 		gitRepo.addToWorkingCopy(sig, PUBLIC_KEY_SIG(item, auth))
-		gitRepo.send("added public key")
+		gitRepo.send("added public key", PUBLIC_KEY(item), PUBLIC_KEY_STMT(item), PUBLIC_KEY_SIG(item, auth))
 	}
 
 	/** Syncs the repository, adds a public key signature, and sends */
 	def addPublicKeySignature(sig: Path, item: Int, auth: Int): Unit = synchronized {
 		gitRepo.sync()
 		gitRepo.addToWorkingCopy(sig, PUBLIC_KEY_SIG(item, auth))
-		gitRepo.send("added public key signature")
+		gitRepo.send("added public key signature", PUBLIC_KEY_SIG(item, auth))
 	}
 
 	/** Returns the public key if it exists */
@@ -297,7 +297,7 @@ case class BoardSection (val gitRepo: GitRepo) extends Names {
 		gitRepo.addToWorkingCopy(ballots, BALLOTS(item))
 		gitRepo.addToWorkingCopy(stmt, BALLOTS_STMT(item))
 		gitRepo.addToWorkingCopy(sig, BALLOTS_SIG(item))
-		gitRepo.send("added ballots")
+		gitRepo.send("added ballots", BALLOTS(item), BALLOTS_STMT(item), BALLOTS_SIG(item))
 	}
 
 	/** Returns a mix if it exists */
@@ -321,14 +321,14 @@ case class BoardSection (val gitRepo: GitRepo) extends Names {
 		gitRepo.addToWorkingCopy(mix, MIX(item, auth))
 		gitRepo.addToWorkingCopy(stmt, MIX_STMT(item, auth))
 		gitRepo.addToWorkingCopy(sig, MIX_SIG(item, auth, auth))
-		gitRepo.send("added mix")
+		gitRepo.send("added mix", MIX(item, auth), MIX_STMT(item, auth), MIX_SIG(item, auth, auth))
 	}
 
 	/** Syncs the repository, adds a mix signature, and sends */
 	def addMixSignature(sig: Path, item: Int, authMixer: Int, authSigner: Int): Unit = synchronized {
 		gitRepo.sync()
 		gitRepo.addToWorkingCopy(sig, MIX_SIG(item, authMixer, authSigner))
-		gitRepo.send("added mix signature")
+		gitRepo.send("added mix signature", MIX_SIG(item, authMixer, authSigner))
 	}
 
 	/** Returns a decryption if it exists */
@@ -352,7 +352,7 @@ case class BoardSection (val gitRepo: GitRepo) extends Names {
 		gitRepo.addToWorkingCopy(decryption, DECRYPTION(item, auth))
 		gitRepo.addToWorkingCopy(stmt, DECRYPTION_STMT(item, auth))
 		gitRepo.addToWorkingCopy(sig, DECRYPTION_SIG(item, auth))
-		gitRepo.send("added decryption")
+		gitRepo.send("added decryption", DECRYPTION(item, auth), DECRYPTION_STMT(item, auth), DECRYPTION_SIG(item, auth))
 	}
 
 	/** Returns the plaintexts if they exist */
@@ -376,14 +376,14 @@ case class BoardSection (val gitRepo: GitRepo) extends Names {
 		gitRepo.addToWorkingCopy(plaintexts, PLAINTEXTS(item))
 		gitRepo.addToWorkingCopy(stmt, PLAINTEXTS_STMT(item))
 		gitRepo.addToWorkingCopy(sig, PLAINTEXTS_SIG(item, auth))
-		gitRepo.send("added plaintexts")
+		gitRepo.send("added plaintexts", PLAINTEXTS(item), PLAINTEXTS_STMT(item), PLAINTEXTS_SIG(item, auth))
 	}
 
 	/** Syncs the repository, adds a plaintexts signature, and sends */
 	def addPlaintextsSignature(sig: Path, item: Int, auth: Int): Unit = synchronized {
 		gitRepo.sync()
 		gitRepo.addToWorkingCopy(sig, PLAINTEXTS_SIG(item, auth))
-		gitRepo.send("added plaintexts signature")
+		gitRepo.send("added plaintexts signature", PLAINTEXTS_SIG(item, auth))
 	}
 
 	/** Syncs the repository, see the GitRepo implementation for details */
@@ -566,7 +566,7 @@ case class GitRepo(val repoPath: Path) {
  	 * Atomic push is requested and needs git 2.4+ on the server.
  	 *
  	 */
-	def send(message: String) = {
+	def send(message: String, files: String*) = {
 		val t0 = System.nanoTime()
 
 		val repository = buildRepo
@@ -574,9 +574,9 @@ case class GitRepo(val repoPath: Path) {
 
 	  try {
 		  var start = System.nanoTime()
-		  git.add()
-			.addFilepattern(".")
-			.call()
+		  val addCommand = git.add()
+		  files.foreach(addCommand.addFilepattern(_))
+			addCommand.call()
 			var end = System.nanoTime()
 			logger.info("Add time: " + ((end - start) / 1000000000.0) + " s")
 
