@@ -735,6 +735,7 @@ case class GitRepo(val repoPath: Path) {
 		println("***************************************")
 		cfg.setPackedGitMMAP(true)
 		cfg.setPackedGitWindowSize(131072)
+		cfg.getPackedGitLimit(104857600)
 		cfg.install()
 
 		val builder = new FileRepositoryBuilder()
