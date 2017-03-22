@@ -465,8 +465,10 @@ case class GitRepo(val repoPath: Path) {
   println(cfg.getStreamFileThreshold())
   println("***************************************")
   cfg.setPackedGitMMAP(true)
-  cfg.setPackedGitWindowSize(1048576)
-  cfg.setPackedGitLimit(104857600)
+  // 10mb
+  cfg.setPackedGitWindowSize(10485760)
+  // 100mb
+  cfg.setPackedGitLimit(304857600)
   cfg.install()
 
   /** Returns the file input stream for matching file, if it exists
