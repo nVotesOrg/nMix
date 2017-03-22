@@ -53,24 +53,6 @@ sealed trait Action {
         ""
       }
     }.getOrElse("")
-
-
-    // cleaner implementation, but checks signatures even if stmt dont match
-    /*
-      val result = for {
-      okStmt <- ctx.section.getConfigStatement.map(expected == _)
-      sig <- ctx.section.getConfigSignature(ctx.position)
-    } yield {
-      val okSig = Statement.verify(expected, sig, ctx.trusteeCfg.publicKey)
-      if(okStmt && okSig) {
-        expected
-      }
-      else {
-        ""
-      }
-    }
-    result.getOrElse("")
-    */
   }
 
   /** Action operations go here */

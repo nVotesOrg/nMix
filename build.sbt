@@ -30,14 +30,4 @@ assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeSca
 
 cancelable in Global := true
 fork in run := false
-envVars in run := Map(
-  "nmixlib.gmp" -> "false",
-  "nmixlib.extractor" -> "false",
-  "nmixlib.parallel-generators" -> "false"
-)
 fork in Test := false
-envVars in Test := Map(
-  "USE_GMP" -> "false",
-  "USE_EXTRACTOR" -> "false",
-  "USE_PARALLEL_GENERATORS" -> "false"
-)
