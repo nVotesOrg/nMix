@@ -733,6 +733,8 @@ case class GitRepo(val repoPath: Path) {
 		println(cfg.getPackedGitWindowSize())
 		println(cfg.getStreamFileThreshold())
 		println("***************************************")
+		cfg.setPackedGitMMAP(true)
+		cfg.install()
 
 		val builder = new FileRepositoryBuilder()
 	  builder.setGitDir(repoPath.resolve(".git").toFile)
