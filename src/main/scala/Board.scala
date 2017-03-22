@@ -726,6 +726,7 @@ case class GitRepo(val repoPath: Path) {
 		val cfg = new WindowCacheConfig()
 
     println("WindowCacheConfig *********************")
+    println(cfg.isPackedGitMMAP())
     println(cfg.getDeltaBaseCacheLimit())
 		println(cfg.getPackedGitLimit())
 		println(cfg.getPackedGitOpenFiles())
