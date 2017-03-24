@@ -132,7 +132,7 @@ object BallotboxAdd extends App {
     val publicKey = section.getPublicKey(item).get
     val pk = Util.getPublicKeyFromString(publicKey, generator)
 
-    val ballots = Util.getRandomVotes(totalVotes, generator, pk).map(_.convertToString).toArray
+    val ballots = Util.getRandomVotes(totalVotes, generator, pk).par.map(_.convertToString).toArray
     // val ballots = Util.encryptVotes(List(1, 3, 5, 7, 11), cSettings, pk).map(_.convertToString).toArray
 
     val ballotsString = Ballots(ballots).asJson.noSpaces

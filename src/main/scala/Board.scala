@@ -454,7 +454,7 @@ case class GitRepo(val repoPath: Path) {
     throw new IllegalArgumentException(s"repoPath '$repoPath' is not a directory")
   }
 
-  val cfg = new WindowCacheConfig()
+  /* val cfg = new WindowCacheConfig()
 
   println("WindowCacheConfig *********************")
   println(cfg.isPackedGitMMAP())
@@ -467,9 +467,9 @@ case class GitRepo(val repoPath: Path) {
   cfg.setPackedGitMMAP(true)
   // 10mb
   cfg.setPackedGitWindowSize(10485760)
-  // 100mb
+  // 300mb
   cfg.setPackedGitLimit(304857600)
-  cfg.install()
+  cfg.install()*/
 
   /** Returns the file input stream for matching file, if it exists
    *
@@ -564,7 +564,7 @@ case class GitRepo(val repoPath: Path) {
 
   /** Adds, commits and pushes any changes in the working copy
    *
-   * If the push fails due to non-fast-forward, pulls and retries up to 4 times.
+   * If the push fails due to non-fast-forward, pulls and retries up to 7 times.
    * Atomic push is requested and needs git 2.4+ on the server.
    *
    */
@@ -632,7 +632,7 @@ case class GitRepo(val repoPath: Path) {
           status
         }
 
-        val attempts = List.fill(5)(attempt)
+        val attempts = List.fill(8)(attempt)
         attempts.takeWhile(_() != RemoteRefUpdate.Status.OK)
       }
       else {
@@ -740,10 +740,12 @@ case class GitRepo(val repoPath: Path) {
    */
   private def buildRepo: Repository = {
     val builder = new FileRepositoryBuilder()
-    builder.setGitDir(repoPath.resolve(".git").toFile)
+    val repo = builder.setGitDir(repoPath.resolve(".git").toFile)
       .readEnvironment()
       .setMustExist(true)
       .build()
+
+    repo
   }
 
   /** Convenience method to return the push status
@@ -777,6 +779,9 @@ object GitRepo {
     override def configure(transport: Transport) = {
       val sshTransport = transport.asInstanceOf[SshTransport]
       sshTransport.setSshSessionFactory(sshSessionFactory)
+      val config = sshTransport.getPackConfig()
+      println("big file threshold: " + config.getBigFileThreshold)
+      println("compression level: " + config.getCompressionLevel)
     }
   }
 
