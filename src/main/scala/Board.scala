@@ -745,6 +745,12 @@ case class GitRepo(val repoPath: Path) {
       .setMustExist(true)
       .build()
 
+    repo.getConfig().setString("pack", null, "window", "0")
+    repo.getConfig().setString("core", null, "bigFileThreshold", "1")
+    repo.getConfig().setString("pack", null, "compression", "0")
+    repo.getConfig().setString("core", null, "compression", "0")
+    repo.getConfig().setString("core", null, "looseCompression", "0")
+
     repo
   }
 

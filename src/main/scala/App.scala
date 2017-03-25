@@ -157,6 +157,12 @@ case class TrusteeConfig(dataStorePath: Path, repoBaseUri: URI, bootstrapRepoUri
    override def toString() = s"TrusteeConfig($dataStorePath $repoBaseUri $bootstrapRepoUri ${peers.length})"
 }
 
+object PushTest extends App {
+  val gitRepo = GitRepo.clone(new URI(args(0)), Paths.get("test"))
+  Files.copy(Paths.get("bigfile"), Paths.get("bigfile"))
+  gitRepo.send("test", "bigfile")
+}
+
 object TrusteeConfig {
 
   def load: TrusteeConfig = {
