@@ -48,239 +48,239 @@ import org.nvotes.mix._
 /** Provides various cryptographic operations */
 object Crypto {
 
-	/** These unicrypt settings must be common to sign generating and verifying methods */
-	val HASH_METHOD = HashMethod.getInstance(HashAlgorithm.SHA256)
-	val CONVERT_METHOD = ConvertMethod.getInstance(BigIntegerToByteArray.getInstance(ByteOrder.BIG_ENDIAN),
-			StringToByteArray.getInstance(StandardCharsets.UTF_8))
+  /** These unicrypt settings must be common to sign generating and verifying methods */
+  val HASH_METHOD = HashMethod.getInstance(HashAlgorithm.SHA256)
+  val CONVERT_METHOD = ConvertMethod.getInstance(BigIntegerToByteArray.getInstance(ByteOrder.BIG_ENDIAN),
+      StringToByteArray.getInstance(StandardCharsets.UTF_8))
 
-	/** AES 128-bit unicrypt encryption scheme
-	 *
-	 *	The unicrypt implementation delegates to javax.security.
-	 *  It is unclear at this time whether there are benefits to using keylengths of 256
-	 *	FIXME verify that the java aes implementation called by unicrypt is constant time
-	 */
-	val AES = AESEncryptionScheme.getInstance(AESEncryptionScheme.KeyLength.KEY128, AESEncryptionScheme.Mode.CBC,
-			   AESEncryptionScheme.DEFAULT_IV)
+  /** AES 128-bit unicrypt encryption scheme
+   *
+   *  The unicrypt implementation delegates to javax.security.
+   *  It is unclear at this time whether there are benefits to using keylengths of 256
+   *  FIXME verify that the java aes implementation called by unicrypt is constant time
+   */
+  val AES = AESEncryptionScheme.getInstance(AESEncryptionScheme.KeyLength.KEY128, AESEncryptionScheme.Mode.CBC,
+         AESEncryptionScheme.DEFAULT_IV)
 
-	/** Returns the sha512 hash of the given file as a String */
-	def sha512(file: Path): String = {
-		sha512(Files.newInputStream(file))
-	}
+  /** Returns the sha512 hash of the given file as a String */
+  def sha512(file: Path): String = {
+    sha512(Files.newInputStream(file))
+  }
 
-	/** Returns the sha512 hash of the given Inputstream as a String */
-	def sha512(inputStream: InputStream): String = {
-		val sha = MessageDigest.getInstance("SHA-512")
-		val in = new BufferedInputStream(inputStream, 32768)
-		val din = new DigestInputStream(in, sha)
+  /** Returns the sha512 hash of the given Inputstream as a String */
+  def sha512(inputStream: InputStream): String = {
+    val sha = MessageDigest.getInstance("SHA-512")
+    val in = new BufferedInputStream(inputStream, 32768)
+    val din = new DigestInputStream(in, sha)
     while (din.read() != -1){}
-		din.close()
+    din.close()
 
     DatatypeConverter.printHexBinary(sha.digest())
-	}
+  }
 
-	/** Returns the sha512 hash of the given String as a String */
-	def sha512(input: String): String = {
-		val sha = MessageDigest.getInstance("SHA-512")
-		val in = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8))
-		val din = new DigestInputStream(in, sha)
+  /** Returns the sha512 hash of the given String as a String */
+  def sha512(input: String): String = {
+    val sha = MessageDigest.getInstance("SHA-512")
+    val in = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8))
+    val din = new DigestInputStream(in, sha)
     while (din.read() != -1){}
-		din.close()
+    din.close()
 
     DatatypeConverter.printHexBinary(sha.digest())
-	}
+  }
 
-	/** Returns a RSA signature of the given String as a byte array */
-	def sign(content: String, privateKey: RSAPrivateKey): Array[Byte] = {
-		val toSign = content.getBytes(StandardCharsets.UTF_8)
-		sign(toSign, privateKey)
-	}
+  /** Returns a RSA signature of the given String as a byte array */
+  def sign(content: String, privateKey: RSAPrivateKey): Array[Byte] = {
+    val toSign = content.getBytes(StandardCharsets.UTF_8)
+    sign(toSign, privateKey)
+  }
 
-	/** Returns a RSA signature of the given byte array as a byte array */
-	def sign(content: Array[Byte], privateKey: RSAPrivateKey): Array[Byte] = {
-		val byteSpace = ByteArrayMonoid.getInstance()
-		val toSign = byteSpace.getElement(content)
-		val scheme = RSASignatureScheme.getInstance(toSign.getSet(),
-			ZMod.getInstance(privateKey.getModulus()), CONVERT_METHOD, HASH_METHOD)
-		val privateKeyElement = scheme.getVerificationKeySpace().getElement(privateKey.getPrivateExponent())
+  /** Returns a RSA signature of the given byte array as a byte array */
+  def sign(content: Array[Byte], privateKey: RSAPrivateKey): Array[Byte] = {
+    val byteSpace = ByteArrayMonoid.getInstance()
+    val toSign = byteSpace.getElement(content)
+    val scheme = RSASignatureScheme.getInstance(toSign.getSet(),
+      ZMod.getInstance(privateKey.getModulus()), CONVERT_METHOD, HASH_METHOD)
+    val privateKeyElement = scheme.getVerificationKeySpace().getElement(privateKey.getPrivateExponent())
 
-		scheme.sign(privateKeyElement, toSign).convertToByteArray.getBytes
-	}
+    scheme.sign(privateKeyElement, toSign).convertToByteArray.getBytes
+  }
 
-	/** Returns true if the given signature byte array and content String is correct */
-	def verify(content: String, signature: Array[Byte], publicKey: RSAPublicKey): Boolean = {
-		val signed = content.getBytes(StandardCharsets.UTF_8)
-		verify(signed, signature, publicKey)
-	}
+  /** Returns true if the given signature byte array and content String is correct */
+  def verify(content: String, signature: Array[Byte], publicKey: RSAPublicKey): Boolean = {
+    val signed = content.getBytes(StandardCharsets.UTF_8)
+    verify(signed, signature, publicKey)
+  }
 
-	/** Returns true if the given signature String and content String is correct */
-	def verify(content: String, signature: String, publicKey: RSAPublicKey): Boolean = {
-		val signed = content.getBytes(StandardCharsets.UTF_8)
-		val sig = signature.getBytes(StandardCharsets.UTF_8)
+  /** Returns true if the given signature String and content String is correct */
+  def verify(content: String, signature: String, publicKey: RSAPublicKey): Boolean = {
+    val signed = content.getBytes(StandardCharsets.UTF_8)
+    val sig = signature.getBytes(StandardCharsets.UTF_8)
 
-		verify(signed, sig, publicKey)
-	}
+    verify(signed, sig, publicKey)
+  }
 
-	/** Returns true if the given signature byte array and content byte array is correct */
-	def verify(content: Array[Byte], signature: Array[Byte], publicKey: RSAPublicKey): Boolean = {
-		val byteSpace = ByteArrayMonoid.getInstance()
-		val signed = byteSpace.getElement(content)
-		val scheme = RSASignatureScheme.getInstance(signed.getSet(),
-			ZMod.getInstance(publicKey.getModulus()), CONVERT_METHOD, HASH_METHOD)
-		val signatureByteArray = ByteArray.getInstance(signature :_*)
-		val signatureElement = scheme.getSignatureSpace.getElementFrom(signatureByteArray)
-		val publicKeyElement = scheme.getSignatureKeySpace().getElement(publicKey.getPublicExponent())
+  /** Returns true if the given signature byte array and content byte array is correct */
+  def verify(content: Array[Byte], signature: Array[Byte], publicKey: RSAPublicKey): Boolean = {
+    val byteSpace = ByteArrayMonoid.getInstance()
+    val signed = byteSpace.getElement(content)
+    val scheme = RSASignatureScheme.getInstance(signed.getSet(),
+      ZMod.getInstance(publicKey.getModulus()), CONVERT_METHOD, HASH_METHOD)
+    val signatureByteArray = ByteArray.getInstance(signature :_*)
+    val signatureElement = scheme.getSignatureSpace.getElementFrom(signatureByteArray)
+    val publicKeyElement = scheme.getSignatureKeySpace().getElement(publicKey.getPublicExponent())
 
-		scheme.verify(publicKeyElement, signed, signatureElement).isTrue
-	}
+    scheme.verify(publicKeyElement, signed, signatureElement).isTrue
+  }
 
-	/** Returns the AES encryption of the given byte array as a byte array */
-	def encryptAES(content: Array[Byte], key: FiniteByteArrayElement): Array[Byte] = {
-		val byteSpace = ByteArrayMonoid.getInstance()
-		val toEncrypt = byteSpace.getElement(content)
-		val pkcs = PKCSPaddingScheme.getInstance(16)
-		val paddedMessage = pkcs.pad(toEncrypt)
-		val encryptedMessage = AES.encrypt(key, paddedMessage)
+  /** Returns the AES encryption of the given byte array as a byte array */
+  def encryptAES(content: Array[Byte], key: FiniteByteArrayElement): Array[Byte] = {
+    val byteSpace = ByteArrayMonoid.getInstance()
+    val toEncrypt = byteSpace.getElement(content)
+    val pkcs = PKCSPaddingScheme.getInstance(16)
+    val paddedMessage = pkcs.pad(toEncrypt)
+    val encryptedMessage = AES.encrypt(key, paddedMessage)
 
-		encryptedMessage.convertToByteArray.getBytes
-	}
+    encryptedMessage.convertToByteArray.getBytes
+  }
 
-	/** Returns the AES decryption of the given byte array as a byte array */
-	def decryptAES(content: Array[Byte], key: FiniteByteArrayElement): Array[Byte] = {
-		val byteSpace = ByteArrayMonoid.getInstance()
-		val toDecrypt = byteSpace.getElement(content)
-		val decryptedMessage = AES.decrypt(key, toDecrypt)
-		val pkcs = PKCSPaddingScheme.getInstance(16)
-		val unpaddedMessage = pkcs.unpad(decryptedMessage)
+  /** Returns the AES decryption of the given byte array as a byte array */
+  def decryptAES(content: Array[Byte], key: FiniteByteArrayElement): Array[Byte] = {
+    val byteSpace = ByteArrayMonoid.getInstance()
+    val toDecrypt = byteSpace.getElement(content)
+    val decryptedMessage = AES.decrypt(key, toDecrypt)
+    val pkcs = PKCSPaddingScheme.getInstance(16)
+    val unpaddedMessage = pkcs.unpad(decryptedMessage)
 
-		unpaddedMessage.convertToByteArray.getBytes
-	}
+    unpaddedMessage.convertToByteArray.getBytes
+  }
 
-	/** Returns the AES decryption of the given byte array as a base64 encoded String */
-	def encryptAES(content: String, key: FiniteByteArrayElement): String = {
-		val byteSpace = ByteArrayMonoid.getInstance()
-		val toEncrypt = byteSpace.getElement(content.getBytes(StandardCharsets.UTF_8))
-		val pkcs = PKCSPaddingScheme.getInstance(16)
-		val paddedMessage = pkcs.pad(toEncrypt)
-		val encryptedMessage = AES.encrypt(key, paddedMessage)
+  /** Returns the AES decryption of the given byte array as a base64 encoded String */
+  def encryptAES(content: String, key: FiniteByteArrayElement): String = {
+    val byteSpace = ByteArrayMonoid.getInstance()
+    val toEncrypt = byteSpace.getElement(content.getBytes(StandardCharsets.UTF_8))
+    val pkcs = PKCSPaddingScheme.getInstance(16)
+    val paddedMessage = pkcs.pad(toEncrypt)
+    val encryptedMessage = AES.encrypt(key, paddedMessage)
 
-		val bytes = encryptedMessage.convertToByteArray.getBytes
-		Base64.getEncoder().encodeToString(bytes)
-		// content
-	}
+    val bytes = encryptedMessage.convertToByteArray.getBytes
+    Base64.getEncoder().encodeToString(bytes)
+    // content
+  }
 
-	/** Returns the AES decryption of the given base64 encoded String as a String */
-	def decryptAES(content: String, key: FiniteByteArrayElement): String = {
-		val byteSpace = ByteArrayMonoid.getInstance()
-		val bytes = Base64.getDecoder().decode(content)
-		val toDecrypt = byteSpace.getElement(bytes)
-		val decryptedMessage = AES.decrypt(key, toDecrypt)
-		val pkcs = PKCSPaddingScheme.getInstance(16)
-		val unpaddedMessage = pkcs.unpad(decryptedMessage)
+  /** Returns the AES decryption of the given base64 encoded String as a String */
+  def decryptAES(content: String, key: FiniteByteArrayElement): String = {
+    val byteSpace = ByteArrayMonoid.getInstance()
+    val bytes = Base64.getDecoder().decode(content)
+    val toDecrypt = byteSpace.getElement(bytes)
+    val decryptedMessage = AES.decrypt(key, toDecrypt)
+    val pkcs = PKCSPaddingScheme.getInstance(16)
+    val unpaddedMessage = pkcs.unpad(decryptedMessage)
 
-		new String(unpaddedMessage.convertToByteArray.getBytes, StandardCharsets.UTF_8)
-		// content
-	}
+    new String(unpaddedMessage.convertToByteArray.getBytes, StandardCharsets.UTF_8)
+    // content
+  }
 
-	/** Return the AES key in the given file as a unicrypt object */
-	def readAESKey(path: Path): FiniteByteArrayElement = {
-		val keyString = IO.asString(path)
-		AES.getEncryptionKeySpace.getElementFrom(keyString)
-	}
+  /** Return the AES key in the given file as a unicrypt object */
+  def readAESKey(path: Path): FiniteByteArrayElement = {
+    val keyString = IO.asString(path)
+    AES.getEncryptionKeySpace.getElementFrom(keyString)
+  }
 
-	/** Return a random AES key as a byte array */
-	def randomAESKey: Array[Byte] = {
-		AES.generateSecretKey().convertToByteArray.getBytes
-	}
+  /** Return a random AES key as a byte array */
+  def randomAESKey: Array[Byte] = {
+    AES.generateSecretKey().convertToByteArray.getBytes
+  }
 
-	/** Return a random AES key as a unicrypt converted String */
-	def randomAESKeyString: String = {
-		AES.generateSecretKey().convertToString
-	}
+  /** Return a random AES key as a unicrypt converted String */
+  def randomAESKeyString: String = {
+    AES.generateSecretKey().convertToString
+  }
 
-	/** Return a random AES key as a unicrypt object */
-	def randomAESKeyElement: FiniteByteArrayElement = {
-		AES.generateSecretKey()
-	}
+  /** Return a random AES key as a unicrypt object */
+  def randomAESKeyElement: FiniteByteArrayElement = {
+    AES.generateSecretKey()
+  }
 
-	/** Reads a private RSA key from the given file
-	 *
-	 *	The file must be in pkcs8 PEM format. Example generating and
-	 *  converting commands (the second produces the right file)
-	 *
-	 *  ssh-keygen -t rsa -b 4096 -f keys/id_rsa -q -N ""
-	 *  openssl pkcs8 -topk8 -inform PEM -outform PEM -in keys/id_rsa -out keys/id_rsa.pem -nocrypt
-	 *
-	 */
-	def readPrivateRsa(path: Path): RSAPrivateKey = {
-		var pkpem = IO.asString(path)
-		readPrivateRsa(pkpem)
-	}
+  /** Reads a private RSA key from the given file
+   *
+   *  The file must be in pkcs8 PEM format. Example generating and
+   *  converting commands (the second produces the right file)
+   *
+   *  ssh-keygen -t rsa -b 4096 -f keys/id_rsa -q -N ""
+   *  openssl pkcs8 -topk8 -inform PEM -outform PEM -in keys/id_rsa -out keys/id_rsa.pem -nocrypt
+   *
+   */
+  def readPrivateRsa(path: Path): RSAPrivateKey = {
+    var pkpem = IO.asString(path)
+    readPrivateRsa(pkpem)
+  }
 
-	/** Reads a public RSA key from the given file
-	 *
-	 *	The file must be in PEM format. Example generating and
-	 *  converting commands (the second produces the right file)
-	 *
-	 *  ssh-keygen -t rsa -b 4096 -f keys/id_rsa -q -N ""
-	 *  openssl rsa -in keys/id_rsa -pubout > keys/id_rsa.pub.pem
-	 *
-	 */
-	def readPublicRsa(path: Path): RSAPublicKey = {
-		val pkpem = IO.asString(path)
-		readPublicRsa(pkpem)
-	}
+  /** Reads a public RSA key from the given file
+   *
+   *  The file must be in PEM format. Example generating and
+   *  converting commands (the second produces the right file)
+   *
+   *  ssh-keygen -t rsa -b 4096 -f keys/id_rsa -q -N ""
+   *  openssl rsa -in keys/id_rsa -pubout > keys/id_rsa.pub.pem
+   *
+   */
+  def readPublicRsa(path: Path): RSAPublicKey = {
+    val pkpem = IO.asString(path)
+    readPublicRsa(pkpem)
+  }
 
-	/** Reads a private RSA key from the given String
-	 *
-	 *	The file must be in pkcs8 PEM format. Example generating and
-	 *  converting commands (the second produces the right file)
-	 *
-	 *  ssh-keygen -t rsa -b 4096 -f keys/id_rsa -q -N ""
-	 *  openssl pkcs8 -topk8 -inform PEM -outform PEM -in keys/id_rsa -out keys/id_rsa.pem -nocrypt
-	 *
-	 */
-	def readPrivateRsa(str: String): RSAPrivateKey = {
-		var pkpem = str
-		pkpem = pkpem.replace("-----BEGIN PRIVATE KEY-----\n", "")
-		pkpem = pkpem.replace("-----END PRIVATE KEY-----", "")
-		val decoded = Base64.getMimeDecoder().decode(pkpem)
-		val spec = new PKCS8EncodedKeySpec(decoded)
-		val kf = KeyFactory.getInstance("RSA")
+  /** Reads a private RSA key from the given String
+   *
+   *  The file must be in pkcs8 PEM format. Example generating and
+   *  converting commands (the second produces the right file)
+   *
+   *  ssh-keygen -t rsa -b 4096 -f keys/id_rsa -q -N ""
+   *  openssl pkcs8 -topk8 -inform PEM -outform PEM -in keys/id_rsa -out keys/id_rsa.pem -nocrypt
+   *
+   */
+  def readPrivateRsa(str: String): RSAPrivateKey = {
+    var pkpem = str
+    pkpem = pkpem.replace("-----BEGIN PRIVATE KEY-----\n", "")
+    pkpem = pkpem.replace("-----END PRIVATE KEY-----", "")
+    val decoded = Base64.getMimeDecoder().decode(pkpem)
+    val spec = new PKCS8EncodedKeySpec(decoded)
+    val kf = KeyFactory.getInstance("RSA")
 
-		kf.generatePrivate(spec).asInstanceOf[RSAPrivateKey]
-	}
+    kf.generatePrivate(spec).asInstanceOf[RSAPrivateKey]
+  }
 
-	/** Reads a public RSA key from the given String
-	 *
-	 *	The file must be in PEM format. Example generating and
-	 *  converting commands (the second produces the right file)
-	 *
-	 *  ssh-keygen -t rsa -b 4096 -f keys/id_rsa -q -N ""
-	 *  openssl rsa -in keys/id_rsa -pubout > keys/id_rsa.pub.pem
-	 *
-	 */
-	def readPublicRsa(str: String): RSAPublicKey = {
-		var pkpem = str
-		pkpem = pkpem.replace("-----BEGIN PUBLIC KEY-----\n", "")
-		pkpem = pkpem.replace("-----END PUBLIC KEY-----", "")
-		val decoded = Base64.getMimeDecoder().decode(pkpem)
-		val spec: X509EncodedKeySpec = new X509EncodedKeySpec(decoded)
-		val kf = KeyFactory.getInstance("RSA")
+  /** Reads a public RSA key from the given String
+   *
+   *  The file must be in PEM format. Example generating and
+   *  converting commands (the second produces the right file)
+   *
+   *  ssh-keygen -t rsa -b 4096 -f keys/id_rsa -q -N ""
+   *  openssl rsa -in keys/id_rsa -pubout > keys/id_rsa.pub.pem
+   *
+   */
+  def readPublicRsa(str: String): RSAPublicKey = {
+    var pkpem = str
+    pkpem = pkpem.replace("-----BEGIN PUBLIC KEY-----\n", "")
+    pkpem = pkpem.replace("-----END PUBLIC KEY-----", "")
+    val decoded = Base64.getMimeDecoder().decode(pkpem)
+    val spec: X509EncodedKeySpec = new X509EncodedKeySpec(decoded)
+    val kf = KeyFactory.getInstance("RSA")
 
-		kf.generatePublic(spec).asInstanceOf[RSAPublicKey]
-	}
+    kf.generatePublic(spec).asInstanceOf[RSAPublicKey]
+  }
 }
 
-/**	Represents a key maker trustee
+/** Represents a key maker trustee
  *
- * 	Methods to create shares and partially decrypt votes.
+ *  Methods to create shares and partially decrypt votes.
  *  Mixes in the nMix KeyMaker trait.
  */
 object KeyMakerTrustee extends KeyMaker {
 
-  /**	Creates a key share
+  /** Creates a key share
    *
-   * 	Returns the key share and proof of knowledge as an nMix EncryptionKeyShareDTO.
+   *  Returns the key share and proof of knowledge as an nMix EncryptionKeyShareDTO.
    *  Returns the private key part of the share as a unicrypted converted String
    */
   def createKeyShare(id: String, cSettings: CryptoSettings): (EncryptionKeyShareDTO, String) = {
@@ -290,12 +290,12 @@ object KeyMakerTrustee extends KeyMaker {
     (encryptionKeyShareDTO, privateKey)
   }
 
-  /**	Partially decrypt a ciphertext with the private part of a share
+  /** Partially decrypt a ciphertext with the private part of a share
    *
-   * 	Returns the partial decryption and proof of knowledge as an nMix EncryptionKeyShareDTO.
+   *  Returns the partial decryption and proof of knowledge as an nMix EncryptionKeyShareDTO.
    */
   def partialDecryption(id: String, votes: Seq[String],
-  	privateShare: String, cSettings: CryptoSettings): PartialDecryptionDTO = {
+    privateShare: String, cSettings: CryptoSettings): PartialDecryptionDTO = {
 
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val v = votes.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v).asInstanceOf[Pair]).seq
@@ -306,16 +306,16 @@ object KeyMakerTrustee extends KeyMaker {
 }
 
 
-/**	Represents a shuffling trustee
+/** Represents a shuffling trustee
  *
- * 	Methods to mix votes.
+ *  Methods to mix votes.
  *  Mixes in the nMix Mixer trait.
  */
 object MixerTrustee extends Mixer {
 
-	/**	Shuffle the provided votes
+  /** Shuffle the provided votes
    *
-   * 	Returns the shuffle and proof of knowledgeas an nMix ShuffleResultDTO
+   *  Returns the shuffle and proof of knowledgeas an nMix ShuffleResultDTO
    */
   def shuffleVotes(votes: Seq[String], publicKey: String, id: String, cSettings: CryptoSettings): ShuffleResultDTO = {
     println("Mixer shuffle..")
