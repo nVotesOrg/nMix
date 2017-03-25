@@ -6,6 +6,6 @@ CLASSPATH=../target/scala-2.12/nMix-assembly-0.2-SNAPSHOT.jar:../target/scala-2.
 MAINCLASS=org.nvotes.trustee.Continuous
 
 OPTIONS="-Dconfig.file=application.conf"
-OPTIMIZATIONS="-Dnmixlib.gmp=true -Dnmixlib.extractor=true -Dnmixlib.parallel-generators=true"
+OPTIMIZATIONS="-Dlibmix.gmp=true -Dlibmix.extractor=true -Dlibmix.parallel-generators=true"
 
 java -Xmx2G -Xms2G $OPTIONS $OPTIMIZATIONS -classpath $CLASSPATH $MAINCLASS $*
