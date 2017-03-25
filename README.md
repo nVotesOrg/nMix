@@ -126,15 +126,15 @@ To speed up HybridRandomByteSequence under linux install rng-tools.
 
 * Disabling git compression - server
 
-    git config --global pack.window 0
-    git config --global core.bigFileThreshold 1
+```git config --global pack.window 0```
+```git config --global core.bigFileThreshold 1```
 
-    git config --global core.compression 0
-    git config --global core.looseCompression 0
-    git config --global pack.compression 0
+```git config --global core.compression 0```
+```git config --global core.looseCompression 0```
+```git config --global pack.compression 0```
 
-* Disabling git compression - server
+* Disabling git compression - client
 
-	-D-Dnmix.git.disable-compression=true
+```-D-Dnmix.git.disable-compression=true```
 
 ##### Misc
