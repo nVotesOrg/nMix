@@ -122,7 +122,7 @@ It is also straightforward to run the demo with remoting, just adjust applicatio
 
 To speed up HybridRandomByteSequence under linux install rng-tools.
 
-##### Git compression
+#### Git compression
 
 * Disabling git compression - server
 
@@ -137,6 +137,6 @@ git config --global pack.compression 0
 
 * Disabling git compression - client
 
-```-D-Dnmix.git.disable-compression=true```
+```-Dnmix.git.disable-compression=true```
 
 ##### Misc

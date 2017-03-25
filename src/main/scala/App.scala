@@ -114,6 +114,7 @@ object OneRun extends App {
 object BallotboxAdd extends App {
   import org.nvotes.mix._
   import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
+  val t0 = System.nanoTime()
 
   val totalVotes = args(0).toInt
   println(s"BallotboxAdd votes = $totalVotes")
@@ -146,6 +147,9 @@ object BallotboxAdd extends App {
 
     section.addBallots(file1, file2, file3, item)
   }
+
+  val t1 = System.nanoTime()
+  println("Generating ballots time: " + ((t1 - t0) / 1000000000.0) + " s")
 }
 
 case class TrusteeConfigRaw(dataStorePath: Path, repoBaseUri: URI, bootstrapRepoUri: URI,
