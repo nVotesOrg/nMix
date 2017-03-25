@@ -158,9 +158,12 @@ case class TrusteeConfig(dataStorePath: Path, repoBaseUri: URI, bootstrapRepoUri
 }
 
 object PushTest extends App {
-  val gitRepo = GitRepo.clone(new URI(args(0)), Paths.get("test"))
-  Files.copy(Paths.get("bigfile"), Paths.get("bigfile"))
-  gitRepo.send("test", "bigfile")
+  val trusteeCfg = TrusteeConfig.load
+  val board = new Board(trusteeCfg.dataStorePath)
+  val section = board.cloneOrSyncSection(trusteeCfg.repoBaseUri, Paths.get("repo"))
+
+  Files.copy(Paths.get("bigfile"), section.gitRepo.repoPath.resolve("bigfile"))
+  section.gitRepo.send("test", "bigfile")
 }
 
 object TrusteeConfig {

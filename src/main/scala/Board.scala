@@ -446,6 +446,8 @@ object BoardSection {
  */
 case class GitRepo(val repoPath: Path) {
   val logger = LoggerFactory.getLogger(classOf[GitRepo])
+  val noCompression = sys.props.get("nmix.git.disable-compression").getOrElse("false").toBoolean
+  logger.info(s"Repo '$repoPath' compression: ${!noCompression}")
 
   if(!Files.exists(repoPath)) {
     throw new IllegalArgumentException(s"repoPath '$repoPath' does not exist")
@@ -745,12 +747,13 @@ case class GitRepo(val repoPath: Path) {
       .setMustExist(true)
       .build()
 
-    repo.getConfig().setString("pack", null, "window", "0")
-    repo.getConfig().setString("core", null, "bigFileThreshold", "1")
-    repo.getConfig().setString("pack", null, "compression", "0")
-    repo.getConfig().setString("core", null, "compression", "0")
-    repo.getConfig().setString("core", null, "looseCompression", "0")
-
+    if(noCompression) {
+      repo.getConfig().setString("pack", null, "window", "0")
+      repo.getConfig().setString("core", null, "bigFileThreshold", "1")
+      repo.getConfig().setString("pack", null, "compression", "0")
+      repo.getConfig().setString("core", null, "compression", "0")
+      repo.getConfig().setString("core", null, "looseCompression", "0")
+    }
     repo
   }
 
@@ -785,9 +788,9 @@ object GitRepo {
     override def configure(transport: Transport) = {
       val sshTransport = transport.asInstanceOf[SshTransport]
       sshTransport.setSshSessionFactory(sshSessionFactory)
-      val config = sshTransport.getPackConfig()
-      println("big file threshold: " + config.getBigFileThreshold)
-      println("compression level: " + config.getCompressionLevel)
+      // val config = sshTransport.getPackConfig()
+      // println("big file threshold: " + config.getBigFileThreshold)
+      // println("compression level: " + config.getCompressionLevel)
     }
   }
 
