@@ -79,7 +79,7 @@ referenced by the scripts below.
 
 * Run the trustees, with the run1.sh, run2.sh and ballots.sh scripts.
 
-Once you've run setup.sh, you can begin the eleciton process. To do this
+Once you've run setup.sh, you can begin the election process. To do this
 
 ```./run1.sh```
 

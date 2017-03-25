@@ -589,6 +589,7 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
           logger.info(s"item $item processing decryption $auth, signature OK")
           // logger.info("verifying decryption " + Crypto.sha512(decryption.asJson.noSpaces) + " with mod " + modulusStr + " votes " + Crypto.sha512(mix.votes.asJson.noSpaces))
 
+          // FIXME should skip verifying pok on our own decryption
           val share = ctx.section.getShare(item, auth).map(decode[Share](_).right.get).get
           val pokOk = verifyDecryption(decryption, mix.votes, ctx.cSettings, modulusStr, share.share.keyShare)
           logger.info(s"item $item processing decryption $auth, pok $pokOk")
