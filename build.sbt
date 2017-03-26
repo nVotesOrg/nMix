@@ -31,3 +31,5 @@ assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeSca
 cancelable in Global := true
 fork in run := false
 fork in Test := false
+
+scalacOptions += "-opt:l:classpath"

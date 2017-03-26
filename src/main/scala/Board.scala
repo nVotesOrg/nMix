@@ -27,6 +27,7 @@ import java.nio.file.Path
 import java.nio.file.Files
 import java.net.URI
 import java.util.UUID
+import java.nio.file.StandardCopyOption.ATOMIC_MOVE
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -557,7 +558,8 @@ case class GitRepo(val repoPath: Path) {
       Files.createDirectories(targetFile.getParent)
 
       // copy the file
-      Files.copy(sourceFile, targetFile)
+      // Files.copy(sourceFile, targetFile)
+      Files.move(sourceFile, targetFile, ATOMIC_MOVE)
     }
     else {
       logger.warn(s"file '$target' already exists, skipping")
@@ -595,7 +597,6 @@ case class GitRepo(val repoPath: Path) {
 
         start = System.nanoTime()
         val commit = git.commit()
-        // .setAll(true)
         files.foreach(commit.setOnly(_))
         commit.setMessage(message)
         commit.call()
@@ -606,7 +607,6 @@ case class GitRepo(val repoPath: Path) {
           start = System.nanoTime()
           val pushCommand = git.push()
           pushCommand.setTransportConfigCallback(GitRepo.sshTransportCallback)
-
           // requires git 2.4+ on server
           pushCommand.setAtomic(true)
           val results = pushCommand.call()
@@ -708,7 +708,6 @@ case class GitRepo(val repoPath: Path) {
       if(head != null) {
         val revWalk = new RevWalk(repository)
         val commit = revWalk.parseCommit(head)
-        // and using commit's tree find the path
         val tree = commit.getTree()
 
         val treeWalk = new TreeWalk(repository)
@@ -754,6 +753,7 @@ case class GitRepo(val repoPath: Path) {
       repo.getConfig().setString("core", null, "compression", "0")
       repo.getConfig().setString("core", null, "looseCompression", "0")
     }
+
     repo
   }
 
@@ -788,9 +788,6 @@ object GitRepo {
     override def configure(transport: Transport) = {
       val sshTransport = transport.asInstanceOf[SshTransport]
       sshTransport.setSshSessionFactory(sshSessionFactory)
-      // val config = sshTransport.getPackConfig()
-      // println("big file threshold: " + config.getBigFileThreshold)
-      // println("compression level: " + config.getCompressionLevel)
     }
   }
 
