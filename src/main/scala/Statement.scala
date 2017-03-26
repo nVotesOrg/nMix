@@ -3,7 +3,7 @@ package org.nvotes.trustee
 import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._, io.circe.generic.JsonCodec
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
-import org.nvotes.mix._
+import org.nvotes.libmix._
 
 /** A Statement represents some assertion an authority makes when signing
  *  the Statement's data.

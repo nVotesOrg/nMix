@@ -52,7 +52,7 @@ object FullCycle extends App {
   Protocol.execute(section, trusteeCfg2)
 
   // add ballots
-  import org.nvotes.mix._
+  import org.nvotes.libmix._
   import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
 
   val configString = section.getConfig.get
@@ -112,7 +112,7 @@ object OneRun extends App {
 }
 
 object BallotboxAdd extends App {
-  import org.nvotes.mix._
+  import org.nvotes.libmix._
   import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
   val t0 = System.nanoTime()
 

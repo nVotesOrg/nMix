@@ -8,10 +8,10 @@ import ch.bfh.unicrypt.crypto.encoder.classes.ZModPrimeToGStarModSafePrime
 import java.math.BigInteger
 
 import org.scalatest.FlatSpec
-import org.nvotes.mix._
+import org.nvotes.libmix._
 
 // duplicate of cryptospec in the nmix project, remove
-class CryptoSpec2 extends FlatSpec {
+class CryptoSpec extends FlatSpec {
 
   val grp = GStarModSafePrime.getFirstInstance(2048)
 

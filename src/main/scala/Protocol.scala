@@ -3,7 +3,7 @@ package org.nvotes.trustee
 import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
 import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
-import org.nvotes.mix._
+import org.nvotes.libmix._
 
 import java.nio.charset.StandardCharsets
 import scala.collection.mutable.ListBuffer

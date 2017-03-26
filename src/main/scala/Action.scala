@@ -6,7 +6,7 @@ import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
 import ch.bfh.unicrypt.crypto.schemes.encryption.classes.ElGamalEncryptionScheme
 import ch.bfh.unicrypt.crypto.encoder.classes.ZModPrimeToGStarModSafePrime
 import ch.bfh.unicrypt.math.algebra.general.classes.Pair
-import org.nvotes.mix._
+import org.nvotes.libmix._
 
 import java.nio.charset.StandardCharsets
 import scala.collection.mutable.ListBuffer

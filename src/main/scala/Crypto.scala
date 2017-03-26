@@ -43,7 +43,7 @@ import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 import java.nio.ByteOrder
 
-import org.nvotes.mix._
+import org.nvotes.libmix._
 
 /** Provides various cryptographic operations */
 object Crypto {
