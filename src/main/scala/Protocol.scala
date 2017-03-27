@@ -125,9 +125,9 @@ object Protocol extends Names {
     val items = config.items
 
     logger.info(s"Evaluating per-item rules..")
-    // val irules = (1 to items).map(i => itemRules(ctx, i, files))
+    val irules = (1 to items).map(i => itemRules(ctx, i, files))
     // using permutation
-    val irules = (1 to items).map(i => itemRulesAlt(ctx, i, files))
+    // val irules = (1 to items).map(i => itemRulesAlt(ctx, i, files))
 
     // get first rule that matches for each item, then
     // collect Action's into list and sort them by priority
