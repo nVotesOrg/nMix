@@ -105,15 +105,12 @@ object Protocol extends Names {
     val group = GStarModSafePrime.getFirstInstance(config.bits)
     val generator = group.getDefaultGenerator()
     val cSettings = CryptoSettings(group, generator)
-
     val ctx = Context(config, section, trusteeCfg, position, cSettings)
 
     val rules = globalRules(ctx)
-
     // first rule that matches is executed
-    val hit = rules.find{ case (c, a) =>
-      c.eval(files)
-    }.map(_._2)
+    val hit = rules.find{ case (c, a) => c.eval(files)}
+      .map(_._2)
 
     logger.info(s"* Global matches: $hit")
     val result = hit.map(_.execute()).getOrElse(Ok)
@@ -125,26 +122,19 @@ object Protocol extends Names {
     }
 
     val items = config.items
-
     val irules = (1 to items).map(i => itemRules(ctx, i, files))
-
     // get first rule that matches for each item, then
     // collect Action's into list and sort them by priority
     val hits = irules.flatMap { rules =>
-      rules.find{ case (c, a) =>
-        c.eval(files)
-      }.map(_._2)
+      rules.find{ case (c, a) => c.eval(files)}
+      .map(_._2)
     }.sorted
 
     if(hits.size > 0) {
-      logger.info(s"Per-item hits: ************************")
-      logger.info(s"${hits.map(_.toString)}")
-      logger.info(s"***************************************")
+      logger.info(s"* Per-item hits: ${hits.map(_.toString)}")
 
       val results = hits.map(action => action -> action.execute)
-      logger.info(s"Per-item results: *********************")
-      logger.info(s"$results")
-      logger.info(s"***************************************")
+      logger.info(s"Per-item results: $results")
     }
     else {
       logger.info(s"* Per-item matches: None")
@@ -184,6 +174,7 @@ object Protocol extends Names {
 
     val config = ctx.config
 
+
     val allConfigsYes = Condition(
       (1 to config.trustees.size).map(auth => CONFIG_SIG(auth) -> true)
       .toList
@@ -192,6 +183,7 @@ object Protocol extends Names {
     val myShareNo = Condition.no(SHARE(item, ctx.position)).no(SHARE_STMT(item, ctx.position))
       .no(SHARE_SIG(item, ctx.position))
 
+    // shares
     val rules = ListBuffer[(Cond, Action)](
       allConfigsYes.and(myShareNo) -> AddShare(ctx, item)
     )
@@ -202,12 +194,14 @@ object Protocol extends Names {
       .toList
     )
 
+    // add public key
     if(ctx.position == 1) {
       val noPublicKey = Condition.no(PUBLIC_KEY(item))
       rules += allShares.and(noPublicKey) -> AddOrSignPublicKey(ctx, item)
     }
 
     val noPublicKeySig = Condition.yes(PUBLIC_KEY(item)).no(PUBLIC_KEY_SIG(item, ctx.position))
+    // add public key
     rules += allShares.and(noPublicKeySig) -> AddOrSignPublicKey(ctx, item)
 
 
@@ -228,15 +222,17 @@ object Protocol extends Names {
     val ballotsYes = Condition.yes(BALLOTS(item)).yes(BALLOTS_STMT(item)).yes(BALLOTS_SIG(item))
 
     val myMixNo = ballotsYes.and(previousMixesYes).andNot(MIX(item, ctx.position))
+    // mix
     rules += myMixNo -> AddMix(ctx, item)
 
-    // sign mixes other than our own
+    // verify mixes other than our own
     val missingSigs = (1 to config.trustees.size).filter(_ != ctx.position).map { auth =>
       (auth, item, Condition(List(MIX(item, auth) -> true, MIX_STMT(item, auth) -> true,
         MIX_SIG(item, auth, auth) -> true, MIX_SIG(item, auth, ctx.position) -> false)))
     }
 
     missingSigs.foreach { case(auth, item, noMixSig) =>
+      // verifiy mixes
       rules += noMixSig -> VerifyMix(ctx, item, auth)
     }
 
@@ -247,6 +243,7 @@ object Protocol extends Names {
     val noDecryptions = Condition.no(DECRYPTION(item, ctx.position))
       .no(DECRYPTION_STMT(item, ctx.position)).no(DECRYPTION_SIG(item, ctx.position))
 
+    // decryptions
     rules += allMixSigs.and(noDecryptions) -> AddDecryption(ctx, item)
 
     val allDecryptions = Condition((1 to config.trustees.size).flatMap { auth =>
@@ -258,10 +255,12 @@ object Protocol extends Names {
 
     if(ctx.position == 1) {
       val noPlaintexts = Condition.no(PLAINTEXTS(item))
+      // plaintexts
       rules += allDecryptions.and(noPlaintexts) -> AddOrSignPlaintexts(ctx, item)
     }
 
     val noPlaintextsSig = Condition.yes(PLAINTEXTS(item)).no(PLAINTEXTS_SIG(item, ctx.position))
+    // sign plaintexts
     rules += allDecryptions.and(noPlaintextsSig) -> AddOrSignPlaintexts(ctx, item)
 
     rules
@@ -279,47 +278,34 @@ object Protocol extends Names {
 
   /** Returns the permuted mix position of the trustee for the given config.
    *
-   *  Positions start at 1.
-   *
-   *  Examples
-   *
-   *  123 at item 1 => 123
-   *  123 at item 2 => 231
-   *  123 at item 3 => 312
-   *  123 at item 4 => 123
-   *
    *  The permutation is a 1 shift left permutation
    *
    *  This 1-shift left is a generator of a cyclic permutation group of
-   *  order 'trustees'
+   *  order 'trustees'. For example
    *
+   *  123 at item 1 => 123    (identity)
+   *  123 at item 2 => 231    (auth 2 is at 1, 3 is at 2, 1 is at 3)
+   *  123 at item 3 => 312
+   *  123 at item 4 => 123
    */
   def getMixPosition(auth: Int, item: Int, trustees: Int): Int = {
     val permuted = (auth + (item - 1)) % trustees
     permuted + 1
   }
 
-  /** Returns the inverse of the permuted mix position
-   *
-   *  See above.
-   */
+  /** Returns the inverse of the permuted mix position */
   def getMixPositionInverse(auth: Int, item: Int, trustees: Int): Int = {
     /** for a cyclic group with generator g of order n we have
      *
-     * g^n = 1
-     *
-     * applying g to some power p we have
+     * g^n = 1. Applying g to some power p we have
      *
      * g^p = x
      *
-     * since
-     *
-     * g^p * g^(n-p) = g^n = 1
+     * since g^p * g^(n-p) = g^n = 1
      *
      * the inverse of x=g^p is g^(n-p)
      *
-     * n-p is the "gap" below, and (item - 1) is p
-     *
+     * Below, n-p is the "gap", and (item - 1) is p
      */
     val gap = trustees - (item - 1)
 
