@@ -559,7 +559,8 @@ case class GitRepo(val repoPath: Path) {
 
       // copy the file
       // Files.copy(sourceFile, targetFile)
-      Files.move(sourceFile, targetFile, ATOMIC_MOVE)
+      // Files.move(sourceFile, targetFile, ATOMIC_MOVE)
+      Files.move(sourceFile, targetFile)
     }
     else {
       logger.warn(s"file '$target' already exists, skipping")

@@ -99,6 +99,7 @@ object Protocol extends Names {
       // FIXME cause a real error
       return
     }
+    // FIXME this info should be in config, not just the bits
     val group = GStarModSafePrime.getFirstInstance(config.bits)
     val generator = group.getDefaultGenerator()
     val cSettings = CryptoSettings(group, generator)
@@ -124,19 +125,22 @@ object Protocol extends Names {
     val items = config.items
 
     logger.info(s"Evaluating per-item rules..")
+    // val irules = (1 to items).map(i => itemRules(ctx, i, files))
+    // using permutation
     val irules = (1 to items).map(i => itemRules(ctx, i, files))
 
-    // get first rule that matches for each item, collect into list
+    // get first rule that matches for each item, then
+    // collect Action's into list and sort them by priority
     val hits = irules.flatMap { rules =>
       rules.find{ case (c, a) =>
         c.eval(files)
       }.map(_._2)
-    }
+    }.sorted
+
     logger.info(s"Per-item hits: ${hits.map(_.getClass)}")
 
     val results = hits.map(_.execute)
     logger.info(s"Per-item results: $results")
-
   }
 
   /** Returns the global rules.
@@ -246,6 +250,11 @@ object Protocol extends Names {
     rules
   }
 
+  private def itemRulesAlt(ctx: Context, item: Int, files: Set[String]) = {
+    val ctxPermuted = ctx.copy(position = getMyPositionAlt(ctx.config, ctx.trusteeCfg, item))
+    itemRules(ctxPermuted, item, files)
+  }
+
   /** Returns the position of the trustee for the given config.
    *
    *  Positions start at 1. If the trustee is not found, returns 0.
@@ -253,6 +262,21 @@ object Protocol extends Names {
   private def getMyPosition(config: Config, trusteeConfig: TrusteeConfig): Int = {
     val pks = config.trustees.map(Crypto.readPublicRsa(_))
     pks.indexOf(trusteeConfig.publicKey) + 1
+  }
+
+  /** Returns the position of the trustee for the given config.
+   *
+   *  Positions start at 1. If the trustee is not found, returns 0.
+   *
+   *  Uses a permutation to enhance parallelism (experimental)
+   */
+  private def getMyPositionAlt(config: Config, trusteeConfig: TrusteeConfig, item: Int): Int = {
+    val pks = config.trustees.map(Crypto.readPublicRsa(_))
+    val index = pks.indexOf(trusteeConfig.publicKey) + 1
+    val permuted = (index + (item - 1)) % config.trustees.size
+    permuted + 1
+    // val target = 1 to config.trustees.size
+    // val shifted = target.drop(item) ++ target.take(i)
   }
 }
 

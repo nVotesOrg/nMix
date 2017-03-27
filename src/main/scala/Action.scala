@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory
  *
  *  Actions are called as a result of matching conditions.
  */
-sealed trait Action {
+sealed trait Action extends Ordered[Action] {
 
   val logger = LoggerFactory.getLogger(getClass)
 
@@ -57,6 +57,19 @@ sealed trait Action {
 
   /** Action operations go here */
   def execute(): Result
+
+  /** The priority of this Action
+   *
+   *  Actions at the beginning of the protocol should be
+   *  prioritized to enhance parallelism
+   *
+   *  Lower values have higher priority
+   */
+  val priority: Int
+
+  def compare (that: Action) = {
+    priority.compare(that.priority)
+  }
 }
 
 /** Used to stop the protocol.
@@ -64,6 +77,9 @@ sealed trait Action {
  *  Examples are pause and error condition rules.
  */
 case class StopAction(message: String) extends Action {
+  /** This value does not matter as StopAction is
+    only issued at the global level */
+  val priority = 1
   def execute(): Result = Stop(message)
 }
 
@@ -77,6 +93,9 @@ case class StopAction(message: String) extends Action {
  *  Other checks may be added (eg depending on list of accepted elections)
  */
 case class ValidateConfig(ctx: Context) extends Action {
+  /** This value does not matter as ValidateConfig is
+    only issued at the global level */
+  val priority = 1
 
   def execute(): Result = {
 
@@ -127,6 +146,7 @@ case class ValidateConfig(ctx: Context) extends Action {
  *  The private share is encrypted with aes, and included in the share.
  */
 case class AddShare(ctx: Context, item: Int) extends Action {
+  val priority = 1
 
   def execute(): Result = {
 
@@ -178,6 +198,7 @@ case class AddShare(ctx: Context, item: Int) extends Action {
  *  identical to their locally created one.
  */
 case class AddOrSignPublicKey(ctx: Context, item: Int) extends Action {
+  val priority = 2
 
   def execute(): Result = {
     val configHash = getValidConfigHash(ctx)
@@ -283,6 +304,7 @@ case class AddOrSignPublicKey(ctx: Context, item: Int) extends Action {
  *  this mix.
  */
 case class AddMix(ctx: Context, item: Int) extends Action {
+  val priority = 3
 
   def execute(): Result = {
     val configHash = getValidConfigHash(ctx)
@@ -333,6 +355,7 @@ case class AddMix(ctx: Context, item: Int) extends Action {
  *  Otherwise they should be the output of the previous mix.
  */
 case class VerifyMix(ctx: Context, item: Int, auth: Int) extends Action {
+  val priority = 4
 
   def execute(): Result = {
     logger.info(s"item $item, target auth $auth")
@@ -431,6 +454,7 @@ case class VerifyMix(ctx: Context, item: Int, auth: Int) extends Action {
  *
  */
 case class AddDecryption(ctx: Context, item: Int) extends Action {
+  val priority = 5
 
   def execute(): Result = {
     val configHash = getValidConfigHash(ctx)
@@ -552,6 +576,7 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
  *  identical to their locally created ones.
  */
 case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
+  val priority = 6
 
   def execute(): Result = {
     val configHash = getValidConfigHash(ctx)
