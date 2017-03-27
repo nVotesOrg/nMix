@@ -223,6 +223,7 @@ case class AddOrSignPublicKey(ctx: Context, item: Int) extends Action {
       if(expectedString == shareStmt) {
         logger.info(s"item $item processing share $auth, statement OK")
         val authPk = Crypto.readPublicRsa(ctx.config.trustees(auth - 1))
+
         val ok = expected.verify(shareSig, authPk)
         if(ok) {
           logger.info(s"item $item processing share $auth, signature OK")
@@ -313,13 +314,27 @@ case class AddMix(ctx: Context, item: Int) extends Action {
       return Error(s"AddMix: invalid config")
     }
 
-    val (previousBallots, previousStr) = if(ctx.position == 1) {
+
+    /* val (previousBallots, previousStr) = if(ctx.position == 1) {
       val ballots = ctx.section.getBallots(item).get
       val bs = decode[Ballots](ballots).right.get
       (bs.ballots, ballots)
     }
     else {
       val mix = ctx.section.getMix(item, ctx.position - 1).get
+      val m = decode[ShuffleResultDTO](mix).right.get
+      (m.votes, mix)
+    }*/
+    // PERM
+    val myMixPosition = Protocol.getMixPosition(ctx.position, item, ctx.config.trustees.size)
+    val previousMixAuth = Protocol.getMixPositionInverse(myMixPosition - 1, item, ctx.config.trustees.size)
+    val (previousBallots, previousStr) = if(myMixPosition == 1) {
+      val ballots = ctx.section.getBallots(item).get
+      val bs = decode[Ballots](ballots).right.get
+      (bs.ballots, ballots)
+    }
+    else {
+      val mix = ctx.section.getMix(item, previousMixAuth).get
       val m = decode[ShuffleResultDTO](mix).right.get
       (m.votes, mix)
     }
@@ -370,13 +385,26 @@ case class VerifyMix(ctx: Context, item: Int, auth: Int) extends Action {
     val mixStmt = ctx.section.getMixStatement(item, auth).get
     val mixSig = ctx.section.getMixSignature(item, auth, auth).get
 
-    val (parentBallots, parentStr) = if(auth == 1) {
+    /* val (parentBallots, parentStr) = if(auth == 1) {
       val ballots = ctx.section.getBallots(item).get
       val bs = decode[Ballots](ballots).right.get
       (bs.ballots, ballots)
     }
     else {
       val mix = ctx.section.getMix(item, auth - 1).get
+      val m = decode[ShuffleResultDTO](mix).right.get
+      (m.votes, mix)
+    } */
+    // PERM
+    val mixPosition = Protocol.getMixPosition(auth, item, ctx.config.trustees.size)
+    val previousMixAuth = Protocol.getMixPositionInverse(mixPosition - 1, item, ctx.config.trustees.size)
+    val (parentBallots, parentStr) = if(mixPosition == 1) {
+      val ballots = ctx.section.getBallots(item).get
+      val bs = decode[Ballots](ballots).right.get
+      (bs.ballots, ballots)
+    }
+    else {
+      val mix = ctx.section.getMix(item, previousMixAuth).get
       val m = decode[ShuffleResultDTO](mix).right.get
       (m.votes, mix)
     }
@@ -402,17 +430,17 @@ case class VerifyMix(ctx: Context, item: Int, auth: Int) extends Action {
           ctx.section.addMixSignature(file, item, auth, ctx.position)
         } else {
           logger.error(s"item $item processing mix $auth, pok NOT ok")
-          Error(s"item $item processing mix $auth, pok NOT ok")
+          return Error(s"item $item processing mix $auth, pok NOT ok")
         }
       }
       else {
         logger.error(s"item $item processing mix $auth, signature NOT ok")
-        Error(s"item $item processing mix $auth, signature NOT ok")
+        return Error(s"item $item processing mix $auth, signature NOT ok")
       }
     } else {
       // the error will be caused below
       logger.error(s"item $item processing mix $auth, statement NOT ok")
-      Error(s"item $item processing mix $auth, statement NOT ok")
+      return Error(s"item $item processing mix $auth, statement NOT ok")
     }
 
     Ok
@@ -465,7 +493,10 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
 
     // the chain is composed of elements of the from
     // input votes hash -> output votes hash
-    val chain = (1 to ctx.config.trustees.size).map { auth =>
+    val chain = (1 to ctx.config.trustees.size).map { a =>
+
+      // PERM
+      val auth = Protocol.getMixPositionInverse(a, item, ctx.config.trustees.size)
 
       val mixStmtStr = ctx.section.getMixStatement(item, auth).get
       val mixStmt = decode[MixStatement](mixStmtStr).right.get
@@ -522,7 +553,11 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
     logger.info(s"ballot signature on item $item OK")
 
     // check the mix-end of the chain
-    val mixStr = ctx.section.getMix(item, ctx.config.trustees.size).get
+    // PERM
+    val lastMixAuth = Protocol.getMixPositionInverse(item, ctx.config.trustees.size, ctx.config.trustees.size)
+    // val mixStr = ctx.section.getMix(item, ctx.config.trustees.size).get
+    val mixStr = ctx.section.getMix(item, lastMixAuth).get
+
     val mix = decode[ShuffleResultDTO](mixStr).right.get
     val mixHash = Crypto.sha512(mixStr)
 
@@ -586,7 +621,10 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
     }
 
     // get mixVotes
-    val mixStr = ctx.section.getMix(item, ctx.config.trustees.size).get
+    // val mixStr = ctx.section.getMix(item, ctx.config.trustees.size).get
+    // PERM
+    val lastMixAuth = Protocol.getMixPositionInverse(item, ctx.config.trustees.size, ctx.config.trustees.size)
+    val mixStr = ctx.section.getMix(item, lastMixAuth).get
     val mix = decode[ShuffleResultDTO](mixStr).right.get
     val mixHash = Crypto.sha512(mixStr)
 
@@ -628,7 +666,7 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
         }
       } else {
         // the error will be caused below
-        logger.warn(s"item $item processing share $auth, statement NOT ok")
+        logger.warn(s"item $item processing decryption $auth, statement NOT ok")
       }
     }
 

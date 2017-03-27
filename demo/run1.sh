@@ -9,3 +9,4 @@ OPTIONS="-Dconfig.file=application.conf"
 OPTIMIZATIONS="-Dlibmix.gmp=true -Dlibmix.extractor=true -Dlibmix.parallel-generators=true -Dnmix.git.disable-compression=true"
 
 java -Xmx4G -Xms4G $OPTIONS $OPTIMIZATIONS -classpath $CLASSPATH $MAINCLASS $*
+

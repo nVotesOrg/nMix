@@ -12,7 +12,7 @@ resolvers += "jgit-repository" at "http://download.eclipse.org/jgit/maven"
 libraryDependencies ++= Seq(
   "org.eclipse.jgit" % "org.eclipse.jgit" % "4.5.0.201609210915-r",
   "com.github.melrief" %% "pureconfig" % "0.6.0",
-  "org.slf4j" % "slf4j-simple" % "1.6.4",
+  "org.slf4j" % "slf4j-simple" % "1.7.25",
   // "com.squareup.jnagmp" % "jnagmp" % "2.0.0",
   "org.scalatest" %% "scalatest" % "3.0.1" % "test",
   "org.scalactic" %% "scalactic" % "3.0.1" % "test"

@@ -41,7 +41,8 @@ case class Ballots(ballots: Seq[String])
 case class Plaintexts(plaintexts: Seq[String])
 
 /** Convenience class to pass around relevant data  */
-case class Context(config: Config, section: BoardSection, trusteeCfg: TrusteeConfig, position: Int, cSettings: CryptoSettings)
+case class Context(config: Config, section: BoardSection, trusteeCfg: TrusteeConfig,
+  position: Int, cSettings: CryptoSettings)
 
 /** Implements the cryptographic protocol through stateless, reactive and
  *  choreographed actors.
@@ -126,8 +127,6 @@ object Protocol extends Names {
 
     logger.info(s"Evaluating per-item rules..")
     val irules = (1 to items).map(i => itemRules(ctx, i, files))
-    // using permutation
-    // val irules = (1 to items).map(i => itemRulesAlt(ctx, i, files))
 
     // get first rule that matches for each item, then
     // collect Action's into list and sort them by priority
@@ -137,10 +136,14 @@ object Protocol extends Names {
       }.map(_._2)
     }.sorted
 
-    logger.info(s"Per-item hits: ${hits.map(_.getClass)}")
+    logger.info(s"Per-item hits: ************")
+    logger.info(s"${hits.map(_.getClass.getSimpleName)}")
+    logger.info(s"***************************")
 
     val results = hits.map(_.execute)
-    logger.info(s"Per-item results: $results")
+    logger.info(s"Per-item results: *********")
+    logger.info(s"$results")
+    logger.info(s"***************************")
   }
 
   /** Returns the global rules.
@@ -202,8 +205,17 @@ object Protocol extends Names {
     val noPublicKeySig = Condition.yes(PUBLIC_KEY(item)).no(PUBLIC_KEY_SIG(item, ctx.position))
     rules += allShares.and(noPublicKeySig) -> AddOrSignPublicKey(ctx, item)
 
-    val previousMixesYes = Condition((1 to ctx.position - 1).flatMap { auth =>
+
+    /*val previousMixesYes = Condition((1 to ctx.position - 1).flatMap { auth =>
         List(MIX(item, auth) -> true, MIX_STMT(item, auth) -> true, MIX_SIG(item, auth, auth) -> true)
+      }
+      .toList
+    )*/
+    // PERM
+    val myMixPosition = getMixPosition(ctx.position, item, ctx.config.trustees.size)
+    val previousMixesYes = Condition((1 to myMixPosition - 1).flatMap { auth =>
+        val mixAuth = getMixPositionInverse(auth, item, ctx.config.trustees.size)
+        List(MIX(item, mixAuth) -> true, MIX_STMT(item, mixAuth) -> true, MIX_SIG(item, mixAuth, mixAuth) -> true)
       }
       .toList
     )
@@ -250,10 +262,6 @@ object Protocol extends Names {
     rules
   }
 
-  private def itemRulesAlt(ctx: Context, item: Int, files: Set[String]) = {
-    val ctxPermuted = ctx.copy(position = getMyPositionAlt(ctx.config, ctx.trusteeCfg, item))
-    itemRules(ctxPermuted, item, files)
-  }
 
   /** Returns the position of the trustee for the given config.
    *
@@ -264,19 +272,32 @@ object Protocol extends Names {
     pks.indexOf(trusteeConfig.publicKey) + 1
   }
 
-  /** Returns the position of the trustee for the given config.
+  /** Returns the permuted mix position of the trustee for the given config.
    *
-   *  Positions start at 1. If the trustee is not found, returns 0.
+   *  Positions start at 1.
    *
-   *  Uses a permutation to enhance parallelism (experimental)
+   *  Examples
+   *
+   *  123 at item 1 => 123
+   *  123 at item 2 => 231
+   *  123 at item 3 => 312
+   *  123 at item 4 => 123
+   *
    */
-  private def getMyPositionAlt(config: Config, trusteeConfig: TrusteeConfig, item: Int): Int = {
-    val pks = config.trustees.map(Crypto.readPublicRsa(_))
-    val index = pks.indexOf(trusteeConfig.publicKey) + 1
-    val permuted = (index + (item - 1)) % config.trustees.size
+  def getMixPosition(auth: Int, item: Int, trustees: Int): Int = {
+    val permuted = (auth + (item - 1)) % trustees
     permuted + 1
-    // val target = 1 to config.trustees.size
-    // val shifted = target.drop(item) ++ target.take(i)
+  }
+
+  /** Returns the inverse of the permuted mix position
+   *
+   *  See above.
+   */
+  def getMixPositionInverse(auth: Int, item: Int, trustees: Int): Int = {
+    val gap = trustees - (item - 1)
+
+    val permuted = (auth + gap) % trustees
+    permuted + 1
   }
 }
 
