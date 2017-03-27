@@ -106,8 +106,6 @@ object OneRun extends App {
   val trusteeCfg = TrusteeConfig.load
   val board = new Board(trusteeCfg.dataStorePath)
   val section = board.cloneOrSyncSection(trusteeCfg.repoBaseUri, Paths.get("repo"))
-  // val cfg = section.getConfig.get
-  // println(Crypto.sha512(cfg))
   Protocol.execute(section, trusteeCfg)
 }
 

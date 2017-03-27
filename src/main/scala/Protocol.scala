@@ -100,6 +100,7 @@ object Protocol extends Names {
       // FIXME cause a real error
       return
     }
+
     // FIXME this info should be in config, not just the bits
     val group = GStarModSafePrime.getFirstInstance(config.bits)
     val generator = group.getDefaultGenerator()
@@ -107,25 +108,24 @@ object Protocol extends Names {
 
     val ctx = Context(config, section, trusteeCfg, position, cSettings)
 
-    logger.info(s"Evaluating global rules..")
     val rules = globalRules(ctx)
+
     // first rule that matches is executed
     val hit = rules.find{ case (c, a) =>
       c.eval(files)
     }.map(_._2)
 
-    logger.info(s"Executing global hits: $hit")
+    logger.info(s"* Global matches: $hit")
     val result = hit.map(_.execute()).getOrElse(Ok)
+    if(hit.size > 0) logger.info(s"* Global rules result: $result")
 
     if(result != Ok) {
       logger.warn(s"Got pause or error signal: $result")
       return
     }
-    logger.info(s"Global rules result: $result")
 
     val items = config.items
 
-    logger.info(s"Evaluating per-item rules..")
     val irules = (1 to items).map(i => itemRules(ctx, i, files))
 
     // get first rule that matches for each item, then
@@ -136,14 +136,19 @@ object Protocol extends Names {
       }.map(_._2)
     }.sorted
 
-    logger.info(s"Per-item hits: ************")
-    logger.info(s"${hits.map(_.getClass.getSimpleName)}")
-    logger.info(s"***************************")
+    if(hits.size > 0) {
+      logger.info(s"Per-item hits: ************************")
+      logger.info(s"${hits.map(_.toString)}")
+      logger.info(s"***************************************")
 
-    val results = hits.map(_.execute)
-    logger.info(s"Per-item results: *********")
-    logger.info(s"$results")
-    logger.info(s"***************************")
+      val results = hits.map(action => action -> action.execute)
+      logger.info(s"Per-item results: *********************")
+      logger.info(s"$results")
+      logger.info(s"***************************************")
+    }
+    else {
+      logger.info(s"* Per-item matches: None")
+    }
   }
 
   /** Returns the global rules.
@@ -283,6 +288,11 @@ object Protocol extends Names {
    *  123 at item 3 => 312
    *  123 at item 4 => 123
    *
+   *  The permutation is a 1 shift left permutation
+   *
+   *  This 1-shift left is a generator of a cyclic permutation group of
+   *  order 'trustees'
+   *
    */
   def getMixPosition(auth: Int, item: Int, trustees: Int): Int = {
     val permuted = (auth + (item - 1)) % trustees
@@ -294,6 +304,23 @@ object Protocol extends Names {
    *  See above.
    */
   def getMixPositionInverse(auth: Int, item: Int, trustees: Int): Int = {
+    /** for a cyclic group with generator g of order n we have
+     *
+     * g^n = 1
+     *
+     * applying g to some power p we have
+     *
+     * g^p = x
+     *
+     * since
+     *
+     * g^p * g^(n-p) = g^n = 1
+     *
+     * the inverse of x=g^p is g^(n-p)
+     *
+     * n-p is the "gap" below, and (item - 1) is p
+     *
+     */
     val gap = trustees - (item - 1)
 
     val permuted = (auth + gap) % trustees

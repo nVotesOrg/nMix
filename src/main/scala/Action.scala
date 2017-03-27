@@ -137,7 +137,7 @@ case class ValidateConfig(ctx: Context) extends Action {
     }
   }
 
-  override def toString = s"${ctx.config} ${ctx.section.name} ${ctx.position}"
+  override def toString = s"ValidateConfig"
 }
 
 /** Adds this authority's share.
@@ -176,6 +176,8 @@ case class AddShare(ctx: Context, item: Int) extends Action {
 
     Ok
   }
+
+  override def toString = s"AddShare($item)"
 }
 
 /** Add the public key, or signs it if we are not #1 authority.
@@ -293,6 +295,8 @@ case class AddOrSignPublicKey(ctx: Context, item: Int) extends Action {
 
     Ok
   }
+
+  override def toString = s"AddOrSignPublicKey($item)"
 }
 
 /** Adds this authority's mix
@@ -357,6 +361,8 @@ case class AddMix(ctx: Context, item: Int) extends Action {
 
     Ok
   }
+
+  override def toString = s"AddMix($item)"
 }
 
 /** Verify another authority's mix
@@ -460,6 +466,8 @@ case class VerifyMix(ctx: Context, item: Int, auth: Int) extends Action {
     Verifier.verifyShuffle(Util.tupleFromSeq(votes), Util.tupleFromSeq(shuffled), shuffleProof,
       proverId, pk, cSettings)
   }
+
+  override def toString = s"VerifyMix($item, $auth)"
 }
 
 /** Add this authority's partial decryption of the output of the last mix.
@@ -493,6 +501,7 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
 
     // the chain is composed of elements of the from
     // input votes hash -> output votes hash
+    // val chain = (1 to ctx.config.trustees.size).map { auth =>
     val chain = (1 to ctx.config.trustees.size).map { a =>
 
       // PERM
@@ -591,6 +600,8 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
 
     Ok
   }
+
+  override def toString = s"AddDecryption($item)"
 }
 
 /** Add the plaintexts, or signs them if we are not #1 authority.
@@ -765,4 +776,6 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
     val plaintexts = decrypted.par.map(encoder.decode(_).convertToString).seq
     plaintexts
   }
+
+  override def toString = s"AddOrSignPlaintexts($item)"
 }
