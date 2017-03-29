@@ -34,6 +34,9 @@ case class Config(id: String, name: String, bits: Int, items: Int, ballotbox: St
  */
 case class Share(share: EncryptionKeyShareDTO, encryptedPrivateKey: String)
 
+case class OfflineMixData(proof: PermutationProofDTO, encryptedPermutations: String,
+  encryptedRandomizations: String)
+
 /** Ballots provided by the ballotbox in unicrypt format. Encrypted */
 case class Ballots(ballots: Seq[String])
 

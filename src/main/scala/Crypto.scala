@@ -43,6 +43,9 @@ import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 import java.nio.ByteOrder
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import org.nvotes.libmix._
 
 /** Provides various cryptographic operations */
@@ -274,14 +277,16 @@ object Crypto {
 /** Represents a key maker trustee
  *
  *  Methods to create shares and partially decrypt votes.
- *  Mixes in the nMix KeyMaker trait.
+ *  Mixes in the libmix KeyMaker trait.
  */
 object KeyMakerTrustee extends KeyMaker {
 
+  val logger = LoggerFactory.getLogger(KeyMakerTrustee.getClass)
+
   /** Creates a key share
    *
-   *  Returns the key share and proof of knowledge as an nMix EncryptionKeyShareDTO.
-   *  Returns the private key part of the share as a unicrypted converted String
+   *  Returns the key share and proof of knowledge as an libmix EncryptionKeyShareDTO.
+   *  Returns the private key part of the share as a unicrypt converted String
    */
   def createKeyShare(id: String, cSettings: CryptoSettings): (EncryptionKeyShareDTO, String) = {
 
@@ -309,55 +314,65 @@ object KeyMakerTrustee extends KeyMaker {
 /** Represents a shuffling trustee
  *
  *  Methods to mix votes.
- *  Mixes in the nMix Mixer trait.
+ *  Mixes in the libmix Mixer trait.
  */
 object MixerTrustee extends Mixer {
 
+  val logger = LoggerFactory.getLogger(MixerTrustee.getClass)
+
   /** Shuffle the provided votes
    *
-   *  Returns the shuffle and proof of knowledgeas an nMix ShuffleResultDTO
+   *  Returns the shuffle and proof of knowledgeas an libmix ShuffleResultDTO
    */
   def shuffleVotes(votes: Seq[String], publicKey: String, id: String, cSettings: CryptoSettings): ShuffleResultDTO = {
-    println("Mixer shuffle..")
+    logger.info("Mixer shuffle..")
 
-    // not using Util.getPublicKeyFromString since we need the scheme below
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val keyPairGen = elGamal.getKeyPairGenerator()
     val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
 
-    println("Convert votes..")
+    logger.info("Convert votes..")
 
     val vs = votes.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v) ).seq
 
-    println("Mixer creating shuffle..")
+    logger.info("Mixer creating shuffle..")
 
     shuffle(Util.tupleFromSeq(vs), pk, cSettings, id)
   }
 
-  // TODO add support for offline phase
+  /** Performs the offline phase of the shuffle
+   *
+   *  Returns the permutation data and the permutation proof
+   */
+  def preShuffleVotes(votes: Seq[String], publicKey: String,
+    id: String, cSettings: CryptoSettings): (PermutationProofDTO, PreShuffleData) = {
+    logger.info("Mixer offline phase..")
 
-  /* def preShuffleVotes(e: Election[_, VotesStopped]) = {
-    val elGamal = ElGamalEncryptionScheme.getInstance(e.state.cSettings.generator)
+    val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val keyPairGen = elGamal.getKeyPairGenerator()
-    val publicKey = keyPairGen.getPublicKeySpace().getElementFrom(e.state.publicKey)
+    val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
 
-    preShuffle(e.state.votes.size, publicKey, e.state.cSettings, id)
-  } */
+    preShuffle(votes.size, pk, cSettings, id)
+  }
 
-  /* def shuffleVotes(e: Election[_, Mixing[_]], preData: PreShuffleData, pdtoFuture: Future[PermutationProofDTO]) = {
-    println("Mixer..")
-    val elGamal = ElGamalEncryptionScheme.getInstance(e.state.cSettings.generator)
+  /** Performs the online phase of the shuffle
+   *
+   *  Requires data from the online phase
+   *  Returns the shuffle and proof of knowledgeas an libmix ShuffleResultDTO
+   */
+  def shuffleVotes(votesString: Seq[String], preData: PreShuffleData, pdto: PermutationProofDTO,
+    publicKey: String, id: String, cSettings: CryptoSettings): ShuffleResultDTO = {
+
+    logger.info("Mixer online phase..")
+    val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val keyPairGen = elGamal.getKeyPairGenerator()
-    val publicKey = keyPairGen.getPublicKeySpace().getElementFrom(e.state.publicKey)
-    println("Convert votes..")
+    val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
+    logger.info("Convert votes..")
 
-    val votes = e.state match {
-      case s: Mixing[_0] => e.state.votes.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v) ).seq
-      case _ => e.state.mixes.toList.last.votes.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v) ).seq
-    }
+    val votes = votesString.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v) ).seq
 
-    println("Mixer creating shuffle..")
+    logger.info("Mixer creating shuffle..")
 
-    shuffle(Util.tupleFromSeq(votes), publicKey, e.state.cSettings, id, preData, pdtoFuture)
-  }*/
+    shuffle(Util.tupleFromSeq(votes), preData, pdto, pk, cSettings, id)
+  }
 }
