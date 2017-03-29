@@ -78,8 +78,8 @@ object Protocol extends Names {
    */
   def execute(section: BoardSection, trusteeCfg: TrusteeConfig): Unit = {
 
-    logger.info(s"Begin executing protocol for section '${section.name}'")
-    logger.info(s"Syncing...'${section.name}'")
+    logger.info(s"Begin executing protocol for section '${section.name}'...")
+    logger.info(s"Syncing '${section.name}'")
 
     section.sync()
     val files = section.getFileSet
@@ -174,36 +174,19 @@ object Protocol extends Names {
 
     val config = ctx.config
 
-
     val allConfigsYes = Condition(
       (1 to config.trustees.size).map(auth => CONFIG_SIG(auth) -> true)
       .toList
     )
-
     val myShareNo = Condition.no(SHARE(item, ctx.position)).no(SHARE_STMT(item, ctx.position))
       .no(SHARE_SIG(item, ctx.position))
-
-    // shares
-    val rules = ListBuffer[(Cond, Action)](
-      allConfigsYes.and(myShareNo) -> AddShare(ctx, item)
-    )
-
     val allShares = Condition((1 to config.trustees.size).flatMap { auth =>
         List(SHARE(item, auth) -> true, SHARE_STMT(item, auth) -> true, SHARE_SIG(item, auth) -> true)
       }
       .toList
     )
-
-    // add public key
-    if(ctx.position == 1) {
-      val noPublicKey = Condition.no(PUBLIC_KEY(item))
-      rules += allShares.and(noPublicKey) -> AddOrSignPublicKey(ctx, item)
-    }
-
+    val noPublicKey = Condition.no(PUBLIC_KEY(item))
     val noPublicKeySig = Condition.yes(PUBLIC_KEY(item)).no(PUBLIC_KEY_SIG(item, ctx.position))
-    // add public key
-    rules += allShares.and(noPublicKeySig) -> AddOrSignPublicKey(ctx, item)
-
 
     /*val previousMixesYes = Condition((1 to ctx.position - 1).flatMap { auth =>
         List(MIX(item, auth) -> true, MIX_STMT(item, auth) -> true, MIX_SIG(item, auth, auth) -> true)
@@ -218,48 +201,48 @@ object Protocol extends Names {
       }
       .toList
     )
-
     val ballotsYes = Condition.yes(BALLOTS(item)).yes(BALLOTS_STMT(item)).yes(BALLOTS_SIG(item))
-
     val myMixNo = ballotsYes.and(previousMixesYes).andNot(MIX(item, ctx.position))
-    // mix
-    rules += myMixNo -> AddMix(ctx, item)
-
     // verify mixes other than our own
-    val missingSigs = (1 to config.trustees.size).filter(_ != ctx.position).map { auth =>
+    val missingMixSigs = (1 to config.trustees.size).filter(_ != ctx.position).map { auth =>
       (auth, item, Condition(List(MIX(item, auth) -> true, MIX_STMT(item, auth) -> true,
         MIX_SIG(item, auth, auth) -> true, MIX_SIG(item, auth, ctx.position) -> false)))
     }
-
-    missingSigs.foreach { case(auth, item, noMixSig) =>
-      // verifiy mixes
-      rules += noMixSig -> VerifyMix(ctx, item, auth)
-    }
-
     val allMixSigs = Condition((1 to config.trustees.size).map { auth =>
       MIX_SIG(item, auth, ctx.position) -> true
     }.toList)
-
     val noDecryptions = Condition.no(DECRYPTION(item, ctx.position))
       .no(DECRYPTION_STMT(item, ctx.position)).no(DECRYPTION_SIG(item, ctx.position))
-
-    // decryptions
-    rules += allMixSigs.and(noDecryptions) -> AddDecryption(ctx, item)
-
     val allDecryptions = Condition((1 to config.trustees.size).flatMap { auth =>
         List(DECRYPTION(item, auth) -> true, DECRYPTION_STMT(item, auth) -> true,
           DECRYPTION_SIG(item, auth) -> true)
       }
       .toList
     )
+    val noPlaintexts = Condition.no(PLAINTEXTS(item))
+    val noPlaintextsSig = Condition.yes(PLAINTEXTS(item)).no(PLAINTEXTS_SIG(item, ctx.position))
 
+    val rules = ListBuffer[(Cond, Action)]()
+    // add shares
+    rules += allConfigsYes.and(myShareNo) -> AddShare(ctx, item)
+    // add public key
     if(ctx.position == 1) {
-      val noPlaintexts = Condition.no(PLAINTEXTS(item))
-      // plaintexts
+      rules += allShares.and(noPublicKey) -> AddOrSignPublicKey(ctx, item)
+    }
+    // sign public key
+    rules += allShares.and(noPublicKeySig) -> AddOrSignPublicKey(ctx, item)
+    // add mix
+    rules += myMixNo -> AddMix(ctx, item)
+    // verifiy mixes
+    missingMixSigs.foreach { case(auth, item, noMixSig) =>
+      rules += noMixSig -> VerifyMix(ctx, item, auth)
+    }
+    // add decryptions
+    rules += allMixSigs.and(noDecryptions) -> AddDecryption(ctx, item)
+    if(ctx.position == 1) {
+      // add plaintexts
       rules += allDecryptions.and(noPlaintexts) -> AddOrSignPlaintexts(ctx, item)
     }
-
-    val noPlaintextsSig = Condition.yes(PLAINTEXTS(item)).no(PLAINTEXTS_SIG(item, ctx.position))
     // sign plaintexts
     rules += allDecryptions.and(noPlaintextsSig) -> AddOrSignPlaintexts(ctx, item)
 

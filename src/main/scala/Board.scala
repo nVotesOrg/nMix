@@ -585,7 +585,7 @@ case class GitRepo(val repoPath: Path) {
       files.foreach(addCommand.addFilepattern(_))
       addCommand.call()
       var end = System.nanoTime()
-      logger.info("Add time: " + ((end - start) / 1000000000.0) + " s")
+      logger.debug("Add time: " + ((end - start) / 1000000000.0) + " s")
 
 
       val status = git.status().call()
@@ -602,7 +602,7 @@ case class GitRepo(val repoPath: Path) {
         commit.setMessage(message)
         commit.call()
         end = System.nanoTime()
-        logger.info("Commit time: " + ((end - start) / 1000000000.0) + " s")
+        logger.debug("Commit time: " + ((end - start) / 1000000000.0) + " s")
 
         val attempt = () => {
           start = System.nanoTime()
@@ -612,7 +612,7 @@ case class GitRepo(val repoPath: Path) {
           pushCommand.setAtomic(true)
           val results = pushCommand.call()
           end = System.nanoTime()
-          logger.info("Push time: " + ((end - start) / 1000000000.0) + " s")
+          logger.debug("Push time: " + ((end - start) / 1000000000.0) + " s")
 
           val status = getPushStatus(results)
           logger.info(s"push status: $status")
@@ -627,7 +627,7 @@ case class GitRepo(val repoPath: Path) {
               pullCommand.setTransportConfigCallback(GitRepo.sshTransportCallback)
               val result = pullCommand.call()
               end = System.nanoTime()
-              logger.info("Pull (recover) time: " + ((end - start) / 1000000000.0) + " s")
+              logger.debug("Pull (recover) time: " + ((end - start) / 1000000000.0) + " s")
               logger.info(s"pull command, fetch: ${result.getFetchResult.toString}, merge ${result.getMergeResult.toString}")
             }
           }
@@ -672,17 +672,17 @@ case class GitRepo(val repoPath: Path) {
       val result = fetchCommand.call()
 
       var end = System.nanoTime()
-      logger.info("Fetch time: " + ((end - start) / 1000000000.0) + " s")
+      logger.debug("Fetch time: " + ((end - start) / 1000000000.0) + " s")
 
       start = System.nanoTime()
       git.reset().setMode(ResetType.HARD).setRef("origin/master").call()
       end = System.nanoTime()
-      logger.info("Reset time: " + ((end - start) / 1000000000.0) + " s")
+      logger.debug("Reset time: " + ((end - start) / 1000000000.0) + " s")
 
       start = System.nanoTime()
       git.clean().setCleanDirectories(true).call()
       end = System.nanoTime()
-      logger.info("Clean time: " + ((end - start) / 1000000000.0) + " s")
+      logger.debug("Clean time: " + ((end - start) / 1000000000.0) + " s")
     }
     finally {
       repository.close()
