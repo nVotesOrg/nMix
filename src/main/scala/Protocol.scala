@@ -34,8 +34,7 @@ case class Config(id: String, name: String, bits: Int, items: Int, ballotbox: St
  */
 case class Share(share: EncryptionKeyShareDTO, encryptedPrivateKey: String)
 
-case class OfflineMixData(proof: PermutationProofDTO, encryptedPermutations: String,
-  encryptedRandomizations: String)
+case class OfflineMixData(proof: PermutationProofDTO, preShuffleData: PreShuffleData)
 
 /** Ballots provided by the ballotbox in unicrypt format. Encrypted */
 case class Ballots(ballots: Seq[String])
@@ -177,6 +176,8 @@ object Protocol extends Names {
 
     val config = ctx.config
 
+    // construct conditions
+
     val allConfigsYes = Condition(
       (1 to config.trustees.size).map(auth => CONFIG_SIG(auth) -> true)
       .toList
@@ -224,6 +225,8 @@ object Protocol extends Names {
     )
     val noPlaintexts = Condition.no(PLAINTEXTS(item))
     val noPlaintextsSig = Condition.yes(PLAINTEXTS(item)).no(PLAINTEXTS_SIG(item, ctx.position))
+
+    // construct rules
 
     val rules = ListBuffer[(Cond, Action)]()
     // add shares

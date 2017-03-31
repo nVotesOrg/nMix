@@ -281,7 +281,7 @@ object Crypto {
  */
 object KeyMakerTrustee extends KeyMaker {
 
-  val logger = LoggerFactory.getLogger(KeyMakerTrustee.getClass)
+  override val logger = LoggerFactory.getLogger(KeyMakerTrustee.getClass)
 
   /** Creates a key share
    *
@@ -318,7 +318,7 @@ object KeyMakerTrustee extends KeyMaker {
  */
 object MixerTrustee extends Mixer {
 
-  val logger = LoggerFactory.getLogger(MixerTrustee.getClass)
+  override val logger = LoggerFactory.getLogger(MixerTrustee.getClass)
 
   /** Shuffle the provided votes
    *

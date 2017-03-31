@@ -17,7 +17,6 @@ import org.eclipse.jgit.api.TransportConfigCallback
 import org.eclipse.jgit.api.ResetCommand.ResetType
 import org.eclipse.jgit.transport.RemoteRefUpdate
 import org.eclipse.jgit.transport.PushResult
-import org.eclipse.jgit.storage.file.WindowCacheConfig
 
 import java.io.File
 import java.io.InputStream
@@ -28,9 +27,12 @@ import java.nio.file.Files
 import java.net.URI
 import java.util.UUID
 import java.nio.file.StandardCopyOption.ATOMIC_MOVE
+import scala.collection.mutable.WeakHashMap
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+
+import org.nvotes.libmix.PreShuffleData
 
 /** Symbolic constants for protocol files.
  *
@@ -58,6 +60,11 @@ trait Names {
   def BALLOTS(item: Int) = s"bb/$item/ballots.ucb"
   def BALLOTS_STMT(item: Int) = s"bb/$item/ballot.stmt.json"
   def BALLOTS_SIG(item: Int) = s"bb/$item/ballot.sig"
+
+  // since we are using a local memory storage, this entry will
+  // be used as a map key name, not a file name
+  // the entry in the map will be a libmix PreShuffleData object
+  def PERM_DATA(item: Int, auth: Int) = s"$auth/$item/perm_data"
 
   def MIX(item: Int, auth: Int) = s"$auth/$item/mix.ucs"
   def MIX_STMT(item: Int, auth: Int) = s"$auth/$item/mix.stmt.json"
@@ -188,11 +195,21 @@ class Board (val dataStorePath: Path) {
 case class BoardSection (val gitRepo: GitRepo) extends Names {
   val logger = LoggerFactory.getLogger(classOf[BoardSection])
 
+  val preShuffleData = WeakHashMap[String, PreShuffleData]()
+
   /** Returns the name of the BoardSection, which is its target Path */
   def name: String = gitRepo.repoPath.getName(gitRepo.repoPath.getNameCount - 1).toString
 
-  /** Returns the set of all files in the section's repository */
-  def getFileSet: Set[String] = gitRepo.getFileSet()
+  /** Returns the set of all entries in this section
+   *
+   *  The preShuffleData memory storage area is included
+   *  to allow transparent access to its data as if it were
+   *  a regular file in the repository
+   */
+  def getFileSet: Set[String] = synchronized {
+    logger.info(s"Permutation data cache size is ${preShuffleData.size}")
+    gitRepo.getFileSet() ++ preShuffleData.keySet
+  }
 
   /** Returns the configuration if it exists as an Option[String] */
   def getConfig: Option[String] = getFileStream(CONFIG).map(IO.asString(_))
@@ -299,6 +316,16 @@ case class BoardSection (val gitRepo: GitRepo) extends Names {
     gitRepo.addToWorkingCopy(stmt, BALLOTS_STMT(item))
     gitRepo.addToWorkingCopy(sig, BALLOTS_SIG(item))
     gitRepo.send("added ballots", BALLOTS(item), BALLOTS_STMT(item), BALLOTS_SIG(item))
+  }
+
+  /** Returns private permutation data if it exists */
+  def getPreShuffleData(item: Int, auth: Int): Option[PreShuffleData] = synchronized {
+    preShuffleData.get(PERM_DATA(item, auth))
+  }
+
+  /** Adds private permutation data */
+  def addPreShuffleData(data: PreShuffleData, item: Int, auth: Int) = synchronized {
+    preShuffleData += PERM_DATA(item, auth) -> data
   }
 
   /** Returns a mix if it exists */
