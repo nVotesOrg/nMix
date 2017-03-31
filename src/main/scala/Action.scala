@@ -299,6 +299,43 @@ case class AddOrSignPublicKey(ctx: Context, item: Int) extends Action {
   override def toString = s"AddOrSignPublicKey($item)"
 }
 
+/** Adds this authority's preshuffle data
+ *
+ *  To calculate permutation only the number of votes cast
+ *  is required, so these actions can occur in parallel
+ *  as soon as the ballots have been posted.
+ *
+ *  In the current implementation, this data is stored in
+ *  memory at the board, so we do not need to encrypt
+ *  the permutation data. If sending to the repository
+ *  it _must_ be encrypted.
+ */
+case class AddPreShuffleData(ctx: Context, item: Int) extends Action {
+  val priority = 3
+
+  def execute(): Result = {
+    val configHash = getValidConfigHash(ctx)
+    if(configHash.length == 0) {
+      logger.error(s"invalid config")
+      return Error(s"AddPreShuffleData: invalid config")
+    }
+    logger.info("starting..")
+
+    val ballots = decode[Ballots](ctx.section.getBallots(item).get).right.get
+    val publicKey = ctx.section.getPublicKey(item).get
+    val modulusStr = ctx.trusteeCfg.publicKey.getModulus.toString
+
+    val (proof, data) = MixerTrustee.preShuffleVotes(ballots.ballots.length, publicKey, modulusStr, ctx.cSettings)
+
+    ctx.section.addPreShuffleDataLocal(PreShuffleData(proof, data), item, ctx.position)
+
+    Ok
+  }
+
+  override def toString = s"AddPreShuffleData($item)"
+}
+
+
 /** Adds this authority's mix
  *
  *  If this authority is #1, it will mix the votes provided by the
@@ -310,6 +347,7 @@ case class AddOrSignPublicKey(ctx: Context, item: Int) extends Action {
  */
 case class AddMix(ctx: Context, item: Int) extends Action {
   val priority = 3
+  val myMixPosition = Protocol.getMixPosition(ctx.position, item, ctx.config.trustees.size)
 
   def execute(): Result = {
     val configHash = getValidConfigHash(ctx)
@@ -318,19 +356,6 @@ case class AddMix(ctx: Context, item: Int) extends Action {
       return Error(s"AddMix: invalid config")
     }
 
-
-    /* val (previousBallots, previousStr) = if(ctx.position == 1) {
-      val ballots = ctx.section.getBallots(item).get
-      val bs = decode[Ballots](ballots).right.get
-      (bs.ballots, ballots)
-    }
-    else {
-      val mix = ctx.section.getMix(item, ctx.position - 1).get
-      val m = decode[ShuffleResultDTO](mix).right.get
-      (m.votes, mix)
-    }*/
-    // PERM
-    val myMixPosition = Protocol.getMixPosition(ctx.position, item, ctx.config.trustees.size)
     val previousMixAuth = Protocol.getMixPositionInverse(myMixPosition - 1, item, ctx.config.trustees.size)
     val (previousBallots, previousStr) = if(myMixPosition == 1) {
       val ballots = ctx.section.getBallots(item).get
@@ -346,7 +371,11 @@ case class AddMix(ctx: Context, item: Int) extends Action {
     val publicKey = ctx.section.getPublicKey(item).get
     val modulusStr = ctx.trusteeCfg.publicKey.getModulus.toString
 
-    val newMix = MixerTrustee.shuffleVotes(previousBallots, publicKey, modulusStr, ctx.cSettings)
+    val preShuffleData = ctx.section.getPreShuffleDataLocal(item, ctx.position).get
+
+    // val newMix = MixerTrustee.shuffleVotes(previousBallots, publicKey, modulusStr, ctx.cSettings)
+    logger.info("performing online phase with pre-shuffle data")
+    val newMix = MixerTrustee.shuffleVotes(previousBallots, preShuffleData, publicKey, modulusStr, ctx.cSettings)
     val mixHash = Crypto.sha512(newMix.asJson.noSpaces)
     val parentHash = Crypto.sha512(previousStr)
 
@@ -362,7 +391,7 @@ case class AddMix(ctx: Context, item: Int) extends Action {
     Ok
   }
 
-  override def toString = s"AddMix($item)"
+  override def toString = s"AddMix($item, $myMixPosition)"
 }
 
 /** Verify another authority's mix
@@ -391,17 +420,6 @@ case class VerifyMix(ctx: Context, item: Int, auth: Int) extends Action {
     val mixStmt = ctx.section.getMixStatement(item, auth).get
     val mixSig = ctx.section.getMixSignature(item, auth, auth).get
 
-    /* val (parentBallots, parentStr) = if(auth == 1) {
-      val ballots = ctx.section.getBallots(item).get
-      val bs = decode[Ballots](ballots).right.get
-      (bs.ballots, ballots)
-    }
-    else {
-      val mix = ctx.section.getMix(item, auth - 1).get
-      val m = decode[ShuffleResultDTO](mix).right.get
-      (m.votes, mix)
-    } */
-    // PERM
     val mixPosition = Protocol.getMixPosition(auth, item, ctx.config.trustees.size)
     val previousMixAuth = Protocol.getMixPositionInverse(mixPosition - 1, item, ctx.config.trustees.size)
     val (parentBallots, parentStr) = if(mixPosition == 1) {

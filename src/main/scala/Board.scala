@@ -32,8 +32,6 @@ import scala.collection.mutable.WeakHashMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import org.nvotes.libmix.PreShuffleData
-
 /** Symbolic constants for protocol files.
  *
  *  Some of these are parameterized by authority and item, and are
@@ -207,7 +205,7 @@ case class BoardSection (val gitRepo: GitRepo) extends Names {
    *  a regular file in the repository
    */
   def getFileSet: Set[String] = synchronized {
-    logger.info(s"Permutation data cache size is ${preShuffleData.size}")
+    logger.info(s"Permutation data cache size: ${preShuffleData.size}")
     gitRepo.getFileSet() ++ preShuffleData.keySet
   }
 
@@ -319,12 +317,12 @@ case class BoardSection (val gitRepo: GitRepo) extends Names {
   }
 
   /** Returns private permutation data if it exists */
-  def getPreShuffleData(item: Int, auth: Int): Option[PreShuffleData] = synchronized {
+  def getPreShuffleDataLocal(item: Int, auth: Int): Option[PreShuffleData] = synchronized {
     preShuffleData.get(PERM_DATA(item, auth))
   }
 
   /** Adds private permutation data */
-  def addPreShuffleData(data: PreShuffleData, item: Int, auth: Int) = synchronized {
+  def addPreShuffleDataLocal(data: PreShuffleData, item: Int, auth: Int) = synchronized {
     preShuffleData += PERM_DATA(item, auth) -> data
   }
 
@@ -621,7 +619,7 @@ case class GitRepo(val repoPath: Path) {
 
       if( (added.size > 0) || (changed.size > 0) ) {
 
-        logger.info(s"committing ${added.size} additions and ${changed.size} modifications")
+        logger.info(s"Committing ${added.size} additions and ${changed.size} modifications")
 
         start = System.nanoTime()
         val commit = git.commit()
@@ -646,9 +644,9 @@ case class GitRepo(val repoPath: Path) {
 
           // http://download.eclipse.org/jgit/site/4.6.1.201703071140-r/apidocs/index.html
           if(status != RemoteRefUpdate.Status.OK) {
-            logger.warn(s"push status was not OK: $status")
+            logger.warn(s"Push status was not OK: $status")
             if(status == RemoteRefUpdate.Status.REJECTED_NONFASTFORWARD) {
-              logger.warn(s"attempting to recover non fast forward")
+              logger.warn(s"Attempting to recover non fast forward")
               start = System.nanoTime()
               val pullCommand = git.pull()
               pullCommand.setTransportConfigCallback(GitRepo.sshTransportCallback)

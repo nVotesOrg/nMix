@@ -20,7 +20,7 @@ sealed trait Cond {
   def eval(files: Set[String]): Boolean
 
   /** Returns the logical conjunction of this Condition and the one provided */
-  def and(other: Condition) = {
+  def and(other: Cond) = {
     JointCondition(this, other)
   }
   /** Returns true if this condition is true and the provided file exists */

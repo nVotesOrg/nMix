@@ -344,15 +344,16 @@ object MixerTrustee extends Mixer {
    *
    *  Returns the permutation data and the permutation proof
    */
-  def preShuffleVotes(votes: Seq[String], publicKey: String,
-    id: String, cSettings: CryptoSettings): (PermutationProofDTO, PreShuffleData) = {
+  def preShuffleVotes(voteCount: Int, publicKey: String, id: String,
+    cSettings: CryptoSettings): (PermutationProofDTO, PermutationData) = {
+
     logger.info("Mixer offline phase..")
 
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val keyPairGen = elGamal.getKeyPairGenerator()
     val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
 
-    preShuffle(votes.size, pk, cSettings, id)
+    preShuffle(voteCount, pk, cSettings, id)
   }
 
   /** Performs the online phase of the shuffle
@@ -360,7 +361,7 @@ object MixerTrustee extends Mixer {
    *  Requires data from the online phase
    *  Returns the shuffle and proof of knowledgeas an libmix ShuffleResultDTO
    */
-  def shuffleVotes(votesString: Seq[String], preData: PreShuffleData, pdto: PermutationProofDTO,
+  def shuffleVotes(votesString: Seq[String], preData: PreShuffleData,
     publicKey: String, id: String, cSettings: CryptoSettings): ShuffleResultDTO = {
 
     logger.info("Mixer online phase..")
@@ -373,6 +374,6 @@ object MixerTrustee extends Mixer {
 
     logger.info("Mixer creating shuffle..")
 
-    shuffle(Util.tupleFromSeq(votes), preData, pdto, pk, cSettings, id)
+    shuffle(Util.tupleFromSeq(votes), preData.pData, preData.proof, pk, cSettings, id)
   }
 }

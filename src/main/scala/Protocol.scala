@@ -34,7 +34,7 @@ case class Config(id: String, name: String, bits: Int, items: Int, ballotbox: St
  */
 case class Share(share: EncryptionKeyShareDTO, encryptedPrivateKey: String)
 
-case class OfflineMixData(proof: PermutationProofDTO, preShuffleData: PreShuffleData)
+case class PreShuffleData(proof: PermutationProofDTO, pData: PermutationData)
 
 /** Ballots provided by the ballotbox in unicrypt format. Encrypted */
 case class Ballots(ballots: Seq[String])
@@ -192,12 +192,6 @@ object Protocol extends Names {
     val noPublicKey = Condition.no(PUBLIC_KEY(item))
     val noPublicKeySig = Condition.yes(PUBLIC_KEY(item)).no(PUBLIC_KEY_SIG(item, ctx.position))
 
-    /*val previousMixesYes = Condition((1 to ctx.position - 1).flatMap { auth =>
-        List(MIX(item, auth) -> true, MIX_STMT(item, auth) -> true, MIX_SIG(item, auth, auth) -> true)
-      }
-      .toList
-    )*/
-    // PERM
     val myMixPosition = getMixPosition(ctx.position, item, ctx.config.trustees.size)
     val previousMixesYes = Condition((1 to myMixPosition - 1).flatMap { auth =>
         val mixAuth = getMixPositionInverse(auth, item, ctx.config.trustees.size)
@@ -206,7 +200,11 @@ object Protocol extends Names {
       .toList
     )
     val ballotsYes = Condition.yes(BALLOTS(item)).yes(BALLOTS_STMT(item)).yes(BALLOTS_SIG(item))
+
     val myMixNo = ballotsYes.and(previousMixesYes).andNot(MIX(item, ctx.position))
+    val myPreShuffleNo = ballotsYes.andNot(MIX(item, ctx.position)).andNot(PERM_DATA(item, ctx.position))
+    val myPreShuffleYes = Condition.yes(PERM_DATA(item, ctx.position))
+
     // verify mixes other than our own
     val missingMixSigs = (1 to config.trustees.size).filter(_ != ctx.position).map { auth =>
       (auth, item, Condition(List(MIX(item, auth) -> true, MIX_STMT(item, auth) -> true,
@@ -237,8 +235,10 @@ object Protocol extends Names {
     }
     // sign public key
     rules += allShares.and(noPublicKeySig) -> AddOrSignPublicKey(ctx, item)
-    // add mix
-    rules += myMixNo -> AddMix(ctx, item)
+    // add pre shuffle data
+    rules += myPreShuffleNo -> AddPreShuffleData(ctx, item)
+    // add mix (to turn off offline+online mode, remove the preshuffleyes condition below)
+    rules += myPreShuffleYes.and(myMixNo) -> AddMix(ctx, item)
     // verifiy mixes
     missingMixSigs.foreach { case(auth, item, noMixSig) =>
       rules += noMixSig -> VerifyMix(ctx, item, auth)
