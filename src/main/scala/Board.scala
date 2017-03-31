@@ -205,7 +205,7 @@ case class BoardSection (val gitRepo: GitRepo) extends Names {
    *  a regular file in the repository
    */
   def getFileSet: Set[String] = synchronized {
-    logger.info(s"Permutation data cache size: ${preShuffleData.size}")
+    logger.info(s"Permutation data map size: ${preShuffleData.size}")
     gitRepo.getFileSet() ++ preShuffleData.keySet
   }
 
