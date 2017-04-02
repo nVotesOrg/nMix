@@ -32,7 +32,7 @@ sealed trait Action extends Ordered[Action] {
    */
   def getValidConfigHash(ctx: Context): String = {
 
-    logger.info("verifying config statement and signature")
+    logger.info("Verifying config statement and signature")
 
     val expected = Statement.getConfigStatement(ctx.config)
     val expectedString = expected.asJson.noSpaces
@@ -99,6 +99,7 @@ case class ValidateConfig(ctx: Context) extends Action {
 
   def execute(): Result = {
 
+    logger.info(s"Starting $this...")
     val config = ctx.config
 
     val expected = Statement.getConfigStatement(config)
@@ -155,6 +156,7 @@ case class AddShare(ctx: Context, item: Int) extends Action {
       logger.error(s"invalid config")
       return Error(s"AddShare: invalid config")
     }
+    logger.info(s"Starting $this...")
 
     // the modulus of public keys is unique, can use it as proverId
     // http://crypto.stackexchange.com/questions/8857/uniqueness-of-the-rsa-public-modulus
@@ -206,8 +208,9 @@ case class AddOrSignPublicKey(ctx: Context, item: Int) extends Action {
     val configHash = getValidConfigHash(ctx)
     if(configHash.length == 0) {
       logger.error(s"invalid config")
-      return Error(s"AddShare: invalid config")
+      return Error(s"AddOrSignPublicKey: invalid config")
     }
+    logger.info(s"Starting $this...")
 
     val collectedShares = new ListBuffer[Share]()
 
@@ -319,7 +322,7 @@ case class AddPreShuffleData(ctx: Context, item: Int) extends Action {
       logger.error(s"invalid config")
       return Error(s"AddPreShuffleData: invalid config")
     }
-    logger.info("starting..")
+    logger.info(s"Starting $this...")
 
     val ballots = decode[Ballots](ctx.section.getBallots(item).get).right.get
     val publicKey = ctx.section.getPublicKey(item).get
@@ -355,6 +358,7 @@ case class AddMix(ctx: Context, item: Int) extends Action {
       logger.error(s"invalid config")
       return Error(s"AddMix: invalid config")
     }
+    logger.info(s"Starting $this...")
 
     val previousMixAuth = Protocol.getMixPositionInverse(myMixPosition - 1, item, ctx.config.trustees.size)
     val (previousBallots, previousStr) = if(myMixPosition == 1) {
@@ -371,11 +375,11 @@ case class AddMix(ctx: Context, item: Int) extends Action {
     val publicKey = ctx.section.getPublicKey(item).get
     val modulusStr = ctx.trusteeCfg.publicKey.getModulus.toString
 
-    val preShuffleData = ctx.section.getPreShuffleDataLocal(item, ctx.position).get
+    val newMix = MixerTrustee.shuffleVotes(previousBallots, publicKey, modulusStr, ctx.cSettings)
+    // logger.info("Performing online phase with pre-shuffle data")
+    // val preShuffleData = ctx.section.getPreShuffleDataLocal(item, ctx.position).get
+    // val newMix = MixerTrustee.shuffleVotes(previousBallots, preShuffleData, publicKey, modulusStr, ctx.cSettings)
 
-    // val newMix = MixerTrustee.shuffleVotes(previousBallots, publicKey, modulusStr, ctx.cSettings)
-    logger.info("performing online phase with pre-shuffle data")
-    val newMix = MixerTrustee.shuffleVotes(previousBallots, preShuffleData, publicKey, modulusStr, ctx.cSettings)
     val mixHash = Crypto.sha512(newMix.asJson.noSpaces)
     val parentHash = Crypto.sha512(previousStr)
 
@@ -387,6 +391,7 @@ case class AddMix(ctx: Context, item: Int) extends Action {
     val file3 = IO.writeTemp(signature)
 
     ctx.section.addMix(file1, file2, file3, item, ctx.position)
+    ctx.section.rmPreShuffleDataLocal(item, ctx.position)
 
     Ok
   }
@@ -415,6 +420,7 @@ case class VerifyMix(ctx: Context, item: Int, auth: Int) extends Action {
       logger.error(s"invalid config")
       return Error(s"VerifyMix: invalid config")
     }
+    logger.info(s"Starting $this...")
 
     val mix = ctx.section.getMix(item, auth).map(decode[ShuffleResultDTO](_).right.get).get
     val mixStmt = ctx.section.getMixStatement(item, auth).get
@@ -516,6 +522,7 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
       logger.error(s"invalid config")
       return Error(s"AddDecryption: invalid config")
     }
+    logger.info(s"Starting $this...")
 
     // the chain is composed of elements of the from
     // input votes hash -> output votes hash
@@ -648,6 +655,7 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
       logger.error(s"invalid config")
       return Error(s"AddOrSignPlaintexts: invalid config")
     }
+    logger.info(s"Starting $this...")
 
     // get mixVotes
     // val mixStr = ctx.section.getMix(item, ctx.config.trustees.size).get

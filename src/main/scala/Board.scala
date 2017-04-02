@@ -27,7 +27,7 @@ import java.nio.file.Files
 import java.net.URI
 import java.util.UUID
 import java.nio.file.StandardCopyOption.ATOMIC_MOVE
-import scala.collection.mutable.WeakHashMap
+import scala.collection.mutable.Map
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -193,7 +193,7 @@ class Board (val dataStorePath: Path) {
 case class BoardSection (val gitRepo: GitRepo) extends Names {
   val logger = LoggerFactory.getLogger(classOf[BoardSection])
 
-  val preShuffleData = WeakHashMap[String, PreShuffleData]()
+  val preShuffleData = Map[String, PreShuffleData]()
 
   /** Returns the name of the BoardSection, which is its target Path */
   def name: String = gitRepo.repoPath.getName(gitRepo.repoPath.getNameCount - 1).toString
@@ -324,6 +324,11 @@ case class BoardSection (val gitRepo: GitRepo) extends Names {
   /** Adds private permutation data */
   def addPreShuffleDataLocal(data: PreShuffleData, item: Int, auth: Int) = synchronized {
     preShuffleData += PERM_DATA(item, auth) -> data
+  }
+
+  /** Remove private permutation data */
+  def rmPreShuffleDataLocal(item: Int, auth: Int) = synchronized {
+    preShuffleData -= PERM_DATA(item, auth)
   }
 
   /** Returns a mix if it exists */

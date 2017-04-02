@@ -135,6 +135,8 @@ object Protocol extends Names {
     if(hits.size > 0) {
       logger.info(s"* Per-item hits: ${hits.map(_.toString)}")
 
+      // parallel execution
+      // val results = hits.par.map(action => action -> action.execute)
       val results = hits.map(action => action -> action.execute)
       logger.info(s"Per-item results: $results")
     }
@@ -201,9 +203,9 @@ object Protocol extends Names {
     )
     val ballotsYes = Condition.yes(BALLOTS(item)).yes(BALLOTS_STMT(item)).yes(BALLOTS_SIG(item))
 
-    val myMixNo = ballotsYes.and(previousMixesYes).andNot(MIX(item, ctx.position))
     val myPreShuffleNo = ballotsYes.andNot(MIX(item, ctx.position)).andNot(PERM_DATA(item, ctx.position))
     val myPreShuffleYes = Condition.yes(PERM_DATA(item, ctx.position))
+    val myMixNo = ballotsYes.and(previousMixesYes).andNot(MIX(item, ctx.position))
 
     // verify mixes other than our own
     val missingMixSigs = (1 to config.trustees.size).filter(_ != ctx.position).map { auth =>
@@ -235,10 +237,14 @@ object Protocol extends Names {
     }
     // sign public key
     rules += allShares.and(noPublicKeySig) -> AddOrSignPublicKey(ctx, item)
+
     // add pre shuffle data
-    rules += myPreShuffleNo -> AddPreShuffleData(ctx, item)
-    // add mix (to turn off offline+online mode, remove the preshuffleyes condition below)
-    rules += myPreShuffleYes.and(myMixNo) -> AddMix(ctx, item)
+    // rules += myPreShuffleNo -> AddPreShuffleData(ctx, item)
+    // add mix (online phase)
+    // rules += myPreShuffleYes.and(myMixNo) -> AddMix(ctx, item)
+    // add mix (offline + online phases)
+    rules += myMixNo -> AddMix(ctx, item)
+
     // verifiy mixes
     missingMixSigs.foreach { case(auth, item, noMixSig) =>
       rules += noMixSig -> VerifyMix(ctx, item, auth)
@@ -254,7 +260,6 @@ object Protocol extends Names {
 
     rules
   }
-
 
   /** Returns the position of the trustee for the given config.
    *
