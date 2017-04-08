@@ -136,8 +136,7 @@ case class ValidateConfig(ctx: Context) extends Action {
       Ok
     }
     else {
-      // FIXME LOG
-      println(s"statements do not match, $expected")
+      logger.error(s"statements do not match, $expected")
       return Error(s"statements do not match, $expected")
     }
   }
@@ -528,9 +527,8 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
     }
     logger.info(s"Starting $this...")
 
-    // the chain is composed of elements of the from
-    // input votes hash -> output votes hash
-    // val chain = (1 to ctx.config.trustees.size).map { auth =>
+    /** the chain is composed of elements of the from
+      input votes hash -> output votes hash */
     val chain = (1 to ctx.config.trustees.size).map { a =>
 
       // PERM
@@ -691,9 +689,7 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
         val ok = expected.verify(decryptionSig, authPk)
         if(ok && (mixHash == expected.mixHash)) {
           logger.info(s"item $item processing decryption $auth, signature OK")
-          // logger.info("verifying decryption " + Crypto.sha512(decryption.asJson.noSpaces) + " with mod " + modulusStr + " votes " + Crypto.sha512(mix.votes.asJson.noSpaces))
 
-          // FIXME should skip verifying pok on our own decryption
           if(auth != ctx.position) {
             val share = ctx.section.getShare(item, auth).map(decode[Share](_).right.get).get
             val pokOk = verifyDecryption(decryption, mix.votes, ctx.cSettings, modulusStr, share.share.keyShare)
@@ -710,7 +706,7 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
             logger.info(s"item $item do not need to verify own decryption $auth pok")
             logger.info(s"*** pk equality ${authPk == ctx.trusteeCfg.publicKey}")
 
-            // collectedDecryptions += decryption
+            collectedDecryptions += decryption
           }
         }
       } else {
