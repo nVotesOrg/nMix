@@ -487,23 +487,6 @@ case class GitRepo(val repoPath: Path) {
     throw new IllegalArgumentException(s"repoPath '$repoPath' is not a directory")
   }
 
-  /* val cfg = new WindowCacheConfig()
-
-  println("WindowCacheConfig *********************")
-  println(cfg.isPackedGitMMAP())
-  println(cfg.getDeltaBaseCacheLimit())
-  println(cfg.getPackedGitLimit())
-  println(cfg.getPackedGitOpenFiles())
-  println(cfg.getPackedGitWindowSize())
-  println(cfg.getStreamFileThreshold())
-  println("***************************************")
-  cfg.setPackedGitMMAP(true)
-  // 10mb
-  cfg.setPackedGitWindowSize(10485760)
-  // 300mb
-  cfg.setPackedGitLimit(304857600)
-  cfg.install()*/
-
   /** Returns the file input stream for matching file, if it exists
    *
    *  The caller is responsible for
@@ -587,6 +570,7 @@ case class GitRepo(val repoPath: Path) {
       // create necessary directories if they are not present
       Files.createDirectories(targetFile.getParent)
 
+      // FIXME use atomic move when not on vm
       // copy the file
       // Files.copy(sourceFile, targetFile)
       // Files.move(sourceFile, targetFile, ATOMIC_MOVE)
