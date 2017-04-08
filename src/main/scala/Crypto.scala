@@ -168,7 +168,6 @@ object Crypto {
 
     val bytes = encryptedMessage.convertToByteArray.getBytes
     Base64.getEncoder().encodeToString(bytes)
-    // content
   }
 
   /** Returns the AES decryption of the given base64 encoded String as a String */
@@ -181,7 +180,6 @@ object Crypto {
     val unpaddedMessage = pkcs.unpad(decryptedMessage)
 
     new String(unpaddedMessage.convertToByteArray.getBytes, StandardCharsets.UTF_8)
-    // content
   }
 
   /** Return the AES key in the given file as a unicrypt object */
