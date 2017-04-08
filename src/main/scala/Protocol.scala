@@ -34,6 +34,17 @@ case class Config(id: String, name: String, bits: Int, items: Int, ballotbox: St
  */
 case class Share(share: EncryptionKeyShareDTO, encryptedPrivateKey: String)
 
+/** Permutation data resulting from offline phase of mixing
+ *
+ *  In the current implementation this data is only stored locally
+ *  in memory. For this reason
+ *
+ *  1. The data does not need to be encrypted.
+ *  2. The data does not need to be serialized.
+ *
+ *  Changing the implementation to store this remotely _must_
+ *  include encryption of permutation data.
+ */
 case class PreShuffleData(proof: PermutationProofDTO, pData: PermutationData)
 
 /** Ballots provided by the ballotbox in unicrypt format. Encrypted */
@@ -110,7 +121,7 @@ object Protocol extends Names {
     val ctx = Context(config, section, trusteeCfg, position, cSettings)
 
     val rules = globalRules(ctx)
-    // first rule that matches is executed
+    /** first rule that matches is executed */
     val hit = rules.find{ case (c, a) => c.eval(files)}
       .map(_._2)
 
@@ -125,8 +136,9 @@ object Protocol extends Names {
 
     val items = config.items
     val irules = (1 to items).map(i => itemRules(ctx, i, files))
-    // get first rule that matches for each item, then
-    // collect Action's into list and sort them by priority
+
+    /** get first rule that matches for each item, then
+      collect Action's into list and sort them by priority */
     val hits = irules.flatMap { rules =>
       rules.find{ case (c, a) => c.eval(files)}
       .map(_._2)
@@ -138,6 +150,7 @@ object Protocol extends Names {
       // parallel execution
       // val results = hits.par.map(action => action -> action.execute)
       val results = hits.map(action => action -> action.execute)
+      // FIXME post errors
       logger.info(s"Per-item results: $results")
     }
     else {
@@ -178,12 +191,13 @@ object Protocol extends Names {
 
     val config = ctx.config
 
-    // construct conditions
+    /** construct conditions */
 
     val allConfigsYes = Condition(
       (1 to config.trustees.size).map(auth => CONFIG_SIG(auth) -> true)
       .toList
     )
+
     val myShareNo = Condition.no(SHARE(item, ctx.position)).no(SHARE_STMT(item, ctx.position))
       .no(SHARE_SIG(item, ctx.position))
     val allShares = Condition((1 to config.trustees.size).flatMap { auth =>
@@ -191,6 +205,7 @@ object Protocol extends Names {
       }
       .toList
     )
+
     val noPublicKey = Condition.no(PUBLIC_KEY(item))
     val noPublicKeySig = Condition.yes(PUBLIC_KEY(item)).no(PUBLIC_KEY_SIG(item, ctx.position))
 
@@ -201,13 +216,15 @@ object Protocol extends Names {
       }
       .toList
     )
+
     val ballotsYes = Condition.yes(BALLOTS(item)).yes(BALLOTS_STMT(item)).yes(BALLOTS_SIG(item))
 
     val myPreShuffleNo = ballotsYes.andNot(MIX(item, ctx.position)).andNot(PERM_DATA(item, ctx.position))
     val myPreShuffleYes = Condition.yes(PERM_DATA(item, ctx.position))
+
     val myMixNo = ballotsYes.and(previousMixesYes).andNot(MIX(item, ctx.position))
 
-    // verify mixes other than our own
+    /** verify mixes other than our own */
     val missingMixSigs = (1 to config.trustees.size).filter(_ != ctx.position).map { auth =>
       (auth, item, Condition(List(MIX(item, auth) -> true, MIX_STMT(item, auth) -> true,
         MIX_SIG(item, auth, auth) -> true, MIX_SIG(item, auth, ctx.position) -> false)))
@@ -215,6 +232,7 @@ object Protocol extends Names {
     val allMixSigs = Condition((1 to config.trustees.size).map { auth =>
       MIX_SIG(item, auth, ctx.position) -> true
     }.toList)
+
     val noDecryptions = Condition.no(DECRYPTION(item, ctx.position))
       .no(DECRYPTION_STMT(item, ctx.position)).no(DECRYPTION_SIG(item, ctx.position))
     val allDecryptions = Condition((1 to config.trustees.size).flatMap { auth =>
@@ -223,19 +241,20 @@ object Protocol extends Names {
       }
       .toList
     )
+
     val noPlaintexts = Condition.no(PLAINTEXTS(item))
     val noPlaintextsSig = Condition.yes(PLAINTEXTS(item)).no(PLAINTEXTS_SIG(item, ctx.position))
 
-    // construct rules
+    /** construct rules */
 
     val rules = ListBuffer[(Cond, Action)]()
-    // add shares
+
     rules += allConfigsYes.and(myShareNo) -> AddShare(ctx, item)
-    // add public key
+
     if(ctx.position == 1) {
       rules += allShares.and(noPublicKey) -> AddOrSignPublicKey(ctx, item)
     }
-    // sign public key
+
     rules += allShares.and(noPublicKeySig) -> AddOrSignPublicKey(ctx, item)
 
     // add pre shuffle data
@@ -245,17 +264,16 @@ object Protocol extends Names {
     // add mix (offline + online phases)
     rules += myMixNo -> AddMix(ctx, item)
 
-    // verifiy mixes
     missingMixSigs.foreach { case(auth, item, noMixSig) =>
       rules += noMixSig -> VerifyMix(ctx, item, auth)
     }
-    // add decryptions
+
     rules += allMixSigs.and(noDecryptions) -> AddDecryption(ctx, item)
     if(ctx.position == 1) {
-      // add plaintexts
+
       rules += allDecryptions.and(noPlaintexts) -> AddOrSignPlaintexts(ctx, item)
     }
-    // sign plaintexts
+
     rules += allDecryptions.and(noPlaintextsSig) -> AddOrSignPlaintexts(ctx, item)
 
     rules

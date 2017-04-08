@@ -67,6 +67,10 @@ sealed trait Action extends Ordered[Action] {
    */
   val priority: Int
 
+  /** Implements the Ordered interface
+   *
+   *  Lower values have higher priority
+   */
   def compare (that: Action) = {
     priority.compare(that.priority)
   }
@@ -690,15 +694,23 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
           // logger.info("verifying decryption " + Crypto.sha512(decryption.asJson.noSpaces) + " with mod " + modulusStr + " votes " + Crypto.sha512(mix.votes.asJson.noSpaces))
 
           // FIXME should skip verifying pok on our own decryption
-          val share = ctx.section.getShare(item, auth).map(decode[Share](_).right.get).get
-          val pokOk = verifyDecryption(decryption, mix.votes, ctx.cSettings, modulusStr, share.share.keyShare)
-          logger.info(s"item $item processing decryption $auth, pok $pokOk")
-          if(pokOk) {
-            collectedDecryptions += decryption
+          if(auth != ctx.position) {
+            val share = ctx.section.getShare(item, auth).map(decode[Share](_).right.get).get
+            val pokOk = verifyDecryption(decryption, mix.votes, ctx.cSettings, modulusStr, share.share.keyShare)
+            logger.info(s"item $item processing decryption $auth, pok $pokOk")
+            if(pokOk) {
+              collectedDecryptions += decryption
+            }
+            else {
+              // the error will be caused below
+              logger.warn(s"item $item processing decryption $auth, pok NOT ok")
+            }
           }
           else {
-            // the error will be caused below
-            logger.warn(s"item $item processing decryption $auth, pok NOT ok")
+            logger.info(s"item $item do not need to verify own decryption $auth pok")
+            logger.info(s"*** pk equality ${authPk == ctx.trusteeCfg.publicKey}")
+
+            // collectedDecryptions += decryption
           }
         }
       } else {

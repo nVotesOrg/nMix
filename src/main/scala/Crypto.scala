@@ -292,7 +292,7 @@ object KeyMakerTrustee extends KeyMaker {
 
     val (encryptionKeyShareDTO, privateKey) = createShare(id, cSettings)
 
-    (encryptionKeyShareDTO, privateKey)
+    (encryptionKeyShareDTO, privateKey.convertToString)
   }
 
   /** Partially decrypt a ciphertext with the private part of a share

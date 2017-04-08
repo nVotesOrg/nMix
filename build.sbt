@@ -32,4 +32,6 @@ cancelable in Global := true
 fork in run := false
 fork in Test := false
 
-scalacOptions += "-opt:l:classpath"
+scalacOptions ++= Seq("-feature", "-language:existentials", "-deprecation", "-opt:l:classpath")
+javacOptions ++= Seq("-deprecation")
+// scalacOptions += "-opt:l:classpath"
