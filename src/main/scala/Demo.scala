@@ -2,6 +2,7 @@ package org.nvotes.trustee
 
 import java.nio.file.Paths
 import java.nio.file.Files
+import java.math.BigInteger
 
 import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
@@ -20,8 +21,8 @@ object BallotboxAdd extends App {
   val configHash = Crypto.sha512(configString)
   val config = decode[Config](configString).right.get
 
-  val group = GStarModSafePrime.getFirstInstance(config.bits)
-  val generator = group.getDefaultGenerator()
+  val group = GStarModSafePrime.getInstance(new BigInteger(config.modulus))
+  val generator = group.getElementFrom(config.generator)
   val cSettings = CryptoSettings(group, generator)
   val votes = (1 to config.items).map { item =>
     val publicKey = section.getPublicKey(item).get

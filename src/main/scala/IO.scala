@@ -20,6 +20,11 @@ object IO {
     Source.fromFile(path.toFile)(StandardCharsets.UTF_8).mkString
   }
 
+  /** Returns the contents of the given file as an array of Strings, assumes UTF-8 */
+  def asStringLines(path: Path): Array[String] = {
+    Source.fromFile(path.toFile)(StandardCharsets.UTF_8).getLines.toArray
+  }
+
   /** Returns the contents of the given file as a String, assumes UTF-8 */
   def asString(input: InputStream): String = {
     val ret = Source.fromInputStream(input)(scala.io.Codec.UTF8).mkString

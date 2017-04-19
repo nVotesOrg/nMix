@@ -147,7 +147,7 @@ object Crypto {
     encryptedMessage.convertToByteArray.getBytes
   }
 
-  /** Returns the AES decryption of the given byte array as a byte array */
+  /** Returns the AES decryption of the given String as a byte array */
   def decryptAES(content: Array[Byte], key: FiniteByteArrayElement): Array[Byte] = {
     val byteSpace = ByteArrayMonoid.getInstance()
     val toDecrypt = byteSpace.getElement(content)
@@ -158,7 +158,7 @@ object Crypto {
     unpaddedMessage.convertToByteArray.getBytes
   }
 
-  /** Returns the AES decryption of the given byte array as a base64 encoded String */
+  /** Returns the AES encryption of the given String as a base64 encoded String */
   def encryptAES(content: String, key: FiniteByteArrayElement): String = {
     val byteSpace = ByteArrayMonoid.getInstance()
     val toEncrypt = byteSpace.getElement(content.getBytes(StandardCharsets.UTF_8))

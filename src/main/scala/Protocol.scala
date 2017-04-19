@@ -6,56 +6,11 @@ import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
 import org.nvotes.libmix._
 
 import java.nio.charset.StandardCharsets
+import java.math.BigInteger
 import scala.collection.mutable.ListBuffer
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
-/** The configuration for a protocol run, typically for an election
- *
- *  Some of these are parameterized by authority and item, needing
- *  methods.
- *
- *  The trustees and ballotbox field are public keys. They must be formatted without
- *  spaces, using \n as markers for newlines. Read by Crypto.ReadPublicRSA
- *  (sublime -> replace \n with \\n)
- */
-case class Config(id: String, name: String, bits: Int, items: Int, ballotbox: String, trustees: Array[String]) {
-  override def toString() = s"Config($id $name $bits $items)"
-}
-
-/** A share of the distributed key.
- *
- *  The public part is stored as an nMix EncryptionKeyShareDTO , which
- *  contains the share and the proof of knowledge.
- *
- *  The private part is aes encrypted by the authority.
- *
- */
-case class Share(share: EncryptionKeyShareDTO, encryptedPrivateKey: String)
-
-/** Permutation data resulting from offline phase of mixing
- *
- *  In the current implementation this data is only stored locally
- *  in memory. For this reason
- *
- *  1. The data does not need to be encrypted.
- *  2. The data does not need to be serialized.
- *
- *  Changing the implementation to store this remotely _must_
- *  include encryption of permutation data.
- */
-case class PreShuffleData(proof: PermutationProofDTO, pData: PermutationData)
-
-/** Ballots provided by the ballotbox in unicrypt format. Encrypted */
-case class Ballots(ballots: Seq[String])
-
-/** Plaintexts jointly encrypted by authorities after mixing, in unicrypt format */
-case class Plaintexts(plaintexts: Seq[String])
-
-/** Convenience class to pass around relevant data  */
-case class Context(config: Config, section: BoardSection, trusteeCfg: TrusteeConfig,
-  position: Int, cSettings: CryptoSettings)
 
 /** Implements the cryptographic protocol through stateless, reactive and
  *  choreographed actors.
@@ -114,9 +69,8 @@ object Protocol extends Names {
       return
     }
 
-    // FIXME this info should be in config, not just the bits
-    val group = GStarModSafePrime.getFirstInstance(config.bits)
-    val generator = group.getDefaultGenerator()
+    val group = GStarModSafePrime.getInstance(new BigInteger(config.modulus))
+    val generator = group.getElementFrom(config.generator)
     val cSettings = CryptoSettings(group, generator)
     val ctx = Context(config, section, trusteeCfg, position, cSettings)
 
