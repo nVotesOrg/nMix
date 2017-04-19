@@ -10,6 +10,21 @@ import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
 import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
 
+/** Writes files for config and statement, with given parameters
+ *
+ *  GenConfig <name> <bits> <items> <ballotbox> <trustees>
+ *
+ *  The ballotbox parameter must point to a file containing the
+ *  public key of the ballotbox
+ *
+ *  The trustees parameter must point to a file containing
+ *  the concatenation of trustee public keys
+ *
+ *  The election id is generated automatically with UUID
+ *
+ *  Example command to run in sbt
+ *  > runMain org.nvotes.trustee.GenConfig e1 2048 3 demo/keys/ballotbox.pub.pem demo/keys/trustees.pem
+ */
 object GenConfig extends App {
   println("generating config with")
   println(s"name: ${args(0)}")
@@ -19,10 +34,12 @@ object GenConfig extends App {
   println(s"trustees: ${args(4)}")
 
   val cfg = makeConfig(args(0), args(1).toInt, args(2).toInt, Paths.get(args(3)), Paths.get(args(4)))
-  println(cfg.asJson.noSpaces)
+  IO.write(Paths.get("config.json"), cfg.asJson.noSpaces)
   val stmt = Statement.getConfigStatement(cfg)
-  println(stmt.asJson.noSpaces)
+  IO.write(Paths.get("config.stmt.json"), stmt.asJson.noSpaces)
+  println("Wrote config.json and config.stmt.json")
 
+  /** Returns the config object */
   def makeConfig(name: String, bits: Int, items: Int, ballotbox: Path, trustees: Path): Config = {
     val group: GStarModSafePrime = GStarModSafePrime.getFirstInstance(bits)
     val modulusStr = group.getModulus.toString
@@ -30,7 +47,7 @@ object GenConfig extends App {
     val generatorStr = generator.convertToString
 
     val lines = IO.asStringLines(trustees)
-    // lookahead regexp, keeps the delimiter
+    /** lookahead regexp, keeps the delimiter */
     val trusteesStr = lines.mkString("\n").split("(?<=-----END PUBLIC KEY-----)")
 
     val ballotboxStr = IO.asString(ballotbox)
@@ -38,8 +55,8 @@ object GenConfig extends App {
     val id = UUID.randomUUID().toString
     Config(id, name, modulusStr, generatorStr, items, ballotboxStr, trusteesStr)
   }
+}
 
-  def generateRandomAESKey() = {
+object GenAESKey extends App {
 
-  }
 }
