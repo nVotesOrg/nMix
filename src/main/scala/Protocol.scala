@@ -62,6 +62,7 @@ object Protocol extends Names {
     val config = decode[Config](configString).right.get
     logger.info(s"Found config: $config")
     val position = getMyPosition(config, trusteeCfg)
+    logger.info(s"This authority at position $position")
 
     if(position == 0) {
       logger.info(s"could not find self in list of trustees for config $config")

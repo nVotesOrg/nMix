@@ -117,12 +117,19 @@ case class ValidateConfig(ctx: Context) extends Action {
         return Error(s"ballotbox is not in peers ${config.ballotbox}")
       }
 
-      if(config.trustees.size < 2) {
-        logger.error(s"Insufficient trustees: ${config.trustees.size}")
-        return Error(s"Insufficient trustees: ${config.trustees.size}")
+      val pks = config.trustees.map(Crypto.readPublicRsa(_)).toSet
+
+      if(pks.size < 2) {
+        logger.error(s"Insufficient trustees: ${pks.size}")
+        return Error(s"Insufficient trustees: ${pks.size}")
       }
 
-      config.trustees.map(Crypto.readPublicRsa(_)).foreach { t =>
+      if(pks.size != config.trustees.size) {
+        logger.error(s"Redundant trustees in config ${config.trustees.size} != ${pks.size}")
+        return Error(s"Redundant trustees in config ${config.trustees.size} != ${pks.size}")
+      }
+
+      pks.foreach { t =>
         if(!ctx.trusteeCfg.peers.contains(t)) {
           logger.error(s"trustee not in peers $t")
           return Error(s"trustee not in peers $t")

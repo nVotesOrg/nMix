@@ -9,12 +9,9 @@ import org.nvotes.libmix._
  *
  *  The trustees and ballotbox field are public keys. They must be formatted without
  *  spaces, using \n as markers for newlines. Read by Crypto.ReadPublicRSA
- *  (sublime -> replace \n with \\n)
+ *
+ *  Generate files with this format with the GenConfig Command
  */
-/*case class Config(id: String, name: String, bits: Int, items: Int, ballotbox: String, trustees: Array[String]) {
-  override def toString() = s"Config($id $name $bits $items)"
-}*/
-
 case class Config(id: String, name: String, modulus: String, generator: String,
 	items: Int, ballotbox: String, trustees: Array[String]) {
   override def toString() = s"Config($id $name $items)"

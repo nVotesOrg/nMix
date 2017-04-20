@@ -41,6 +41,9 @@ object GenConfig extends App {
 
   /** Returns the config object */
   def makeConfig(name: String, bits: Int, items: Int, ballotbox: Path, trustees: Path): Config = {
+    if(bits < 16) {
+      throw new IllegalArgumentException(s"bits too small: $bits")
+    }
     val group: GStarModSafePrime = GStarModSafePrime.getFirstInstance(bits)
     val modulusStr = group.getModulus.toString
     val generator = group.getDefaultGenerator()
@@ -49,6 +52,11 @@ object GenConfig extends App {
     val lines = IO.asStringLines(trustees)
     /** lookahead regexp, keeps the delimiter */
     val trusteesStr = lines.mkString("\n").split("(?<=-----END PUBLIC KEY-----)")
+
+    val pks = trusteesStr.map(Crypto.readPublicRsa(_)).toSet
+    if(pks.size != trusteesStr.size) {
+      throw new IllegalArgumentException(s"Redundant trustees ${trusteesStr.size} != ${pks.size}")
+    }
 
     val ballotboxStr = IO.asString(ballotbox)
 
