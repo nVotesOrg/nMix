@@ -1,4 +1,4 @@
-![alt text](https://ton.twitter.com/i/ton/data/dm/855528058496987142/855528048506142720/XtfBO1Iw.jpg)
+![alt text](http://davidruescas.com/wp-content/uploads/2017/04/nMix.png)
 # nMix: Mixnet-based secure voting
 
 nMix is an open source backend for a mixnet-based, cryptographically secure voting system featuring strong privacy and verifiability properties. It is an implementation of the core [univote](https://e-voting.bfh.ch/projects/univote/) specification, with a few changes.
@@ -33,7 +33,7 @@ which allows for
 
 Below is an example for a 2-authority mixnet setup
 
-![sample deployment](https://ton.twitter.com/i/ton/data/dm/855533187811987459/855533177552723969/G6Fx4IOr.jpg)
+![sample deployment](http://davidruescas.com/wp-content/uploads/2017/04/Untitled-Diagram.png)
 
 ## Requirements
 
