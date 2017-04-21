@@ -113,8 +113,8 @@ case class ValidateConfig(ctx: Context) extends Action {
     if(result) {
 
       if(!ctx.trusteeCfg.peers.contains(Crypto.readPublicRsa(config.ballotbox))) {
-        logger.error(s"ballotbox is not in peers ${config.ballotbox}")
-        return Error(s"ballotbox is not in peers ${config.ballotbox}")
+        logger.error(s"ballotbox is not in peers: ${config.ballotbox}")
+        return Error(s"ballotbox is not in peers: ${config.ballotbox}")
       }
 
       val pks = config.trustees.map(Crypto.readPublicRsa(_)).toSet
@@ -125,8 +125,8 @@ case class ValidateConfig(ctx: Context) extends Action {
       }
 
       if(pks.size != config.trustees.size) {
-        logger.error(s"Redundant trustees in config ${config.trustees.size} != ${pks.size}")
-        return Error(s"Redundant trustees in config ${config.trustees.size} != ${pks.size}")
+        logger.error(s"Redundant trustees in config: ${config.trustees.size} != ${pks.size}")
+        return Error(s"Redundant trustees in config: ${config.trustees.size} != ${pks.size}")
       }
 
       pks.foreach { t =>

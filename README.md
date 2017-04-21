@@ -96,8 +96,7 @@ When they are first run, the trustees will execute operations for config signing
 public key creation, and public key signing. Once these phases are complete, the trustees will
 idle, as they have no work to do.
 
-It is then time to simulate the voting process by adding ballots to the
-bulletin board. This is done with
+It is then time to simulate the voting process by adding ballots to the bulletin board. This is done with
 
 ```./ballots.sh <number of ballots>```
 

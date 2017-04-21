@@ -39,7 +39,13 @@ object GenConfig extends App {
   IO.write(Paths.get("config.stmt.json"), stmt.asJson.noSpaces)
   println("Wrote config.json and config.stmt.json")
 
-  /** Returns the config object */
+  /** Returns the config object
+   *
+   *  Throws IllegalArgumentException if
+   *  - bits < 16
+   *  - there are redundant trustees in the trustees file
+   *  - there are less than two trustees in the trustees file
+   */
   def makeConfig(name: String, bits: Int, items: Int, ballotbox: Path, trustees: Path): Config = {
     if(bits < 16) {
       throw new IllegalArgumentException(s"bits too small: $bits")
@@ -55,7 +61,10 @@ object GenConfig extends App {
 
     val pks = trusteesStr.map(Crypto.readPublicRsa(_)).toSet
     if(pks.size != trusteesStr.size) {
-      throw new IllegalArgumentException(s"Redundant trustees ${trusteesStr.size} != ${pks.size}")
+      throw new IllegalArgumentException(s"Redundant trustees: ${trusteesStr.size} != ${pks.size}")
+    }
+    if(pks.size < 2) {
+      throw new IllegalArgumentException(s"Insufficient trustees: ${pks.size}")
     }
 
     val ballotboxStr = IO.asString(ballotbox)

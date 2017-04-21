@@ -64,6 +64,12 @@ object Protocol extends Names {
     val position = getMyPosition(config, trusteeCfg)
     logger.info(s"This authority at position $position")
 
+    /** Inline helper function used to post errors below */
+    def postError(message: String): Unit = {
+      val file = IO.writeTemp(message)
+      section.addError(file, position)
+    }
+
     if(position == 0) {
       logger.info(s"could not find self in list of trustees for config $config")
       // FIXME cause a real error
@@ -86,6 +92,12 @@ object Protocol extends Names {
 
     if(result != Ok) {
       logger.warn(s"Got pause or error signal: $result")
+
+      result match {
+        case Error(message) => postError(message)
+        case _ =>
+      }
+
       return
     }
 
@@ -105,13 +117,24 @@ object Protocol extends Names {
       // parallel execution
       // val results = hits.par.map(action => action -> action.execute)
       val results = hits.map(action => action -> action.execute)
-      // FIXME post errors
       logger.info(s"Per-item results: $results")
+
+      val errorStrings = results.flatMap {
+        case (_, Error(message)) => Some(message)
+        case _ => None
+      }
+      if(errorStrings.size > 0) {
+        logger.error(s"Results returned errors: $errorStrings")
+        postError(errorStrings.mkString("\n"))
+      }
     }
     else {
       logger.info(s"* Per-item matches: None")
     }
   }
+
+
+
 
   /** Returns the global rules.
    *

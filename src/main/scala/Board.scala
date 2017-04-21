@@ -209,6 +209,17 @@ case class BoardSection (val gitRepo: GitRepo) extends Names {
     gitRepo.getFileSet() ++ preShuffleData.keySet
   }
 
+  /** Syncs the repository, adds the error, and sends
+   *
+   *  If an error already existed it is removed from the working copy
+   *  first (previous errros will exist in the git history)
+   */
+  def addError(error: Path, position: Int): Unit = synchronized {
+    gitRepo.sync()
+    gitRepo.addToWorkingCopy(error, ERROR(position))
+    gitRepo.send("error", ERROR(position))
+  }
+
   /** Returns the configuration if it exists as an Option[String] */
   def getConfig: Option[String] = getFileStream(CONFIG).map(IO.asString(_))
 
@@ -465,7 +476,6 @@ object BoardSection {
     BoardSection(gitRepo)
   }
 }
-
 
 /** A git repository accessed with the jgit api
  *
