@@ -14,7 +14,7 @@ The main elements of the cryptographic scheme are
 
 Together with suitable cryptographic mechanisms at the voting booth this produces an [end-to-end verifiable](https://en.wikipedia.org/wiki/End-to-end_auditable_voting_systems) voting system. More details of the scheme can be found [here](http://davidruescas.com/?p=3651).
 
-## Design
+## Software design
 
 nMix follows a minimal design, composed of
 
@@ -36,7 +36,21 @@ which allows for
 
 * Java 8+
 * Git version 2.4+ (on the bulletin board server)
-* Gmp for native modular arithmetic (optional)
+* Gmp (for native modular arithmetic, optional)
+
+## Installing
+
+Clone the repository
+
+```git clone https://github.com/nVotes/nMix.git```
+
+Install rng-tools
+
+```apt-get install rng-tools```
+
+In order to build the project you will need to [install sbt](http://www.scala-sbt.org/release/docs/Setup.html). To build
+
+```sbt assembly assemblyPackageDependency```
 
 ## Demo setup
 
@@ -75,7 +89,7 @@ NOTE: you should NOT use the keys in the 'keys' subfolder for anything,
 these keys are used merely for the DEMO and should be removed after
 you've finished testing it.
 
-* Install rng-tools
+* Install rng-tools (if you haven't already)
 
 ```apt-get install rng-tools```
 
@@ -88,7 +102,7 @@ you've finished testing it.
 which will create the necessary jars in the target directory. These jars are
 referenced by the scripts below.
 
-* Run the trustees, with the run1.sh, run2.sh and ballots.sh scripts.
+* Run the trustees, with the run1.sh, run2.sh scripts.
 
 Once you've run setup.sh, you can begin the election process. To do this
 
@@ -128,11 +142,9 @@ require large amounts of processing time and memory. This could require adjustin
 
 It is also straightforward to run the demo with remoting, just adjust application.conf accordingly.
 
-### Randomness
+## Additional configuration
 
-To speed up HybridRandomByteSequence under linux install rng-tools.
-
-### Git compression
+#### Git compression
 
 * Disabling git compression - server
 
