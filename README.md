@@ -1,3 +1,4 @@
+![alt text](https://ton.twitter.com/i/ton/data/dm/855528058496987142/855528048506142720/XtfBO1Iw.jpg)
 # nMix: Mixnet-based secure voting
 
 nMix is an open source backend for a mixnet-based, cryptographically secure voting system featuring strong privacy and verifiability properties. It is an implementation of the core [univote](https://e-voting.bfh.ch/projects/univote/) specification, with a few changes.
@@ -14,14 +15,13 @@ The main elements of the cryptographic scheme are
 
 Together with suitable cryptographic mechanisms at the voting booth this produces an [end-to-end verifiable](https://en.wikipedia.org/wiki/End-to-end_auditable_voting_systems) voting system. More details of the scheme can be found [here](http://davidruescas.com/?p=3651).
 
-## Software design
+## Software architecture
 
 nMix follows a minimal design, composed of
 
 * An append-only bulletin board backed by Git
 * A reactive, data-driven election protocol specified declaratively
 * A minimal rule engine for boolean expression conditions
-* Fully stateless, choreographed trustees
 * [libmix](https://github.com/ruescasd/libmix) (including [unicrypt](https://github.com/bfh-evg/univote2)) library for multicore support
 
 which allows for
@@ -30,7 +30,10 @@ which allows for
 * Auditability and tamper resistance via Git's hashchain
 * Simple network toplogy: centralized communication on a single ssh port
 * Simple software deployment: Java8 (+ Git on the bulletin board server)
-* Instantaneous backups during protocol execution
+
+Below is an example for a 2-authority mixnet setup
+
+![sample deployment](https://ton.twitter.com/i/ton/data/dm/855533187811987459/855533177552723969/G6Fx4IOr.jpg)
 
 ## Requirements
 
