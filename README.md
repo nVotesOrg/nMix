@@ -1,7 +1,18 @@
-# nMix
+# nMix: Mixnet-based secure voting
 
-A backend for a mixnet-based, cryptographically secure voting system. It is an implementation
-of the core [univote](https://e-voting.bfh.ch/projects/univote/) specification, with a few changes.
+nMix is an open source backend for a mixnet-based, cryptographically secure voting system featuring strong privacy and verifiability properties. It is an implementation of the core [univote](https://e-voting.bfh.ch/projects/univote/) specification, with a few changes.
+
+## Cryptographic scheme
+
+The main elements of the cryptographic scheme are
+
+* ElGamal homomorphic distributed cryptosystem
+* Verifiable re-encryption mixnet
+* Joint key-generation / decryption with correctness proofs
+* Tamper-resistant bulletin board hash-chain
+* RSA message signing and trustee authentication
+
+Together with suitable cryptographic mechanisms at the voting booth this produces an [end-to-end verifiable](https://en.wikipedia.org/wiki/End-to-end_auditable_voting_systems) voting system. More details of the scheme can be found [here](http://davidruescas.com/?p=3651).
 
 ## Design
 
@@ -13,7 +24,7 @@ nMix follows a minimal design, composed of
 * Fully stateless, choreographed trustees
 * [libmix](https://github.com/ruescasd/libmix) (including [unicrypt](https://github.com/bfh-evg/univote2)) library for multicore support
 
-yielding the following properties (besides the crypto specification)
+which allows for
 
 * Fault tolerance through stateless and idempotent trustees
 * Auditability and tamper resistance via Git's hashchain
@@ -137,5 +148,3 @@ git config --global pack.compression 0
 * Disabling git compression - client
 
 ```-Dnmix.git.disable-compression=true```
-
-#### Misc
