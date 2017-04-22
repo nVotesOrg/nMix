@@ -55,7 +55,7 @@ In order to build the project you will need to [install sbt](http://www.scala-sb
 
 ```sbt assembly assemblyPackageDependency```
 
-## Demo setup
+## Quickstart demo
 
 The demo directory contains data and scripts to run a full election cycle on a single machine,
 from key generation all the way to joint ballot decryption.
@@ -145,11 +145,36 @@ require large amounts of processing time and memory. This could require adjustin
 
 It is also straightforward to run the demo with remoting, just adjust application.conf accordingly.
 
-## Additional configuration
+## User guide
+--
+### Overview
+The following is a typical voting setup using nMix
 
-#### Git compression
+![nMix setup](http://davidruescas.com/wp-content/uploads/2017/04/nMixSetup2.png)
 
-* Disabling git compression - server
+#### Election Configuration
+--
+#### Trustee Configuration
+Several trustee configuration options are listed below.
+##### Libmix settings
+The following settings control libmix optimizations
+
+###### libmix.gmp=true/false
+
+Activates native implementation of modular exponentiation and legendre symbol via
+[jna-gmp](https://github.com/square/jna-gmp) and gmp, if available on the system.
+
+###### libmix.extractor=true/false
+
+Activates automatic extraction and parallelization of modular exponentiation calls.
+
+###### libmix.parallel-generators=true/false
+
+Activates parallel computation of generators used in Terelius-Wikstrom proofs (experimental)
+##### Git compression
+By default, git applies two types of compression to objects stored and sent across the network, one of these does not scale over cpu cores. Compression may be suboptimal on a fast network and if disk space is not a problem. In order to disable git compression
+
+###### Disabling git compression - git server
 
 ```
 git config --global pack.window 0
@@ -160,6 +185,12 @@ git config --global core.looseCompression 0
 git config --global pack.compression 0
 ```
 
-* Disabling git compression - client
+###### Disabling git compression - nMix trustee
 
 ```-Dnmix.git.disable-compression=true```
+
+## EC2 Benchmarks
+
+|Date   |Configuration    |Hardware   |Heap   |Libmix opt.|Trustee opt.|Time(s)
+|---|---|---|---|---|---|---|
+|   |   |   |   |   | ||
