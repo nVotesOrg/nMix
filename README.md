@@ -33,7 +33,7 @@ which allows for
 
 Below is an example for a 2-authority mixnet setup
 
-![sample deployment](http://davidruescas.com/wp-content/uploads/2017/04/Untitled-Diagram.png)
+![sample deployment](http://davidruescas.com/wp-content/uploads/2017/04/nMix2.png)
 
 ## Requirements
 
@@ -146,15 +146,26 @@ require large amounts of processing time and memory. This could require adjustin
 It is also straightforward to run the demo with remoting, just adjust application.conf accordingly.
 
 ## User guide
---
+This section contains detailed information necessary to set up and run elections with nMix.
 ### Overview
 The following is a typical voting setup using nMix
 
-![nMix setup](http://davidruescas.com/wp-content/uploads/2017/04/nMixSetup2.png)
+![nMix setup](http://davidruescas.com/wp-content/uploads/2017/04/nMixSetup3.png)
 
-#### Election Configuration
+The nMix system components can be seen below the dotted line. The nMix software itself runs on the trustees, which cooperatively execute the protocol posting artifacts to the bulletin board, backed by Git.
+###### Registry
+This component handles the authentication and registration of voters. The Registry is responsible for the electoral roll, which is the list of eligible voters for an election. This component is external to nMix.
+###### Ballotbox
+Serves the (typically javascript based) voting booth interface and collects votes. Only votes cast by eligible voters, as determined by the Registry, are allowed. Votes are encrypted at the voting booth with the election public key, jointly created by the Trustees prior to the election. Once the voting period is over, the Ballotbox publishes the set of ballots to the Bulletin Board. This component is external to nMix.
+###### Bulletin Board
+The Bulletin Board maintains the list of information artifacts necessary for the execution of the cryptographic protocol. This includes artifacts related to joint key generation, ballot casting, ballot mixes, and joint decryption, as well as all required mathematical proofs. The Bulletin Board is implemented with Git's hash-chain, and is immutable and tamper resistant.
+###### Trustee
+Trustees cooperate to execute the voting protocol such that its privacy and verifiability properties are guaranteed. These properties are inherited from the nMix design, which in turn is based on the univote specification. Trustees are custodians of election private keys that safeguard vote secrecy. When executing the protocol, Trustees retrieve information published and collected by the Bulletin Board. Trustees run the nMix software.
+### Election Configuration
 --
-#### Trustee Configuration
+### Bulletin Board server configuration
+--
+### Trustee Configuration
 Several trustee configuration options are listed below.
 ##### Libmix settings
 The following settings control libmix optimizations
@@ -189,8 +200,22 @@ git config --global pack.compression 0
 
 ```-Dnmix.git.disable-compression=true```
 
-## EC2 Benchmarks
+### Artifact reference
+--
+### FAQ
+--
+## Benchmarks
 
-|Date   |Configuration    |Hardware   |Heap   |Libmix opt.|Trustee opt.|Time(s)
-|---|---|---|---|---|---|---|
-|   |   |   |   |   | ||
+|Date   |Trustees|Ballots    |Bits |Hardware**   |Heap   |Libmix opt.|Trustee opt.*|Time (min)
+|---|---|---|---|---|---|---|---|---|
+|3/21   |2   |3 x 100k   |2048   |2 x m4.16, 1 x m4.10   |5G|all |NNNN|92
+|3/25   |2   |3 x 100k   |2048   |2 x m4.16,1 x m4.10   |10G|all |NYNN|72
+|3/27   |2   |3 x 100k   |2048   |2 x m4.16,1 x m4.10   |10G|all |YYNN|59
+
+*The Trustee optimization settings column has the following syntax
+Permuted mix assignment=Y/N
+Disable git compression=Y/N
+Offline phase=Y/N
+Parallel actions=Y/N
+
+**Hardware specs described in terms of [EC2 instance types](https://aws.amazon.com/ec2/instance-types/)
