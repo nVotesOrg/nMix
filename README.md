@@ -57,8 +57,7 @@ In order to build the project you will need to [install sbt](http://www.scala-sb
 
 ## Quickstart demo
 
-The demo directory contains data and scripts to run a full election cycle on a single machine,
-from key generation all the way to joint ballot decryption.
+The demo directory contains data and scripts to run a full election cycle on a single machine, from key generation all the way to joint ballot decryption.
 
 * Set up the machine as a git server. First create the /srv/data directory if it does not exist
 
@@ -68,19 +67,13 @@ then create the git user
 
 ```useradd --create-home --skel /dev/null --home-dir /srv/data/git --shell /usr/bin/git-shell git```
 
-this allows serving requests via ssh, but will block attempts at login. This
-command needs to be executed as root.
-
-Once the user has been created, the setup.sh script (as root) will initialize the repository
-and add files necessary to start the demo.
+this allows serving requests via ssh, but will block attempts at login. This command needs to be executed as root. Once the user has been created, the setup.sh script (as root) will initialize the repository and add files necessary to start the demo.
 
 ```./setup.sh```
 
 To re-run a demo you can simply execute setup.sh again to reset everything.
 
-* Add necessary public keys to git's authorized_keys. The user under which
-you run the demo must have their public key added to that file. First create the
-.ssh directory for the git user.
+* Add necessary public keys to git's authorized_keys. The user under which you run the demo must have their public key added to that file. First create the .ssh directory for the git user.
 
 ```mkdir /srv/data/git/.ssh```
 
@@ -88,9 +81,7 @@ Then add a key, for example
 
 ```cat $HOME/.ssh/id_rsa.pub >> /srv/data/git/.ssh/authorized_keys```
 
-NOTE: you should NOT use the keys in the 'keys' subfolder for anything,
-these keys are used merely for the DEMO and should be removed after
-you've finished testing it.
+NOTE: you should NOT use the keys in the 'keys' subfolder for anything, these keys are used merely for the DEMO and should be removed after you've finished testing it.
 
 * Install rng-tools (if you haven't already)
 
@@ -102,8 +93,7 @@ you've finished testing it.
 ```assembly```
 ```assemblyPackageDependency```
 
-which will create the necessary jars in the target directory. These jars are
-referenced by the scripts below.
+which will create the necessary jars in the target directory. These jars are referenced by the scripts below.
 
 * Run the trustees, with the run1.sh, run2.sh scripts.
 
@@ -116,34 +106,23 @@ runs the first trustee. And
 ```./run2.sh```
 
 runs the second trustee. The protocol is reactive, the trustees will execute operations whenever
-they detect work needs to be done on the bulletin board. Note that trustees can be stopped and started
-at will, they will automatically pick up work wherever it was left off. They also don't need to
-run simultaneously or overlap at any moment, it is enough that they run at _some_ point.
+they detect work needs to be done on the bulletin board. Note that trustees can be stopped and started at will, they will automatically pick up work wherever it was left off. They also don't need to run simultaneously or overlap at any moment, it is enough that they run at _some_ point.
 
-When they are first run, the trustees will execute operations for config signing, key share generation,
-public key creation, and public key signing. Once these phases are complete, the trustees will
-idle, as they have no work to do.
+When they are first run, the trustees will execute operations for config signing, key share generation, public key creation, and public key signing. Once these phases are complete, the trustees will idle, as they have no work to do.
 
 It is then time to simulate the voting process by adding ballots to the bulletin board. This is done with
 
 ```./ballots.sh <number of ballots>```
 
-Once the ballots are on the bulletin board, the trustees will automatically begin the mixing process
-and continue operating all the way up to the joint decryption and signing of plaintexts.
+Once the ballots are on the bulletin board, the trustees will automatically begin the mixing process and continue operating all the way up to the joint decryption and signing of plaintexts.
 
-You can inspect the results of the demo by browsing through the files produced in the repository.
-There should be plaintexts files if the process has ended correctly. To restart the process, simply
-execute the setup script again. One way to inspect what's going on during execution is
+You can inspect the results of the demo by browsing through the files produced in the repository. There should be plaintexts files if the process has ended correctly. To restart the process, simply execute the setup script again. One way to inspect what's going on during execution is
 
 ```while :; do tree datastore/repo --noreport; sleep 3; done```
 
 which will show you the contents of the repository periodically.
 
-Although the demo is set up for 2 trustees and 3 ballot sets, you can extend it to run with more
-authorities and ballot sets. Note that if you run a large number of ballots through the demo you may
-require large amounts of processing time and memory. This could require adjusting the jvm options.
-
-It is also straightforward to run the demo with remoting, just adjust application.conf accordingly.
+Although the demo is set up for 2 trustees and 3 ballot sets, you can extend it to run with more authorities and ballot sets. Note that if you run a large number of ballots through the demo you may require large amounts of processing time and memory. This could require adjusting the jvm options. It is also straightforward to run the demo with remoting, refer to the User guide below.
 
 ## User guide
 This section contains detailed information necessary to set up and run elections with nMix.
@@ -161,11 +140,12 @@ Serves the (typically javascript based) voting booth interface and collects vote
 The Bulletin Board maintains the list of information artifacts necessary for the execution of the cryptographic protocol. This includes artifacts related to joint key generation, ballot casting, ballot mixes, and joint decryption, as well as all required mathematical proofs. The Bulletin Board is implemented with Git's hash-chain, and is immutable and tamper resistant.
 ###### Trustee
 Trustees cooperate to execute the voting protocol such that its privacy and verifiability properties are guaranteed. These properties are inherited from the nMix design, which in turn is based on the univote specification. Trustees are custodians of election private keys that safeguard vote secrecy. When executing the protocol, Trustees retrieve information published and collected by the Bulletin Board. Trustees run the nMix software.
-### Election Configuration
+### Election configuration
 --
 ### Bulletin Board server configuration
 --
-### Trustee Configuration
+### Trustee configuration
+--
 Several trustee configuration options are listed below.
 ##### Libmix settings
 The following settings control libmix optimizations
@@ -213,9 +193,10 @@ git config --global pack.compression 0
 |3/27   |2   |3 x 100k   |2048   |2 x m4.16,1 x m4.10   |10G|all |YYNN|59
 
 *The Trustee optimization settings column has the following syntax
+```
 Permuted mix assignment=Y/N
 Disable git compression=Y/N
 Offline phase=Y/N
 Parallel actions=Y/N
-
+```
 **Hardware specs described in terms of [EC2 instance types](https://aws.amazon.com/ec2/instance-types/)
