@@ -146,7 +146,7 @@ The Bulletin Board maintains the list of information artifacts necessary for the
 Trustees cooperate to execute the voting protocol such that its privacy and verifiability properties are guaranteed. These properties are inherited from the nMix design, which in turn is based on the univote specification. Trustees are custodians of election private keys that safeguard vote secrecy. When executing the protocol, Trustees retrieve information published and collected by the Bulletin Board. Trustees run the nMix software.
 ##### Protocol
 The main steps of the protocol are
-1) The election configuration is defined.
+1) The election configuration is defined and posted to the bulletin board.
 2) Trustees individually validate and sign the election configuration.
 3) Trustees jointly generate the public and private key shares of the election public key.
 4) Trustees mutually validate each other's shares and proofs of correctness.
@@ -246,12 +246,15 @@ nMix provides the core cryptography to construct an end-to-end verifiable voting
 The choice of git as a hash-chain was made with full awareness of the status of SHA-1, which will not be a problem because:
 
 a) Git will [transition](https://plus.google.com/+LinusTorvalds/posts/7tp2gYWQugL) away from SHA-1
+
 b) It is always possible to build a hash-chain manually with any choice of secure hash on top of git.
 #####  What about the Registry, Ballotbox and Voting Booth? Where can I find them?
 nMix implements the cryptographic core of a voting system, and does not include these software components. You can either
 
 a) Wait for these components to be developed by us.
+
 b) Write them yourself (they are the comparatively 'easier' parts to develop). Also, a lot of work can be taken from [Agora Voting](https://github.com/agoravoting) which is a stable, production ready system.
+
 c) Work with us to develop them, nMix is an open source project!
 #####  Does nMix support a threshold cryptosystem?
 No, the current version of nMix uses a _distributed_ cryptosystem (which is a special case of a threshold system where t = n). All trustees must cooperate to complete the protocol. However, adding a threshold cryptosystem is on the table, and mostly depends on development resources and funding.
@@ -259,7 +262,7 @@ No, the current version of nMix uses a _distributed_ cryptosystem (which is a sp
 Yes, in theory. The nMix protocol has been designed to decouple the crypto workflow from the bulletin board implementation, relying only on authenticated get and put primitives. If these primitives are supported by another bulletin board implementation the replacement should be possible. See [here](TODO) for a high level design along those lines with IPFS as a backend.
 ## Benchmarks
 
-|Date   |Trustees|Ballots    |Bits |Hardware**   |Heap   |Libmix opt.|Trustee opt.*|Time (min)
+|Date   |Trustees|Ballots    |Public key bits |Hardware**   |Heap   |Libmix opt.|Trustee opt.*|Time (min)
 |---|---|---|---|---|---|---|---|---|
 |3/21   |2   |3 x 100k   |2048   |2 x m4.16, 1 x m4.10   |5G|all |NNNN|92
 |3/25   |2   |3 x 100k   |2048   |2 x m4.16,1 x m4.10   |10G|all |NYNN|72
