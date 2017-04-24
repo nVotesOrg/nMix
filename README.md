@@ -118,7 +118,7 @@ Once the ballots are on the bulletin board, the trustees will automatically begi
 
 * Done!
 
-You can inspect the results of the demo by browsing through the files produced in the repository. There should be plaintexts files if the process has ended correctly. To restart the process, simply execute the setup script again. One way to inspect what's going on during execution is
+You can inspect the results of the demo by browsing through the files produced in the repository. There should be plaintexts files if the process has ended correctly. To reset the process, simply execute the setup script again. One way to inspect what's going on during execution is
 
 ```while :; do tree datastore/repo --noreport; sleep 3; done```
 
@@ -134,6 +134,8 @@ The following is a typical voting setup using nMix
 ![nMix setup](http://davidruescas.com/wp-content/uploads/2017/04/nMixSetup3.png)
 
 The nMix system components can be seen below the dotted line. The nMix software itself runs on the trustees, which cooperatively execute the protocol posting artifacts to the bulletin board, backed by Git.
+##### Components
+Following are descriptions the main components as seen above. Some of these are external to nMix.
 ###### Registry
 This component handles the authentication and registration of voters. The Registry is responsible for the electoral roll, which is the list of eligible voters for an election. This component is external to nMix.
 ###### Ballotbox
@@ -157,7 +159,7 @@ The main steps of the protocol are
 11) The trustees mutually validate each other's decryptions and proofs of correctness.
 12) The trustees construct, validate and sign the plaintexts resulting from decryption.
 
-These steps are performed per election item. Note that the nMix protocol does not include steps related to the Registry and Ballotbox (except 6) above, for clarity). nMix only interfaces with external components in three ways
+These steps are performed per election item. Note that the nMix protocol does not include steps related to the Registry and Ballotbox (except 6. above, for clarity). nMix only interfaces with external components in three ways
 
 1) To receive the Election Configuration, presumably defined by some election authority.
 2) To provide the election public key used to encrypt votes at the Voting Booth
@@ -166,10 +168,36 @@ These steps are performed per election item. Note that the nMix protocol does no
 Issues related to voter registration and authentication are critical to a secure voting system, but they are decoupled from the nMix design and taken as given.
 
 ### Election configuration
-The Election Configuration specifies the election information, the security of the election public key, and the participating trustees and ballotbox agents.
-### Bulletin Board server configuration
+The Election Configuration specifies the election information, the security parameters of the election public key, and the participating trustees and ballotbox agents. It has this json encoded structure
+
+```
+{
+"id":"<an alphanumeric id for the election>",
+"name":"<a human readable name for the election>",
+"modulus":"<the safe prime modulus p of the multiplicative subgroup G*p used for ElGamal encryption>",
+"generator":"<the generator g of the multiplicative subgroup G*p used for ElGamal encryption>",
+"items":<the number of ballot sets (for example, questions) in the election>,
+"ballotbox":"<the RSA public key of the ballotbox>",
+"trustees":["<a list of RSA public keys for each trustee>"]
+}
+```
+Defining and posting this data to the bulletin board is the first step that kicks off the rest of the protocol execution. Besides the configuration itself, a statement file must be provided which will be signed by trustees indicating acceptance of its parameters. The statement config file has this structure
+
+```
+{"configHash":"<the sha-512 hash of the configuration's json representation as a string>"}
+```
+
+nMix provides a utility to generate these two files correctly. For example, from the sbt console
+```
+runMain org.nvotes.trustee.GenConfig <election name> <public key bits> <items> <path to ballotbox rsa public key pem> <path to trustees rsa public key pems, concatenated>
+```
+
+will produce the Election Configuration, _config.json_, and the statement file, _config.stmt.json_.
+
+These two files can then be posted to the bulletin board, executing step 1 of the protocol.
+### Bulletin Board server set up and configuration
 --
-### Trustee configuration
+### Trustee set up and configuration
 --
 Several trustee configuration options are listed below.
 ##### Libmix settings
@@ -210,23 +238,25 @@ git config --global pack.compression 0
 ### FAQ
 #####  Is nMix 100% secure?
 No, no computer or software system is 100% secure. nMix is secure in the specific sense that it employs cryptographic techniques to achieve strong privacy and verifiability properties, as defined in the academic literature.
-##### What about the use of SHA-1 in the Git hash chain?
+
+##### Is nMix end-to-end verifiable?
+nMix provides the core cryptography to construct an end-to-end verifiable voting system. In particular, it provides a bulletin board and a verifiable mix-net and zero knowledge proofs, which are key components necessary for granting recorded-as-cast and counted-as-recorded verifiablity. When combined with suitable external components the whole system becomes end-to-end verifiable. See the next question.
+
+##### What about the use of SHA1 in the Git hash chain?
 The choice of git as a hash-chain was made with full awareness of the status of SHA-1, which will not be a problem because:
 
 a) Git will [transition](https://plus.google.com/+LinusTorvalds/posts/7tp2gYWQugL) away from SHA-1
 b) It is always possible to build a hash-chain manually with any choice of secure hash on top of git.
-##### Is nMix end-to-end verifiable?
-nMix provides the core cryptography to construct an end-to-end verifiable voting system. In particular, it provides a bulletin board and a verifiable mix-net and zero knowledge proofs, which are key components necessary for granting recorded-as-cast and counted-as-recorded verifiablity. When combined with suitable external components the whole system becomes end-to-end verifiable. See the next question.
-
 #####  What about the Registry, Ballotbox and Voting Booth? Where can I find them?
 nMix implements the cryptographic core of a voting system, and does not include these software components. You can either
 
 a) Wait for these components to be developed by us.
-b) Write them yourself (they are the 'easier' parts to develop). Also, a lot of work can be taken from [Agora Voting](https://github.com/agoravoting) which is a stable, production ready system.
+b) Write them yourself (they are the comparatively 'easier' parts to develop). Also, a lot of work can be taken from [Agora Voting](https://github.com/agoravoting) which is a stable, production ready system.
 c) Work with us to develop them, nMix is an open source project!
 #####  Does nMix support a threshold cryptosystem?
 No, the current version of nMix uses a _distributed_ cryptosystem (which is a special case of a threshold system where t = n). All trustees must cooperate to complete the protocol. However, adding a threshold cryptosystem is on the table, and mostly depends on development resources and funding.
-
+#####  Could you replace the Git bulletin board with a Blockchain/IPFS/Tahoe-Lafs?
+Yes, in theory. The nMix protocol has been designed to decouple the crypto workflow from the bulletin board implementation, relying only on authenticated get and put primitives. If these primitives are supported by another bulletin board implementation the replacement should be possible. See [here](TODO) for a high level design along those lines with IPFS as a backend.
 ## Benchmarks
 
 |Date   |Trustees|Ballots    |Bits |Hardware**   |Heap   |Libmix opt.|Trustee opt.*|Time (min)
@@ -243,13 +273,16 @@ Offline phase=Y/N
 Parallel actions=Y/N
 ```
 Not all code changes and optimizations are reflected in this column.
-**Hardware specs described in terms of [EC2 instance types](https://aws.amazon.com/ec2/instance-types/)
 
-#### Licensing
+**Hardware specs described in terms of [EC2 instance types](https://aws.amazon.com/ec2/instance-types/)
 
 #### Acknowledgements
 
-We'd like to thank Rolf Haenni and his [team](https://e-voting.bfh.ch/) for the univote and unicrypt projects on which nMix is largely based. We also thank [Douglas Wikstrom](http://www.csc.kth.se/~dog/) for his thoughtful advice and discussions.
+We'd like to thank
+* Rolf Haenni and his [team](https://e-voting.bfh.ch/) for the univote and unicrypt projects on which nMix is largely based.
+* [Douglas Wikstrom](http://www.csc.kth.se/~dog/) for his thoughtful advice and discussions.
+
+#### Licensing
 
 ##### References
 
