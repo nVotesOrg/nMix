@@ -7,11 +7,11 @@ nMix is an open source backend for a mixnet-based, cryptographically secure voti
 
 The main elements of the cryptographic scheme are
 
-* ElGamal homomorphic distributed cryptosystem
-* Verifiable re-encryption mixnet
-* Joint key-generation / decryption with correctness proofs
-* Tamper-resistant bulletin board hash-chain
-* RSA message signing and trustee authentication
+* ElGamal homomorphic distributed cryptosystem[1][5]
+* Verifiable re-encryption mixnet[2][3][6]
+* Joint key-generation / decryption with correctness proofs[5]
+* Tamper-resistant bulletin board hash-chain[7]
+* RSA message signing and trustee authentication[8]
 
 Together with suitable cryptographic mechanisms at the voting booth this produces an [end-to-end verifiable](https://en.wikipedia.org/wiki/End-to-end_auditable_voting_systems) voting system. More details of the scheme can be found [here](http://davidruescas.com/?p=3651).
 
@@ -105,16 +105,18 @@ runs the first trustee. And
 
 ```./run2.sh```
 
-runs the second trustee. The protocol is reactive, the trustees will execute operations whenever
-they detect work needs to be done on the bulletin board. Note that trustees can be stopped and started at will, they will automatically pick up work wherever it was left off. They also don't need to run simultaneously or overlap at any moment, it is enough that they run at _some_ point.
+runs the second trustee. The protocol is reactive, the trustees will execute operations whenever they detect work needs to be done on the bulletin board. Note that trustees can be stopped and started at will, they will automatically pick up work wherever it was left off. They also don't need to run simultaneously or overlap at any moment, it is enough that they run at _some_ point.
 
 When they are first run, the trustees will execute operations for config signing, key share generation, public key creation, and public key signing. Once these phases are complete, the trustees will idle, as they have no work to do.
 
-It is then time to simulate the voting process by adding ballots to the bulletin board. This is done with
+It is then time to simulate the voting process by adding ballots to the bulletin board.
+* Add ballots
 
 ```./ballots.sh <number of ballots>```
 
 Once the ballots are on the bulletin board, the trustees will automatically begin the mixing process and continue operating all the way up to the joint decryption and signing of plaintexts.
+
+* Done!
 
 You can inspect the results of the demo by browsing through the files produced in the repository. There should be plaintexts files if the process has ended correctly. To restart the process, simply execute the setup script again. One way to inspect what's going on during execution is
 
@@ -140,8 +142,31 @@ Serves the (typically javascript based) voting booth interface and collects vote
 The Bulletin Board maintains the list of information artifacts necessary for the execution of the cryptographic protocol. This includes artifacts related to joint key generation, ballot casting, ballot mixes, and joint decryption, as well as all required mathematical proofs. The Bulletin Board is implemented with Git's hash-chain, and is immutable and tamper resistant.
 ###### Trustee
 Trustees cooperate to execute the voting protocol such that its privacy and verifiability properties are guaranteed. These properties are inherited from the nMix design, which in turn is based on the univote specification. Trustees are custodians of election private keys that safeguard vote secrecy. When executing the protocol, Trustees retrieve information published and collected by the Bulletin Board. Trustees run the nMix software.
+##### Protocol
+The main steps of the protocol are
+1) The election configuration is defined.
+2) Trustees individually validate and sign the election configuration.
+3) Trustees jointly generate the public and private key shares of the election public key.
+4) Trustees mutually validate each other's shares and proofs of correctness.
+5) Trustees construct, validate and sign the election public key.
+6) Voter's cast votes encrypted the election public key signed by all trustees (this step occurs outside of nMix).
+7) The encrypted cast votes (ciphertexts) are uploaded to the nMix bulletin board.
+8) The trustees execute the mix chain, constructing sequential mixes of the ciphertexts.
+9) The trustees mutually validate each other's mix and proofs of correctness.
+10) The trustees perform joint decryption of the ciphertexts produced at the end of the mixnet.
+11) The trustees mutually validate each other's decryptions and proofs of correctness.
+12) The trustees construct, validate and sign the plaintexts resulting from decryption.
+
+These steps are performed per election item. Note that the nMix protocol does not include steps related to the Registry and Ballotbox (except 6) above, for clarity). nMix only interfaces with external components in three ways
+
+1) To receive the Election Configuration, presumably defined by some election authority.
+2) To provide the election public key used to encrypt votes at the Voting Booth
+3) To receive the encrypted votes collected by the Ballotbox.
+
+Issues related to voter registration and authentication are critical to a secure voting system, but they are decoupled from the nMix design and taken as given.
+
 ### Election configuration
---
+The Election Configuration specifies the election information, the security of the election public key, and the participating trustees and ballotbox agents.
 ### Bulletin Board server configuration
 --
 ### Trustee configuration
@@ -183,7 +208,25 @@ git config --global pack.compression 0
 ### Artifact reference
 --
 ### FAQ
---
+#####  Is nMix 100% secure?
+No, no computer or software system is 100% secure. nMix is secure in the specific sense that it employs cryptographic techniques to achieve strong privacy and verifiability properties, as defined in the academic literature.
+##### What about the use of SHA-1 in the Git hash chain?
+The choice of git as a hash-chain was made with full awareness of the status of SHA-1, which will not be a problem because:
+
+a) Git will [transition](https://plus.google.com/+LinusTorvalds/posts/7tp2gYWQugL) away from SHA-1
+b) It is always possible to build a hash-chain manually with any choice of secure hash on top of git.
+##### Is nMix end-to-end verifiable?
+nMix provides the core cryptography to construct an end-to-end verifiable voting system. In particular, it provides a bulletin board and a verifiable mix-net and zero knowledge proofs, which are key components necessary for granting recorded-as-cast and counted-as-recorded verifiablity. When combined with suitable external components the whole system becomes end-to-end verifiable. See the next question.
+
+#####  What about the Registry, Ballotbox and Voting Booth? Where can I find them?
+nMix implements the cryptographic core of a voting system, and does not include these software components. You can either
+
+a) Wait for these components to be developed by us.
+b) Write them yourself (they are the 'easier' parts to develop). Also, a lot of work can be taken from [Agora Voting](https://github.com/agoravoting) which is a stable, production ready system.
+c) Work with us to develop them, nMix is an open source project!
+#####  Does nMix support a threshold cryptosystem?
+No, the current version of nMix uses a _distributed_ cryptosystem (which is a special case of a threshold system where t = n). All trustees must cooperate to complete the protocol. However, adding a threshold cryptosystem is on the table, and mostly depends on development resources and funding.
+
 ## Benchmarks
 
 |Date   |Trustees|Ballots    |Bits |Hardware**   |Heap   |Libmix opt.|Trustee opt.*|Time (min)
@@ -192,11 +235,36 @@ git config --global pack.compression 0
 |3/25   |2   |3 x 100k   |2048   |2 x m4.16,1 x m4.10   |10G|all |NYNN|72
 |3/27   |2   |3 x 100k   |2048   |2 x m4.16,1 x m4.10   |10G|all |YYNN|59
 
-*The Trustee optimization settings column has the following syntax
+*The Trustee optimization settings column has the following syntax.
 ```
 Permuted mix assignment=Y/N
 Disable git compression=Y/N
 Offline phase=Y/N
 Parallel actions=Y/N
 ```
+Not all code changes and optimizations are reflected in this column.
 **Hardware specs described in terms of [EC2 instance types](https://aws.amazon.com/ec2/instance-types/)
+
+#### Licensing
+
+#### Acknowledgements
+
+We'd like to thank Rolf Haenni and his [team](https://e-voting.bfh.ch/) for the univote and unicrypt projects on which nMix is largely based. We also thank [Douglas Wikstrom](http://www.csc.kth.se/~dog/) for his thoughtful advice and discussions.
+
+##### References
+
+[1] T. Elgamal. A public key cryptosystem and a signature scheme based on discrete logarithms. IEEE Transactions on Information Theory, 1985.
+
+[2] B. Terelius and D. Wikstrom. Proofs of Restricted Shuffles. In D. J. Bernstein and T. Lange, editors, AFRICACRYPT’10, 3rd International Conference on Cryptology in Africa, LNCS 6055, pages 100–113, Stellenbosch, South Africa, 2010.
+
+[3] D. Wikstrom. A Commitment-Consistent Proof of a Shuffle. In C. Boyd and J. Gonzalez Nieto, editors, ACISP’09, 14th Australasian Conference on Information Security and Privacy, LNCS 5594, pages 407–421, Brisbane, Australia, 2009.
+
+[4] P. Locher, R. Haenni. A lightweight implementation of a shuffle proof for electronic voting systems. 2014
+
+[5] https://github.com/bfh-evg/univote2/raw/development/doc/report/report.pdf
+
+[6] David Chaum, Untraceable electronic mail, return addresses, and digital pseudonyms, Comm. ACM, 24, 2, 1981.
+
+[7] https://en.wikipedia.org/wiki/Linked_timestamping
+
+[8] R. Rivest, A. Shamir, L. Adleman.  A method for obtaining digital signatures and public-key cryptosystems. 1978.
