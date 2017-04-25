@@ -9,12 +9,20 @@ import java.security.interfaces.RSAPublicKey
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 import java.nio.file.Files
+import java.net.InetAddress
+import java.net.ServerSocket
+
+import org.slf4j.LoggerFactory
 
 import pureconfig.loadConfig
 
 import ch.bfh.unicrypt.math.algebra.general.classes.FiniteByteArrayElement
 
-object Continuous extends App {
+object TrusteeLoop extends App {
+  val logger = LoggerFactory.getLogger(TrusteeLoop.getClass)
+
+  ensureSingleInstance()
+
   val trusteeCfg = TrusteeConfig.load
 
   val board = new Board(trusteeCfg.dataStorePath)
@@ -22,6 +30,31 @@ object Continuous extends App {
   while(true) {
     Thread.sleep(5000)
     Protocol.execute(section, trusteeCfg)
+  }
+
+  /** Terminates the vm if another intance is running
+   *
+   *  Attempts to open a socket to the specified port, if a bind
+   *  exception occurs this means another instance of the application
+   *  is already running.
+   *
+   *  The default port is 9999, but can be override by setting the
+   *  nmix.singleton.port property
+   */
+  def ensureSingleInstance() = {
+    val port = sys.props.get("nmix.singleton.port").getOrElse("9999").toInt
+    val address = Array[Byte](127, 0, 0, 1)
+    if(port != -1) {
+      try {
+        val socket = new ServerSocket(port,0,InetAddress.getByAddress(address))
+      }
+      catch {
+        case b:java.net.BindException => {
+          logger.error("*** It appears another instance of the application is running ***")
+          sys.exit(1)
+        }
+      }
+    }
   }
 }
 

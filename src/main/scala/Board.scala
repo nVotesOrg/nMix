@@ -497,6 +497,12 @@ case class GitRepo(val repoPath: Path) {
     throw new IllegalArgumentException(s"repoPath '$repoPath' is not a directory")
   }
 
+  val removeLock = sys.props.get("nmix.git.remove.lock").getOrElse("true").toBoolean
+  if(removeLock) {
+    logger.info(s"Repo '$repoPath' removing index.lock if it exists..")
+    Files.deleteIfExists(repoPath.resolve(".git").resolve("index.lock"))
+  }
+
   /** Returns the file input stream for matching file, if it exists
    *
    *  The caller is responsible for
