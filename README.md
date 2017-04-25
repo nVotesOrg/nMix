@@ -67,11 +67,7 @@ then create the git user
 
 ```useradd --create-home --skel /dev/null --home-dir /srv/data/git --shell /usr/bin/git-shell git```
 
-this allows serving requests via ssh, but will block attempts at login. This command needs to be executed as root. Once the user has been created, the setup.sh script (as root) will initialize the repository and add files necessary to start the demo.
-
-```./setup.sh```
-
-To re-run a demo you can simply execute setup.sh again to reset everything.
+this allows serving requests via ssh, but will block attempts at login.
 
 * Add necessary public keys to git's authorized_keys. The user under which you run the demo must have their public key added to that file. First create the .ssh directory for the git user.
 
@@ -83,21 +79,13 @@ Then add a key, for example
 
 NOTE: you should NOT use the keys in the 'keys' subfolder for anything, these keys are used merely for the DEMO and should be removed after you've finished testing it.
 
-* Install rng-tools (if you haven't already)
+Now run the setup.sh script (as root) which will initialize the repository with files necessary for the demo election
 
-```apt-get install rng-tools```
+```./setup.sh```
 
-* Compile the project (see [here](http://www.scala-sbt.org/0.13/docs/Installing-sbt-on-Linux.html) to install sbt)
+* Start the protocol by running the trustees
 
-```sbt```
-```assembly```
-```assemblyPackageDependency```
-
-which will create the necessary jars in the target directory. These jars are referenced by the scripts below.
-
-* Run the trustees, with the run1.sh, run2.sh scripts.
-
-Once you've run setup.sh, you can begin the election process. To do this
+To do this
 
 ```./run1.sh```
 
