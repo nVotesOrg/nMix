@@ -161,7 +161,7 @@ These steps are performed per election item. Note that the nMix protocol does no
 2) To provide the election public key used to encrypt votes at the Voting Booth
 3) To receive the encrypted votes collected by the Ballotbox.
 
-Issues related to voter registration and authentication are critical to a secure voting system, but they are decoupled from the nMix design and taken as given.
+Details related to voter registration and authentication are critical to a secure voting system, but they are decoupled from the nMix design and taken as given.
 
 ### Election configuration
 The Election Configuration specifies the election information, the security parameters of the election public key, and the participating trustees and ballotbox agents. It has this json encoded structure
@@ -236,7 +236,7 @@ git config --global pack.compression 0
 No, no computer or software system is 100% secure. nMix is secure in the specific sense that it employs cryptographic techniques to achieve strong privacy and verifiability properties, as defined in the academic literature.
 
 ##### Is nMix end-to-end verifiable?
-nMix provides the core cryptography to construct an end-to-end verifiable voting system. In particular, it provides a bulletin board and a verifiable mix-net and zero knowledge proofs, which are key components necessary for granting recorded-as-cast and counted-as-recorded verifiablity. When combined with suitable external components the whole system becomes end-to-end verifiable.
+nMix provides the core cryptography to construct an end-to-end verifiable voting system. In particular, it provides a bulletin board and a verifiable mix-net and zero knowledge proofs, which are key components necessary for granting recorded-as-cast and counted-as-recorded verifiablity. When combined with suitable external components the whole system becomes end-to-end verifiable. See the next question.
 
 ##### What about the use of SHA1 in the Git hash chain?
 The choice of git as a hash-chain was made with full awareness of the status of SHA-1, which will not be a problem because:
@@ -282,6 +282,8 @@ We'd like to thank
 * [Douglas Wikstrom](http://www.csc.kth.se/~dog/) for his thoughtful advice and discussions.
 
 #### Licensing
+
+nMix is licensed under the terms of the GNU Affero General Public License (GNU AGPLv3).
 
 ##### References
 
