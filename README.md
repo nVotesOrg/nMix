@@ -79,7 +79,9 @@ Then add a key, for example
 
 NOTE: you should NOT use the keys in the 'keys' subfolder for anything, these keys are used merely for the DEMO and should be removed after you've finished testing it.
 
-Now run the setup.sh script (as root) which will initialize the repository with files necessary for the demo election
+* Initialize the repository
+
+Run the setup.sh script (as root) which will initialize the repository with files necessary for the election
 
 ```./setup.sh```
 
