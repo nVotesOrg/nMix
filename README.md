@@ -155,6 +155,7 @@ We'd like to thank
 
 nMix is licensed under the terms of the GNU Affero General Public License (GNU AGPLv3).
 
+---
 ##### References
 
 [1] T. Elgamal. A public key cryptosystem and a signature scheme based on discrete logarithms. IEEE Transactions on Information Theory, 1985.
