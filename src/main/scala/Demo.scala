@@ -23,6 +23,11 @@ import java.math.BigInteger
 
 import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
+/** Generates demo votes and posts them to the bulletin board
+ *
+ *  This code is used as part of the quick start demo. Please
+ *  see the README.md.
+ */
 object BallotboxAdd extends App {
   import org.nvotes.libmix._
   import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
@@ -64,6 +69,7 @@ object BallotboxAdd extends App {
   println("Generating ballots time: " + ((t1 - t0) / 1000000000.0) + " s")
 }
 
+// FIXME remove
 object PushTest extends App {
   val trusteeCfg = TrusteeConfig.load
   val board = new Board(trusteeCfg.dataStorePath)

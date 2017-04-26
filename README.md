@@ -3,7 +3,7 @@
 
 nMix is an open source backend for a mixnet-based, cryptographically secure voting system, featuring strong privacy and verifiability properties. It is a reactive implementation of the core [univote](https://e-voting.bfh.ch/projects/univote/) crypto specification, with a few changes.
 
-## Cryptographic scheme
+### Cryptographic scheme
 
 The main elements of the cryptographic scheme are
 
@@ -15,7 +15,7 @@ The main elements of the cryptographic scheme are
 
 Together with suitable cryptographic mechanisms at the voting booth this produces an [end-to-end verifiable](https://en.wikipedia.org/wiki/End-to-end_auditable_voting_systems) voting system. More details of the scheme can be found [here](http://davidruescas.com/?p=3651).
 
-## Software architecture
+### Software architecture
 
 nMix follows a minimal design, composed of
 
@@ -35,12 +35,12 @@ Below is an example for a 2-authority mixnet setup
 
 ![sample deployment](http://davidruescas.com/wp-content/uploads/2017/04/nMix2.png)
 
-## Requirements
+### Requirements
 
 * Java 8+
 * Git version 2.4+ (on the bulletin board server)
 
-## Installing
+### Installing
 
 Clone the repository
 
@@ -54,7 +54,7 @@ In order to build the project you will need to [install sbt](http://www.scala-sb
 
 ```sbt assembly assemblyPackageDependency```
 
-## Quickstart demo
+### Quickstart demo
 
 The demo directory contains data and scripts to run a full election cycle on a single machine, from key generation all the way to joint ballot decryption.
 
@@ -122,11 +122,11 @@ which will show you the contents of the repository periodically.
 
 Although the demo is set up for 2 trustees and 3 ballot sets, you can extend it to run with more authorities and ballot sets. Note that if you run a large number of ballots through the demo you may require large amounts of processing time and memory. This could require adjusting the jvm options. It is also straightforward to run the demo with remoting, refer to the User guide below.
 
-## Documentation
+### Documentation
 
 * [User guide](https://github.com/nVotes/nMix/blob/master/docs/GUIDE.md)
 
-## Benchmarks
+### Benchmarks
 
 |Date   |Trustees|Ballots    |Public key bits |Hardware**   |Heap   |Libmix opt.|Trustee opt.*|Time (min)
 |---|---|---|---|---|---|---|---|---|
@@ -145,13 +145,13 @@ Not all code changes and optimizations are reflected in this column.
 
 **Hardware specs described in terms of [EC2 instance types](https://aws.amazon.com/ec2/instance-types/)
 
-#### Acknowledgements
+### Acknowledgements
 
 We'd like to thank
 * Rolf Haenni and his [team](https://e-voting.bfh.ch/) for the unicrypt and univote projects.
 * [Douglas Wikstrom](http://www.csc.kth.se/~dog/) for his thoughtful advice and discussions.
 
-#### Licensing
+### Licensing
 
 nMix is licensed under the terms of the GNU Affero General Public License (GNU AGPLv3).
 
