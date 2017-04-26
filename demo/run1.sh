@@ -9,5 +9,5 @@ MAINCLASS=org.nvotes.trustee.TrusteeLoop
 OPTIONS="-Dconfig.file=application.conf -Dnmix.singleton.port=-1"
 OPTIMIZATIONS="-Dlibmix.gmp=true -Dlibmix.extractor=true -Dlibmix.parallel-generators=true -Dnmix.git.disable-compression=true"
 
-java -Xmx4G -Xms4G $OPTIONS $OPTIMIZATIONS -classpath $CLASSPATH $MAINCLASS $*
+java -Xmx4G -Xms4G $OPTIONS $OPTIMIZATIONS -classpath $CLASSPATH $MAINCLASS repo
 

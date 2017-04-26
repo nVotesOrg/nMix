@@ -28,12 +28,12 @@ object BallotboxAdd extends App {
   import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
   val t0 = System.nanoTime()
 
-  val totalVotes = args(0).toInt
+  val totalVotes = args(1).toInt
   println(s"BallotboxAdd votes = $totalVotes")
   val trusteeCfg = TrusteeConfig.load
 
   val board = new Board(trusteeCfg.dataStorePath)
-  val section = board.cloneOrSyncSection(trusteeCfg.repoBaseUri, Paths.get("repo"))
+  val section = board.cloneOrSyncSection(trusteeCfg.repoBaseUri, Paths.get(args(0)))
   val configString = section.getConfig.get
   val configHash = Crypto.sha512(configString)
   val config = decode[Config](configString).right.get

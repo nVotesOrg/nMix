@@ -8,4 +8,4 @@ MAINCLASS=org.nvotes.trustee.TrusteeLoop
 OPTIONS="-Dconfig.file=application.conf -Ddata-store-path=datastore2 -Dpublic-key=keys/auth2.pub.pem -Dprivate-key=keys/auth2.pem -Dnmix.singleton.port=-1"
 OPTIMIZATIONS="-Dlibmix.gmp=true -Dlibmix.extractor=true -Dlibmix.parallel-generators=true -Dnmix.git.disable-compression=true"
 
-java -Xmx4G -Xms4G $OPTIONS $OPTIMIZATIONS -classpath $CLASSPATH $MAINCLASS $*
+java -Xmx4G -Xms4G $OPTIONS $OPTIMIZATIONS -classpath $CLASSPATH $MAINCLASS repo

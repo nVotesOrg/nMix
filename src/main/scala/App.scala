@@ -35,18 +35,35 @@ import pureconfig.loadConfig
 
 import ch.bfh.unicrypt.math.algebra.general.classes.FiniteByteArrayElement
 
+/** Run's the trustee protocol against a section of the board
+  *
+  *  The trustee polls the bulletin board every n seconds
+  *  and reactively executes work. This runs indefinitely,
+  *  a trustee does not terminate unless an error occurs.
+  *
+  *  Before executing, a check is made to ensure this is the only
+  *  instance running on this machine. This is implemented via
+  *  binding to a port, specified by the 'nmix.singleton.port'
+  *  environment property. Set to -1 to disable this check.
+  *
+  */
 object TrusteeLoop extends App {
   val logger = LoggerFactory.getLogger(TrusteeLoop.getClass)
 
-  ensureSingleInstance()
+  if(args.size != 1) {
+    logger.error("No target repo argument supplied on command line")
+  } else {
 
-  val trusteeCfg = TrusteeConfig.load
+    ensureSingleInstance()
 
-  val board = new Board(trusteeCfg.dataStorePath)
-  val section = board.cloneOrSyncSection(trusteeCfg.repoBaseUri, Paths.get("repo"))
-  while(true) {
-    Thread.sleep(5000)
-    Protocol.execute(section, trusteeCfg)
+    val trusteeCfg = TrusteeConfig.load
+
+    val board = new Board(trusteeCfg.dataStorePath)
+    val section = board.cloneOrSyncSection(trusteeCfg.repoBaseUri, Paths.get(args(0)))
+    while(true) {
+      Thread.sleep(5000)
+      Protocol.execute(section, trusteeCfg)
+    }
   }
 
   /** Terminates the vm if another intance is running
@@ -75,17 +92,32 @@ object TrusteeLoop extends App {
   }
 }
 
+/** The trustee configuration as read from the filesystem
+  *
+  */
 case class TrusteeConfigRaw(dataStorePath: Path, repoBaseUri: URI, bootstrapRepoUri: URI,
   publicKey: Path, privateKey:Path, aesKey: Path, peers: Path)
 
+/** The trustee configuration, converted to objects
+  *
+  */
 case class TrusteeConfig(dataStorePath: Path, repoBaseUri: URI, bootstrapRepoUri: URI,
   publicKey: RSAPublicKey, privateKey: RSAPrivateKey, aesKey: FiniteByteArrayElement, peers: Seq[RSAPublicKey]) {
 
    override def toString() = s"TrusteeConfig($dataStorePath $repoBaseUri $bootstrapRepoUri ${peers.length})"
 }
 
+/** Used to load the trustee configuration */
 object TrusteeConfig {
 
+  /** Loads the trustee configuration and converts the raw values into objects
+   *
+   *  Throws exceptions if
+   *  - the configuration is not found in the classpath or set by -Dconfig.file
+   *  - the configuration does not parse correctly, according to TrusteeConfigRaw
+   *  - the peers file does not exist or does not parse correctly into a set of RSA public keys
+   *  - the aes key file does not exist or does not parse correctly into an object
+   */
   def load: TrusteeConfig = {
     val c = loadConfig[TrusteeConfigRaw].right.get
     val publicKey = Crypto.readPublicRsa(c.publicKey)

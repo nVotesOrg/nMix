@@ -8,4 +8,4 @@ MAINCLASS=org.nvotes.trustee.BallotboxAdd
 OPTIONS="-Dconfig.file=application.conf -Ddata-store-path=datastore3 -Dpublic-key=keys/auth2.pub.pem -Dprivate-key=keys/auth2.pem"
 OPTIMIZATIONS="-Dlibmix.gmp=true -Dlibmix.extractor=true -Dlibmix.parallel-generators=true -Dnmix.git.disable-compression=true"
 
-java -Xmx2G -Xms2G $OPTIONS $OPTIMIZATIONS -classpath $CLASSPATH $MAINCLASS $*
+java -Xmx2G -Xms2G $OPTIONS $OPTIMIZATIONS -classpath $CLASSPATH $MAINCLASS repo $*
