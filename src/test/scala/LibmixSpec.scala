@@ -10,8 +10,12 @@ import java.math.BigInteger
 import org.scalatest.FlatSpec
 import org.nvotes.libmix._
 
-// duplicate of cryptospec in the nmix project, remove
-class CryptoSpec extends FlatSpec {
+/** Tests libmix functionality
+ *
+ *  This test is a duplicate of the libmix CryptoSpec. It is added
+ *  here for convenience.
+ */
+class LibmixSpec extends FlatSpec {
 
   val grp = GStarModSafePrime.getFirstInstance(2048)
 
@@ -31,7 +35,7 @@ class CryptoSpec extends FlatSpec {
     val publicKey = keyPair.getSecond()
 
     val plaintexts = Seq.fill(10)(scala.util.Random.nextInt(10))
-  	val votes = Util.encryptVotes(plaintexts, Csettings, publicKey)
+    val votes = Util.encryptVotes(plaintexts, Csettings, publicKey)
 
     val shuffleResult = MX.shuffle(Util.tupleFromSeq(votes), publicKey, Csettings, "proverId")
     val shuffled = shuffleResult.votes.map( v => Util.fromString(elGamal.getEncryptionSpace, v) )
@@ -51,17 +55,17 @@ class CryptoSpec extends FlatSpec {
 
   "The dkg process" should "verify shares, verify decryptions, decrypt correctly" in {
     val (share, key) = KM.createShare("1", Csettings)
-    var ok = addShare(share, "1", Csettings, key)
+    var ok = addShare(share, "1", Csettings, key.convertToString)
     assert(ok)
 
     val (share2, key2) = KM.createShare("2", Csettings)
-    ok = addShare(share2, "2", Csettings, key2)
+    ok = addShare(share2, "2", Csettings, key2.convertToString)
     assert(ok)
 
     val publicKey = combineShares(shares, Csettings)
 
     val plaintexts = Seq.fill(10)(scala.util.Random.nextInt(10))
-  	val ciphertexts = Util.encryptVotes(plaintexts, Csettings, publicKey)
+    val ciphertexts = Util.encryptVotes(plaintexts, Csettings, publicKey)
 
     // a^-x1
     val elementsOne = KM.partialDecrypt(ciphertexts, privates(0), "0", Csettings)
@@ -79,7 +83,7 @@ class CryptoSpec extends FlatSpec {
     // a^-x * b = m
     val decrypted = (ciphertexts zip combined).map(c => c._1.getSecond().apply(c._2))
     val encoder = ZModPrimeToGStarModSafePrime.getInstance(Csettings.group)
-	val decoded = decrypted.map(encoder.decode(_).convertToString)
+  val decoded = decrypted.map(encoder.decode(_).convertToString)
 
     assert(plaintexts.sorted == decoded.map(_.toInt).sorted)
   }
