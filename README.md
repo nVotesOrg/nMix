@@ -63,25 +63,8 @@ run an election demo on a single machine without having to do a real world deplo
 
 * [Tutorial](https://github.com/nVotes/nMix/blob/master/docs/TUTORIAL.md)
 * [User guide](https://github.com/nVotes/nMix/blob/master/docs/GUIDE.md)
-
-### Benchmarks
-
-|Date   |Trustees|Ballots    |Public key bits |Hardware**   |Heap   |Libmix opt.|Trustee opt.*|Time (min)
-|---|---|---|---|---|---|---|---|---|
-|3/21   |2   |3 x 100k   |2048   |2 x m4.16, 1 x m4.10   |5G|all |NNNN|92
-|3/25   |2   |3 x 100k   |2048   |2 x m4.16,1 x m4.10   |10G|all |NYNN|72
-|3/27   |2   |3 x 100k   |2048   |2 x m4.16,1 x m4.10   |10G|all |YYNN|59
-
-*The Trustee optimization settings column has the following syntax.
-```
-Permuted mix assignment=Y/N
-Disable git compression=Y/N
-Offline phase=Y/N
-Parallel actions=Y/N
-```
-Not all code changes and optimizations are reflected in this column.
-
-**Hardware specs described in terms of [EC2 instance types](https://aws.amazon.com/ec2/instance-types/)
+* [FAQ](https://github.com/nVotes/nMix/blob/master/docs/GUIDE.md#faq)
+* [Performance benchmarks](https://github.com/nVotes/nMix/blob/master/docs/BENCHMARKS.md)
 
 ### Acknowledgements
 
