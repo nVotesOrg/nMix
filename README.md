@@ -57,7 +57,7 @@ In order to build the project you will need to [install sbt](http://www.scala-sb
 ### Quickstart
 
 The best place to start is to follow the [tutorial](https://github.com/nVotes/nMix/blob/master/docs/TUTORIAL.md). You can
-run an election demo on a single machine without having to do a real world deployment.
+run an election demo on a single machine without having to do a real world distributed deployment.
 
 ### Documentation
 
@@ -66,9 +66,13 @@ run an election demo on a single machine without having to do a real world deplo
 * [FAQ](https://github.com/nVotes/nMix/blob/master/docs/GUIDE.md#faq)
 * [Performance benchmarks](https://github.com/nVotes/nMix/blob/master/docs/BENCHMARKS.md)
 
+### Getting help
+
+* You can ask questions in the [mailing list](https://groups.google.com/forum/#!forum/nmix-voting)
+
 ### Acknowledgements
 
-* Rolf Haenni and his [team](https://e-voting.bfh.ch/) for the unicrypt and univote projects.
+* [Rolf Haenni](https://web.ti.bfh.ch/?id=hnr1&L=2) and his [team](https://e-voting.bfh.ch/) for the unicrypt and univote projects.
 * [Douglas Wikstrom](http://www.csc.kth.se/~dog/) for his thoughtful advice and discussions.
 
 ### Licensing
