@@ -68,7 +68,7 @@ run an election demo on a single machine without having to do a real world distr
 
 ### Getting help
 
-* You can ask questions in the [mailing list](https://groups.google.com/forum/#!forum/nmix-voting)
+* You can ask questions on the [mailing list](https://groups.google.com/forum/#!forum/nmix-voting)
 
 ### Acknowledgements
 
