@@ -240,9 +240,6 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
   /** Returns the configuration if it exists as an Option[String] */
   def getConfig: Option[String] = getFileStream(CONFIG).map(IO.asString(_))
 
-  /** Returns the configuration if it exists as an Option[InputStream] */
-  def getConfigStream: Option[InputStream] = getFileStream(CONFIG)
-
   /** Returns the configuration statement if it exists */
   def getConfigStatement: Option[String] = getFileStream(CONFIG_STMT).map(IO.asString(_))
 
@@ -452,7 +449,7 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
   }
 
   /** Sends (posts) to the repository, see the GitRepo implementation for details */
-  def send(message: String): Unit = {
+  private def send(message: String): Unit = {
     gitRepo.send(message)
   }
 
@@ -889,6 +886,10 @@ object GitRepo {
   }
 }
 
+/** Defines the contact point between the Protocol and the Bulletin board
+ *
+ *  Currently there is only the git implementation.
+ */
 trait BoardSectionInterface {
 
   /** the name of the board section */

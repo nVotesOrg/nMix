@@ -61,7 +61,7 @@ object Protocol extends Names {
    *  Global rules depend on data that is global to the section
    *  Item rules depend only on item data
    */
-  def execute(section: BoardSectionInterface, trusteeCfg: TrusteeConfig): Unit = {
+  def execute(section: BoardSectionInterface, trusteeCfg: TrusteeConfig): Result = {
 
     logger.info(s"Begin executing protocol for section '${section.name}'...")
     logger.info(s"Syncing '${section.name}'")
@@ -71,8 +71,7 @@ object Protocol extends Names {
 
     if(!files.contains(CONFIG)) {
       logger.error(s"Section ${section.name} does not have a config")
-      // FIXME cause a real error
-      return
+      return Error(s"Section ${section.name} does not have a config")
     }
 
     val configString = section.getConfig.get
@@ -89,8 +88,7 @@ object Protocol extends Names {
 
     if(position == 0) {
       logger.info(s"could not find self in list of trustees for config $config")
-      // FIXME cause a real error
-      return
+      return Error(s"could not find self in list of trustees for config $config")
     }
 
     val group = GStarModSafePrime.getInstance(new BigInteger(config.modulus))
@@ -115,7 +113,7 @@ object Protocol extends Names {
         case _ =>
       }
 
-      return
+      return result
     }
 
     val items = config.items
@@ -143,11 +141,14 @@ object Protocol extends Names {
       if(errorStrings.size > 0) {
         logger.error(s"Results returned errors: $errorStrings")
         postError(errorStrings.mkString("\n"))
+        return Error(errorStrings.mkString("\n"))
       }
     }
     else {
       logger.info(s"* Per-item matches: None")
     }
+
+    Ok
   }
 
 
