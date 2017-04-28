@@ -31,7 +31,7 @@ which allows for
 * Simple network toplogy: centralized communication on a single ssh port
 * Simple software deployment: Java8 (+ Git on the bulletin board server)
 
-Below is an example for a 2-authority mixnet setup
+Below is an example mixnet deployment with two trustees
 
 ![sample deployment](http://davidruescas.com/wp-content/uploads/2017/04/nMix2.png)
 
