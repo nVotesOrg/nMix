@@ -64,5 +64,5 @@ case class Ballots(ballots: Seq[String])
 case class Plaintexts(plaintexts: Seq[String])
 
 /** Convenience class to pass around relevant data  */
-case class Context(config: Config, section: BoardSection, trusteeCfg: TrusteeConfig,
+case class Context(config: Config, section: BoardSectionInterface, trusteeCfg: TrusteeConfig,
   position: Int, cSettings: CryptoSettings)

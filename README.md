@@ -68,7 +68,6 @@ run an election demo on a single machine without having to do a real world deplo
 
 ### Acknowledgements
 
-We'd like to thank
 * Rolf Haenni and his [team](https://e-voting.bfh.ch/) for the unicrypt and univote projects.
 * [Douglas Wikstrom](http://www.csc.kth.se/~dog/) for his thoughtful advice and discussions.
 

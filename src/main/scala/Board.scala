@@ -207,7 +207,7 @@ class Board (val dataStorePath: Path) {
  *  Methods that retrieve files always return Options as they may not exist.
  *
  */
-case class BoardSection (val gitRepo: GitRepo) extends Names {
+case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface with Names {
   val logger = LoggerFactory.getLogger(classOf[BoardSection])
 
   val preShuffleData = Map[String, PreShuffleData]()
@@ -289,7 +289,7 @@ case class BoardSection (val gitRepo: GitRepo) extends Names {
     getFileStream(SHARE_SIG(item, auth)).map(IO.asBytes(_))
   }
 
-  /** Syncs the repository, adds a share triple (Share, Statement, Signature), and sends */
+  /** Syncs the repository, adds a public key triple (Share, Statement, Signature), and sends */
   def addPublicKey(publicKey: Path, stmt: Path, sig: Path, item: Int, auth: Int): Unit = synchronized {
     gitRepo.sync()
     gitRepo.addToWorkingCopy(publicKey, PUBLIC_KEY(item))
@@ -335,7 +335,7 @@ case class BoardSection (val gitRepo: GitRepo) extends Names {
     getFileStream(BALLOTS_SIG(item)).map(IO.asBytes(_))
   }
 
-  /** Syncs the repository, adds a share triple (Share, Statement, Signature), and sends */
+  /** Syncs the repository, adds a ballots triple (Share, Statement, Signature), and sends */
   def addBallots(ballots: Path, stmt: Path, sig: Path, item: Int): Unit = synchronized {
     gitRepo.sync()
     gitRepo.addToWorkingCopy(ballots, BALLOTS(item))
@@ -374,7 +374,7 @@ case class BoardSection (val gitRepo: GitRepo) extends Names {
     getFileStream(MIX_SIG(item, auth, auth2)).map(IO.asBytes(_))
   }
 
-  /** Syncs the repository, adds a share triple (Share, Statement, Signature), and sends */
+  /** Syncs the repository, adds a mix triple (Share, Statement, Signature), and sends */
   def addMix(mix: Path, stmt: Path, sig: Path, item: Int, auth: Int): Unit = synchronized {
     gitRepo.sync()
     gitRepo.addToWorkingCopy(mix, MIX(item, auth))
@@ -405,7 +405,7 @@ case class BoardSection (val gitRepo: GitRepo) extends Names {
     getFileStream(DECRYPTION_SIG(item, auth)).map(IO.asBytes(_))
   }
 
-  /** Syncs the repository, adds a share triple (Share, Statement, Signature), and sends */
+  /** Syncs the repository, adds a decryption triple (Share, Statement, Signature), and sends */
   def addDecryption(decryption: Path, stmt: Path, sig: Path, item: Int, auth: Int): Unit = synchronized {
     gitRepo.sync()
     gitRepo.addToWorkingCopy(decryption, DECRYPTION(item, auth))
@@ -429,7 +429,7 @@ case class BoardSection (val gitRepo: GitRepo) extends Names {
     getFileStream(PLAINTEXTS_SIG(item, auth)).map(IO.asBytes(_))
   }
 
-  /** Syncs the repository, adds a share triple (Share, Statement, Signature), and sends */
+  /** Syncs the repository, adds a plaintext triple (Share, Statement, Signature), and sends */
   def addPlaintexts(plaintexts: Path, stmt: Path, sig: Path, item: Int, auth: Int): Unit = synchronized {
     gitRepo.sync()
     gitRepo.addToWorkingCopy(plaintexts, PLAINTEXTS(item))
@@ -589,23 +589,20 @@ case class GitRepo(val repoPath: Path) {
     if(targetFile.isAbsolute()) {
       throw new IllegalArgumentException(s"targetPath '$targetFile' is invalid")
     }
-    // no up-directory nonsense
+    /** no up-directory paths nonsense */
     if(!targetFile.startsWith(repoPath)) {
       throw new IllegalArgumentException(s"file name '$targetFile' is invalid")
     }
 
-    // check if file already in repository
     val present = getFileSet(target.toString)
     if(!present.contains(target.toString)) {
-      // remove the file first from working copy if it exists
+      /** remove the file first from working copy if it exists */
       Files.deleteIfExists(targetFile)
 
-      // create necessary directories if they are not present
+      /* create necessary directories if they are not present */
       Files.createDirectories(targetFile.getParent)
 
-      // FIXME use atomic move when not on vm
-      // copy the file
-      // Files.copy(sourceFile, targetFile)
+      // FIXME use atomic move when not on local vm
       // Files.move(sourceFile, targetFile, ATOMIC_MOVE)
       Files.move(sourceFile, targetFile)
     }
@@ -655,7 +652,6 @@ case class GitRepo(val repoPath: Path) {
           start = System.nanoTime()
           val pushCommand = git.push()
           pushCommand.setTransportConfigCallback(GitRepo.sshTransportCallback)
-          // requires git 2.4+ on server
           pushCommand.setAtomic(true)
           val results = pushCommand.call()
           end = System.nanoTime()
@@ -664,7 +660,7 @@ case class GitRepo(val repoPath: Path) {
           val status = getPushStatus(results)
           logger.info(s"push status: $status")
 
-          // http://download.eclipse.org/jgit/site/4.6.1.201703071140-r/apidocs/index.html
+          /** status codes at http://download.eclipse.org/jgit/site/4.6.1.201703071140-r/apidocs/index.html */
           if(status != RemoteRefUpdate.Status.OK) {
             logger.warn(s"Push status was not OK: $status")
             if(status == RemoteRefUpdate.Status.REJECTED_NONFASTFORWARD) {
@@ -828,7 +824,7 @@ object GitRepo {
   /** Jgit machinery for ssh transports */
   val sshSessionFactory = new JschConfigSessionFactory() {
     override protected def configure(host: Host, session: Session) = {
-      // http://stackoverflow.com/questions/13396534/unknownhostkey-exception-in-accessing-github-securely
+      /** http://stackoverflow.com/questions/13396534/unknownhostkey-exception-in-accessing-github-securely */
       session.setConfig("StrictHostKeyChecking", "no")
     }
   }
@@ -891,4 +887,130 @@ object GitRepo {
       GitRepo(target).sync()
     }
   }
+}
+
+trait BoardSectionInterface {
+
+  /** the name of the board section */
+  def name: String
+
+  /** Returns the set of all entries in this section
+   *
+   *  The preShuffleData must be included
+   */
+  def getFileSet: Set[String]
+
+  /** syncs the local bulletin board with the remote storage, retrieving updates */
+  def sync(): BoardSectionInterface
+
+  /** Adds the error, and sends
+   *
+   *  If an error already existed it is overwritten
+   */
+  def addError(error: Path, position: Int): Unit
+
+  /** Returns the configuration if it exists as an Option[String] */
+  def getConfig: Option[String]
+
+  /** Returns the configuration statement if it exists */
+  def getConfigStatement: Option[String]
+
+  /** Returns the configuration statement signature if it exists */
+  def getConfigSignature(auth: Int): Option[Array[Byte]]
+
+  /** Adds the configuration */
+  def addConfig(config: Path): Unit
+
+  /** Adds the configuration signature */
+  def addConfigSig(sig: Path, position: Int): Unit
+
+  /** Adds a share triple (Share, Statement, Signature) */
+  def addShare(share: Path, stmt: Path, sig: Path, item: Int, position: Int): Unit
+
+  /** Returns a share if it exists */
+  def getShare(item: Int, auth: Int): Option[String]
+
+  /** Returns a share statement if it exists */
+  def getShareStatement(item: Int, auth: Int): Option[String]
+
+  /** Returns a share signature if it exists */
+  def getShareSignature(item: Int, auth: Int): Option[Array[Byte]]
+
+  /** Adds a public key triple (Share, Statement, Signature) */
+  def addPublicKey(publicKey: Path, stmt: Path, sig: Path, item: Int, auth: Int): Unit
+
+  /** Adds a public key signature, and sends */
+  def addPublicKeySignature(sig: Path, item: Int, auth: Int): Unit
+
+  /** Returns the public key if it exists */
+  def getPublicKey(item: Int): Option[String]
+
+  /** Returns the public key statement if it exists */
+  def getPublicKeyStatement(item: Int): Option[String]
+
+  /** Returns the public key signature if it exists */
+  def getPublicKeySignature(item: Int, auth: Int): Option[Array[Byte]]
+
+  /** Returns the ballots if they exist */
+  def getBallots(item: Int): Option[String]
+
+  /** Returns the ballots statement if it exists */
+  def getBallotsStatement(item: Int): Option[String]
+
+  /** Returns the ballots signature if it exists */
+  def getBallotsSignature(item: Int): Option[Array[Byte]]
+
+  /** Adds a ballot triple (Share, Statement, Signature */
+  def addBallots(ballots: Path, stmt: Path, sig: Path, item: Int): Unit
+
+  /** Returns private permutation data if it exists */
+  def getPreShuffleDataLocal(item: Int, auth: Int): Option[PreShuffleData]
+
+  /** Adds private permutation data */
+  def addPreShuffleDataLocal(data: PreShuffleData, item: Int, auth: Int)
+
+  /** Remove private permutation data */
+  def rmPreShuffleDataLocal(item: Int, auth: Int)
+
+  /** Returns a mix if it exists */
+  def getMix(item: Int, auth: Int): Option[String]
+
+  /** Returns a mix statement if it exists */
+  def getMixStatement(item: Int, auth: Int): Option[String]
+
+  /** Returns a mix signature if it exists */
+  def getMixSignature(item: Int, auth: Int, auth2: Int): Option[Array[Byte]]
+
+  /** Adds a mix triple */
+  def addMix(mix: Path, stmt: Path, sig: Path, item: Int, auth: Int): Unit
+
+  /** Adds a mix signature */
+  def addMixSignature(sig: Path, item: Int, authMixer: Int, authSigner: Int): Unit
+
+  /** Returns a decryption if it exists */
+  def getDecryption(item: Int, auth: Int): Option[String]
+
+  /** Returns a decryption statement if it exists */
+  def getDecryptionStatement(item: Int, auth: Int): Option[String]
+
+  /** Returns a decryption signature if it exists */
+  def getDecryptionSignature(item: Int, auth: Int): Option[Array[Byte]]
+
+  /** Adds a decryption triple (Share, Statement, Signature) */
+  def addDecryption(decryption: Path, stmt: Path, sig: Path, item: Int, auth: Int): Unit
+
+  /** Returns the plaintexts if they exist */
+  def getPlaintexts(item: Int): Option[String]
+
+  /** Returns the plaintexts statement if it exists */
+  def getPlaintextsStatement(item: Int): Option[String]
+
+  /** Returns the plaintexts signature if it exists */
+  def getPlaintextsSignature(item: Int, auth: Int): Option[Array[Byte]]
+
+  /** Adds a plaintext triple (Share, Statement, Signature) */
+  def addPlaintexts(plaintexts: Path, stmt: Path, sig: Path, item: Int, auth: Int): Unit
+
+  /** Adds a plaintexts signature */
+  def addPlaintextsSignature(sig: Path, item: Int, auth: Int): Unit
 }

@@ -61,7 +61,7 @@ object Protocol extends Names {
    *  Global rules depend on data that is global to the section
    *  Item rules depend only on item data
    */
-  def execute(section: BoardSection, trusteeCfg: TrusteeConfig): Unit = {
+  def execute(section: BoardSectionInterface, trusteeCfg: TrusteeConfig): Unit = {
 
     logger.info(s"Begin executing protocol for section '${section.name}'...")
     logger.info(s"Syncing '${section.name}'")
