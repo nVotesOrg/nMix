@@ -6,6 +6,9 @@ import org.scalatest.FlatSpec
 import java.nio.charset.StandardCharsets
 import java.util.UUID
 
+/** Tests the condition detection functionality
+ *
+ */
 class ConditionSpec extends FlatSpec {
 
   val files = Set("config.json", "config_1.stmt", "config_1.sig", "1/error")

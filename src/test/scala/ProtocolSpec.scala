@@ -9,6 +9,9 @@ import org.scalatest.FlatSpec
 import java.nio.charset.StandardCharsets
 import java.util.UUID
 
+/** Tests the protocol using an in memory bulletin board
+ *
+ */
 class ProtocolSpec extends FlatSpec with Names {
 
   "Protocol" should "return error if no config" in {
@@ -39,12 +42,10 @@ class ProtocolSpec extends FlatSpec with Names {
   }
 
   def getCfg1 = {
-
     TrusteeConfig(bogusPath, bogusUri, bogusUri, auth1pubRsa, auth1privRsa, aesKey, peers)
   }
 
   def getCfg2 = {
-
     TrusteeConfig(bogusPath, bogusUri, bogusUri, auth2pubRsa, auth2privRsa, aesKey, peers)
   }
 
@@ -68,28 +69,22 @@ class ProtocolSpec extends FlatSpec with Names {
   val configStatement = """{"configHash":"EFF86B73B1A046EE45B6F18E23B0EE98C6E4CF845C6B9ABEF7A3A72A083BAF9FCC6D6F8AEB321A08FCB53B13117466FCB4D32EE5FD284A020023DAF094BE1BBB"}"""
 }
 
-
+/** An in memory implementation of a bulletin board section
+ *
+ *  This is only meant to be used for the test above
+ */
 case class MemoryBoardSection(name: String) extends BoardSectionInterface with Names {
   import scala.collection.mutable.Map
 
   val contents = Map[String, Array[Byte]]()
   val preShuffleData = Map[String, PreShuffleData]()
 
-  private def add(file: Path, key: String): Unit = {
-    val bytes = Files.readAllBytes(file)
-
-    contents += key -> bytes
-  }
-  private def str(in: Array[Byte]): String = {
-    new String(in, StandardCharsets.UTF_8)
-  }
   def addConfig(config: String, configStatement: String) = {
     contents += CONFIG -> config.getBytes(StandardCharsets.UTF_8)
     contents += CONFIG_STMT -> configStatement.getBytes(StandardCharsets.UTF_8)
   }
 
   def getFileSet: Set[String] = synchronized {
-
     contents.keySet.toSet ++ preShuffleData.keySet
   }
 
@@ -99,210 +94,163 @@ case class MemoryBoardSection(name: String) extends BoardSectionInterface with N
 
   def getConfig: Option[String] = contents.get(CONFIG).map(str(_))
 
-
   def getConfigStatement: Option[String] = contents.get(CONFIG_STMT).map(str(_))
-
 
   def getConfigSignature(auth: Int): Option[Array[Byte]] = {
     contents.get(CONFIG_SIG(auth))
   }
 
-
   def addConfig(config: Path): Unit = synchronized {
-
     add(config, CONFIG)
-
   }
-
 
   def addConfigSig(sig: Path, position: Int): Unit = synchronized {
-
     add(sig, CONFIG_SIG(position))
-
   }
 
-
   def addShare(share: Path, stmt: Path, sig: Path, item: Int, position: Int): Unit = synchronized {
-
     add(share, SHARE(item, position))
     add(stmt, SHARE_STMT(item, position))
     add(sig, SHARE_SIG(item, position))
-
   }
-
 
   def getShare(item: Int, auth: Int): Option[String] = {
     contents.get(SHARE(item, auth)).map(str(_))
   }
 
-
   def getShareStatement(item: Int, auth: Int): Option[String] = {
     contents.get(SHARE_STMT(item, auth)).map(str(_))
   }
-
 
   def getShareSignature(item: Int, auth: Int): Option[Array[Byte]] = {
     contents.get(SHARE_SIG(item, auth))
   }
 
-
   def addPublicKey(publicKey: Path, stmt: Path, sig: Path, item: Int, auth: Int): Unit = synchronized {
-
     add(publicKey, PUBLIC_KEY(item))
     add(stmt, PUBLIC_KEY_STMT(item))
     add(sig, PUBLIC_KEY_SIG(item, auth))
-
   }
-
 
   def addPublicKeySignature(sig: Path, item: Int, auth: Int): Unit = synchronized {
-
     add(sig, PUBLIC_KEY_SIG(item, auth))
-
   }
-
 
   def getPublicKey(item: Int): Option[String] = {
     contents.get(PUBLIC_KEY(item)).map(str(_))
   }
 
-
   def getPublicKeyStatement(item: Int): Option[String] = {
     contents.get(PUBLIC_KEY_STMT(item)).map(str(_))
   }
-
 
   def getPublicKeySignature(item: Int, auth: Int): Option[Array[Byte]] = {
     contents.get(PUBLIC_KEY_SIG(item, auth))
   }
 
-
   def getBallots(item: Int): Option[String] =  {
     contents.get(BALLOTS(item)).map(str(_))
   }
-
 
   def getBallotsStatement(item: Int): Option[String] =  {
     contents.get(BALLOTS_STMT(item)).map(str(_))
   }
 
-
   def getBallotsSignature(item: Int): Option[Array[Byte]] =  {
     contents.get(BALLOTS_SIG(item))
   }
 
-
   def addBallots(ballots: Path, stmt: Path, sig: Path, item: Int): Unit = synchronized {
-
     add(ballots, BALLOTS(item))
     add(stmt, BALLOTS_STMT(item))
     add(sig, BALLOTS_SIG(item))
-
   }
-
 
   def getPreShuffleDataLocal(item: Int, auth: Int): Option[PreShuffleData] = synchronized {
     preShuffleData.get(PERM_DATA(item, auth))
   }
 
-
   def addPreShuffleDataLocal(data: PreShuffleData, item: Int, auth: Int) = synchronized {
     preShuffleData += PERM_DATA(item, auth) -> data
   }
-
 
   def rmPreShuffleDataLocal(item: Int, auth: Int) = synchronized {
     preShuffleData -= PERM_DATA(item, auth)
   }
 
-
   def getMix(item: Int, auth: Int): Option[String] =  {
     contents.get(MIX(item, auth)).map(str(_))
   }
-
 
   def getMixStatement(item: Int, auth: Int): Option[String] = {
     contents.get(MIX_STMT(item, auth)).map(str(_))
   }
 
-
   def getMixSignature(item: Int, auth: Int, auth2: Int): Option[Array[Byte]] = {
     contents.get(MIX_SIG(item, auth, auth2))
   }
 
-
   def addMix(mix: Path, stmt: Path, sig: Path, item: Int, auth: Int): Unit = synchronized {
-
     add(mix, MIX(item, auth))
     add(stmt, MIX_STMT(item, auth))
     add(sig, MIX_SIG(item, auth, auth))
-
   }
-
 
   def addMixSignature(sig: Path, item: Int, authMixer: Int, authSigner: Int): Unit = synchronized {
-
     add(sig, MIX_SIG(item, authMixer, authSigner))
-
   }
-
 
   def getDecryption(item: Int, auth: Int): Option[String] = {
     contents.get(DECRYPTION(item, auth)).map(str(_))
   }
 
-
   def getDecryptionStatement(item: Int, auth: Int): Option[String] = {
     contents.get(DECRYPTION_STMT(item, auth)).map(str(_))
   }
-
 
   def getDecryptionSignature(item: Int, auth: Int): Option[Array[Byte]] = {
     contents.get(DECRYPTION_SIG(item, auth))
   }
 
-
   def addDecryption(decryption: Path, stmt: Path, sig: Path, item: Int, auth: Int): Unit = synchronized {
-
     add(decryption, DECRYPTION(item, auth))
     add(stmt, DECRYPTION_STMT(item, auth))
     add(sig, DECRYPTION_SIG(item, auth))
-
   }
-
 
   def getPlaintexts(item: Int): Option[String] = {
     contents.get(PLAINTEXTS(item)).map(str(_))
   }
 
-
   def getPlaintextsStatement(item: Int): Option[String] = {
     contents.get(PLAINTEXTS_STMT(item)).map(str(_))
   }
-
 
   def getPlaintextsSignature(item: Int, auth: Int): Option[Array[Byte]] = {
     contents.get(PLAINTEXTS_SIG(item, auth))
   }
 
-
   def addPlaintexts(plaintexts: Path, stmt: Path, sig: Path, item: Int, auth: Int): Unit = synchronized {
-
     add(plaintexts, PLAINTEXTS(item))
     add(stmt, PLAINTEXTS_STMT(item))
     add(sig, PLAINTEXTS_SIG(item, auth))
-
   }
-
 
   def addPlaintextsSignature(sig: Path, item: Int, auth: Int): Unit = synchronized {
-
     add(sig, PLAINTEXTS_SIG(item, auth))
-
   }
-
 
   def sync(): MemoryBoardSection = {
     this
+  }
+
+  private def add(file: Path, key: String): Unit = {
+    val bytes = Files.readAllBytes(file)
+
+    contents += key -> bytes
+  }
+
+  private def str(in: Array[Byte]): String = {
+    new String(in, StandardCharsets.UTF_8)
   }
 }

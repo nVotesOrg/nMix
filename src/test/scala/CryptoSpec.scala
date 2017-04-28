@@ -6,6 +6,10 @@ import org.scalatest.FlatSpec
 import java.nio.charset.StandardCharsets
 import java.util.UUID
 
+/** Tests the Crypto object functionality
+ *
+ *  Basic tests for RSA signing, verifying and AES encryption/decryption
+ */
 class CryptoSpec extends FlatSpec {
 
   "ok signature" should "verify ok" in {
