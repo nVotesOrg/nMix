@@ -7,6 +7,7 @@ import java.net.URI
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.util.UUID
+import scala.util.Random
 
 import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
@@ -29,7 +30,34 @@ class ProtocolSpec extends FlatSpec with Names {
     assert(result2.isInstanceOf[Error])
   }
 
-  "Protocol" should "execute correctly" in {
+  "Protocol" should "return error if trustees not in peers" in {
+    val auth1cfg = getBadCfg
+    val auth2cfg = getBadCfg
+    val bb = new MemoryBoardSection("test")
+    bb.addConfig(config, configStatement)
+
+    val result1 = Protocol.execute(bb, auth1cfg)
+    val result2 = Protocol.execute(bb, auth2cfg)
+
+    assert(result1.isInstanceOf[Error])
+    assert(result2.isInstanceOf[Stop])
+  }
+
+  "Protocol" should "return error if local trustee not in election cfg" in {
+    val auth1cfg = getBadCfg2
+    val auth2cfg = getBadCfg2
+    val bb = new MemoryBoardSection("test")
+    bb.addConfig(config, configStatement)
+
+    val result1 = Protocol.execute(bb, auth1cfg)
+    val result2 = Protocol.execute(bb, auth2cfg)
+
+    assert(result1.isInstanceOf[Error])
+    assert(result2.isInstanceOf[Error])
+  }
+
+
+  "Protocol" should "return error for malformed ballots" in {
     val auth1cfg = getCfg1
     val auth2cfg = getCfg2
     val bb = new MemoryBoardSection("test")
@@ -69,7 +97,65 @@ class ProtocolSpec extends FlatSpec with Names {
     assert(files.contains(PUBLIC_KEY_SIG(1, 2)))
 
     // cast votes
-    genVotes(bb, 100)
+    genBadVotes(bb)
+    files = bb.getFileSet
+    assert(files.contains(BALLOTS(1)))
+    assert(files.contains(BALLOTS_STMT(1)))
+    assert(files.contains(BALLOTS_SIG(1)))
+
+    // mix permutation
+    // auth 1 => first mix of question 2
+    // auth 2 => first mix of question 1, 3, second mix of 2
+    val result1 = Protocol.execute(bb, auth1cfg)
+    val result2 = Protocol.execute(bb, auth2cfg)
+    assert(result1.isInstanceOf[Error])
+    assert(result2.isInstanceOf[Stop])
+  }
+
+  "Protocol" should "execute full election cycle correctly" in {
+    val auth1cfg = getCfg1
+    val auth2cfg = getCfg2
+    val bb = new MemoryBoardSection("test")
+    bb.addConfig(config, configStatement)
+
+    // sign config
+    Protocol.execute(bb, auth1cfg)
+    Protocol.execute(bb, auth2cfg)
+
+    var files = bb.getFileSet
+    assert(files.contains(CONFIG_SIG(1)))
+    assert(files.contains(CONFIG_SIG(2)))
+
+    // create shares
+    Protocol.execute(bb, auth1cfg)
+    Protocol.execute(bb, auth2cfg)
+
+    files = bb.getFileSet
+    assert(files.contains(SHARE(1, 1)))
+    assert(files.contains(SHARE_STMT(1, 1)))
+    assert(files.contains(SHARE_SIG(1, 1)))
+    assert(files.contains(SHARE(1, 2)))
+    assert(files.contains(SHARE_STMT(1, 2)))
+    assert(files.contains(SHARE_SIG(1, 2)))
+
+    // first trustee combines shares and signs pk
+    Protocol.execute(bb, auth1cfg)
+    files = bb.getFileSet
+    assert(files.contains(PUBLIC_KEY(1)))
+    assert(files.contains(PUBLIC_KEY_STMT(1)))
+    assert(files.contains(PUBLIC_KEY_SIG(1, 1)))
+    assert(!files.contains(PUBLIC_KEY_SIG(1, 2)))
+
+    // second trustee signs pk
+    Protocol.execute(bb, auth2cfg)
+    files = bb.getFileSet
+    assert(files.contains(PUBLIC_KEY_SIG(1, 2)))
+
+    // cast votes
+    val votes = Seq.fill(6)(Random.nextInt(Int.MaxValue))
+    println(s"casting $votes")
+
+    genVotes(bb, votes)
     files = bb.getFileSet
     assert(files.contains(BALLOTS(1)))
     assert(files.contains(BALLOTS_STMT(1)))
@@ -143,6 +229,14 @@ class ProtocolSpec extends FlatSpec with Names {
     files = bb.getFileSet
     assert(files.contains(PLAINTEXTS_SIG(1, 2)))
     assert(files.contains(PLAINTEXTS_SIG(3, 2)))
+
+    val p1 = decode[Plaintexts](bb.getPlaintexts(1).get).right.get
+    val p2 = decode[Plaintexts](bb.getPlaintexts(2).get).right.get
+    val p3 = decode[Plaintexts](bb.getPlaintexts(3).get).right.get
+
+    assert(p1.plaintexts.map(_.toInt).sorted == votes.map(_ + 1).sorted)
+    assert(p2.plaintexts.map(_.toInt).sorted == votes.map(_ + 2).sorted)
+    assert(p3.plaintexts.map(_.toInt).sorted == votes.map(_ + 3).sorted)
   }
 
   def getCfg1 = {
@@ -151,6 +245,14 @@ class ProtocolSpec extends FlatSpec with Names {
 
   def getCfg2 = {
     TrusteeConfig(bogusPath, bogusUri, bogusUri, auth2pubRsa, auth2privRsa, aesKey, peers)
+  }
+
+  def getBadCfg = {
+    TrusteeConfig(bogusPath, bogusUri, bogusUri, auth2pubRsa, auth2privRsa, aesKey, Array(ballotboxpubRsa))
+  }
+
+  def getBadCfg2 = {
+    TrusteeConfig(bogusPath, bogusUri, bogusUri, ballotboxpubRsa, auth2privRsa, aesKey, peers)
   }
 
   val auth1pub = "-----BEGIN PUBLIC KEY-----\nMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAzDavZyxk38eTbilzTena\nB5xEqCMGyKgT3/cJ3gUWxFli/aTh3Rs5gjd5PKf/aefljBVcR8OsDTKxeBT6DXT9\nwdbPaGtF9nG0+Wi8KtQ15SiZdg72KX+NMGx6HVuqWZvojxRRmPCDar8oSFrcRIuV\ndimOCvmKQAjUaG9j2ZXfbcA0l9QA1nMTG/3BL/VFmBeCdiSyROjtmpCKgCgeb2HH\nfNA/E/FUipOT7fLzWFVohnzSY65gjkG3U2h1vEHwzqkWVo4vuOXX/WZcRmrIlQDq\njAwG6piiNHhUmxAk5/2LWaZL2mfVV4peXpHjEUrCSe/DSkuMraac6lYMshWXfDQc\nsos9CxdbaBHxvvzRH+ja0Wt+QSAooQMVXX+fFQrJUCK2TTIWZKfFQR2Js1XfhfE4\n3Mn1l/TKQadq2a3F50gAy5JrXDPc9LcSzRexwIfUMzjQ7QvIWsmmShD9rwnWuAti\nwWWxG0ReB7d6qUkZGCtzoYNb9BqKEI39lScMhfY+wfAN4d7Mi6EcD1yPra8sOqR1\n04cyH5dn3DUZtHzZF9EWx5BPPhyYxI40DFXFn2UAb1bb/R89YuFcKyxgyrZjPlHe\nv5UnfA0XsbfUPiBVz7cEuf23R7sgxYJJSyZaf5Yqw4bOoYELAGokppA3yPc+6pNN\n8lp0ycZbowlpSz+SAXMFFdsCAwEAAQ==\n-----END PUBLIC KEY-----"
@@ -174,7 +276,7 @@ class ProtocolSpec extends FlatSpec with Names {
   val config = """{"id":"28222807-3189-46c9-9393-0fb3da5fdf5c","name":"e1","modulus":"16158503035655503650357438344334975980222051334857742016065172713762327569433945446598600705761456731844358980460949009747059779575245460547544076193224141560315438683650498045875098875194826053398028819192033784138396109321309878080919047169238085235290822926018152521443787945770532904303776199561965192760957166694834171210342487393282284747428088017663161029038902829665513096354230157075129296432088558362971801859230928678799175576150822952201848806616643615613562842355410104862578550863465661734839271290328348967522998634176499319107762583194718667771801067716614802322659239302476074096777926805529798824879","generator":"4","items":3,"ballotbox":"-----BEGIN PUBLIC KEY-----\nMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAxR1ONgU7Uax+0Sp50zLD\njCkHxvxIU4WPk8EWJaZDJcq5LZqOqXT9vBoutOd6uuajLi590vt6Lmb9hqn79Otj\nqov58Xg/BUDTf3RFLeyIn4+x4+j7W5GlIrmGaqNg7EalCacsemqmcbuFrRnMA6g7\n62n0zVS61BX+tpVH5HkBXWwI+HIU1bEBHiUlQQN12QeNxW7tcdrC+JSUyc+vqb2z\niUVrbd0X9dEfppc5EPhBGBQ6haFcYd6nX788tiVAW4eaAJFVgJXOtVVqBSuMba6M\nDlj2SO+oEMgx4lEunH2mPmjx/7kFOLCfRWdGpNIrjAG4yyni2Q0wcZYtJbYo1jfr\nzidWkqBHxMUVM/tQnbxrx+KpEXUJGytUanTzNyKJebCkqxSG3WbblD3IKYz6Lw1v\nUFekjikyAnNTWakmPAhxeVCf1pksEiS388sfomMiC6IIO8Fb+25mSTj+qSETd4fQ\n+j+xghQvMs6Cmtf4iQhlHzFqsHG2EmP1YfVlWFFqauyM9eBjWCccMKTxKXaMSzc0\nnrDkdIirdH2sryDLMYh8ZaGYJqPyg2Fyv7ZuLKUmdJYYxloFGNJLYpJ2JejbQ+Dt\n0VN/oA7KLk31qkd5Cv/jf1RJOFoKmKoKS+M5vSzKVF0Upc9AU+Jrv0BXQbe/nk72\ni1mZeW4V8w/DrqiOXLH2mskCAwEAAQ==\n-----END PUBLIC KEY-----\n","trustees":["-----BEGIN PUBLIC KEY-----\nMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAzDavZyxk38eTbilzTena\nB5xEqCMGyKgT3/cJ3gUWxFli/aTh3Rs5gjd5PKf/aefljBVcR8OsDTKxeBT6DXT9\nwdbPaGtF9nG0+Wi8KtQ15SiZdg72KX+NMGx6HVuqWZvojxRRmPCDar8oSFrcRIuV\ndimOCvmKQAjUaG9j2ZXfbcA0l9QA1nMTG/3BL/VFmBeCdiSyROjtmpCKgCgeb2HH\nfNA/E/FUipOT7fLzWFVohnzSY65gjkG3U2h1vEHwzqkWVo4vuOXX/WZcRmrIlQDq\njAwG6piiNHhUmxAk5/2LWaZL2mfVV4peXpHjEUrCSe/DSkuMraac6lYMshWXfDQc\nsos9CxdbaBHxvvzRH+ja0Wt+QSAooQMVXX+fFQrJUCK2TTIWZKfFQR2Js1XfhfE4\n3Mn1l/TKQadq2a3F50gAy5JrXDPc9LcSzRexwIfUMzjQ7QvIWsmmShD9rwnWuAti\nwWWxG0ReB7d6qUkZGCtzoYNb9BqKEI39lScMhfY+wfAN4d7Mi6EcD1yPra8sOqR1\n04cyH5dn3DUZtHzZF9EWx5BPPhyYxI40DFXFn2UAb1bb/R89YuFcKyxgyrZjPlHe\nv5UnfA0XsbfUPiBVz7cEuf23R7sgxYJJSyZaf5Yqw4bOoYELAGokppA3yPc+6pNN\n8lp0ycZbowlpSz+SAXMFFdsCAwEAAQ==\n-----END PUBLIC KEY-----","\n-----BEGIN PUBLIC KEY-----\nMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA2PfFrJXJ3w9PdFaffP7f\nQDqyxQFbSaJKT3I2tzxKnLR4w/nb0Dl/aQuAmuK0AJ3iF33tBH2Gy8md64QXzB4V\nlsktz2GzL+FCyl8ZgOkHAh6+H7pkpbGeFL4vLcv8TD+DRZ1/EWU2knKC4+eF92YY\nC5+Zp0zxc+MGTZreT4kULT7TW8vcP+l65fgpZEOMHS5FGMzuI6a18rgBLOyEcjzm\nJxALNgtdXXtowWhwKQ0BpPY++57aKiXX7Z4FLjmiHespk02pjoS5mWsMeL1DfeOr\nDH3PTF6J8aef1Q3n2QjubpUnBB+2z0bwCYZUXYMwNtfk1mE6o568ijXAYnW0Mcr5\noma7FsiHo3HYX6xJ8Nh5P7f23Yd94KvOePys8gKzFuv0yDma1bm9jtXeEIt7HV04\nbTfj1mmBWQcwRyOrk8qKgQWD9LlwHJq//cAyo13JsII7saNjwTSFVfLl5LgAJhDM\nHtfQGEFxUZa6tXY0Y+anCOnQvUXgDIK5j8d4qODLvGA3fWD5i0UiaOtY/yM+Olsf\nQ+doqdeC2q++1gXvN0MKMGxQSog5MyRADzsnILn3sCI6KoicTxFuvdfc56GsepnC\nBO/cxzGM4FrZ2pSvrmNh7soH+0beqnNCYt0dIXkI3wzDl9d11uGT7PPzU4Kx8fBr\n5/7CxKLYr8tGDCPhTY3KCfUCAwEAAQ==\n-----END PUBLIC KEY-----"]}"""
   val configStatement = """{"configHash":"EFF86B73B1A046EE45B6F18E23B0EE98C6E4CF845C6B9ABEF7A3A72A083BAF9FCC6D6F8AEB321A08FCB53B13117466FCB4D32EE5FD284A020023DAF094BE1BBB"}"""
 
-  def genVotes(section: MemoryBoardSection, totalVotes: Int) = {
+  def genVotes(section: MemoryBoardSection, plaintexts: Seq[Int]) = {
     import org.nvotes.libmix._
     import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
 
@@ -190,8 +292,41 @@ class ProtocolSpec extends FlatSpec with Names {
       val pk = Util.getPublicKeyFromString(publicKey, generator)
 
       // val ballots = Util.getRandomVotesStr(totalVotes, generator, pk).toArray
-      val ballots = Util.encryptVotes(List(1, 3, 5, 7, 11).map(_ + item), cSettings, pk)
+      val ballots = Util.encryptVotes(plaintexts.map(_ + item), cSettings, pk)
         .map(_.convertToString).toArray
+
+      val ballotsString = Ballots(ballots).asJson.noSpaces
+      val ballotHash = Crypto.sha512(ballotsString)
+      val statement = Statement.getBallotsStatement(ballotHash, configHash, item)
+      val signature = statement.sign(ballotboxprivRsa)
+
+      val file1 = IO.writeTemp(ballotsString)
+      val file2 = IO.writeTemp(statement.asJson.noSpaces)
+      val file3 = IO.writeTemp(signature)
+
+      section.addBallots(file1, file2, file3, item)
+    }
+  }
+
+  def genBadVotes(section: MemoryBoardSection) = {
+    import org.nvotes.libmix._
+    import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
+
+    val configString = section.getConfig.get
+    val configHash = Crypto.sha512(configString)
+    val config = decode[Config](configString).right.get
+
+    val group = GStarModSafePrime.getInstance(new BigInteger(config.modulus))
+    val generator = group.getElementFrom(config.generator)
+    val cSettings = CryptoSettings(group, generator)
+    val votes = (1 to config.items).map { item =>
+      val publicKey = section.getPublicKey(item).get
+      val pk = Util.getPublicKeyFromString(publicKey, generator)
+
+      // val ballots = Util.getRandomVotesStr(totalVotes, generator, pk).toArray
+      //val ballots = Util.encryptVotes(plaintexts.map(_ + item), cSettings, pk)
+      //  .map(_.convertToString).toArray
+      val ballots = Seq.fill(10)("[0|0]")
 
       val ballotsString = Ballots(ballots).asJson.noSpaces
       val ballotHash = Crypto.sha512(ballotsString)

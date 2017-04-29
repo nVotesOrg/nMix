@@ -96,56 +96,66 @@ object Protocol extends Names {
     val cSettings = CryptoSettings(group, generator)
     val ctx = Context(config, section, trusteeCfg, position, cSettings)
 
-    val rules = globalRules(ctx)
-    /** first rule that matches is executed */
-    val hit = rules.find{ case (c, a) => c.eval(files)}
-      .map(_._2)
+    try {
 
-    logger.info(s"* Global matches: $hit")
-    val result = hit.map(_.execute()).getOrElse(Ok)
-    if(hit.size > 0) logger.info(s"* Global rules result: $result")
 
-    if(result != Ok) {
-      logger.warn(s"Got pause or error signal: $result")
+      val rules = globalRules(ctx)
+      /** first rule that matches is executed */
+      val hit = rules.find{ case (c, a) => c.eval(files)}
+        .map(_._2)
 
-      result match {
-        case Error(message) => postError(message)
-        case _ =>
+      logger.info(s"* Global matches: $hit")
+      val result = hit.map(_.execute()).getOrElse(Ok)
+      if(hit.size > 0) logger.info(s"* Global rules result: $result")
+
+      if(result != Ok) {
+        logger.warn(s"Got pause or error signal: $result")
+
+        result match {
+          case Error(message) => postError(message)
+          case _ =>
+        }
+
+        return result
       }
 
-      return result
+      val items = config.items
+      val irules = (1 to items).map(i => itemRules(ctx, i, files))
+
+      /** get first rule that matches for each item, then
+        collect Action's into list and sort them by priority */
+      val hits = irules.flatMap { rules =>
+        rules.find{ case (c, a) => c.eval(files)}
+        .map(_._2)
+      }.sorted
+
+      if(hits.size > 0) {
+        logger.info(s"* Per-item hits: ${hits.map(_.toString)}")
+        // parallel execution
+        // val results = hits.par.map(action => action -> action.execute)
+        val results = hits.map(action => action -> action.execute)
+        logger.info(s"Per-item results: $results")
+
+        val errorStrings = results.flatMap {
+          case (_, Error(message)) => Some(message)
+          case _ => None
+        }
+        if(errorStrings.size > 0) {
+          logger.error(s"Results returned errors: $errorStrings")
+          postError(errorStrings.mkString("\n"))
+          return Error(errorStrings.mkString("\n"))
+        }
+      }
+      else {
+        logger.info(s"* Per-item matches: None")
+      }
     }
-
-    val items = config.items
-    val irules = (1 to items).map(i => itemRules(ctx, i, files))
-
-    /** get first rule that matches for each item, then
-      collect Action's into list and sort them by priority */
-    val hits = irules.flatMap { rules =>
-      rules.find{ case (c, a) => c.eval(files)}
-      .map(_._2)
-    }.sorted
-
-    if(hits.size > 0) {
-      logger.info(s"* Per-item hits: ${hits.map(_.toString)}")
-
-      // parallel execution
-      // val results = hits.par.map(action => action -> action.execute)
-      val results = hits.map(action => action -> action.execute)
-      logger.info(s"Per-item results: $results")
-
-      val errorStrings = results.flatMap {
-        case (_, Error(message)) => Some(message)
-        case _ => None
+    catch {
+      case e:Exception => {
+        logger.error(s"Exception caught executing actions $e")
+        postError(e.toString)
+        return Error(e.toString)
       }
-      if(errorStrings.size > 0) {
-        logger.error(s"Results returned errors: $errorStrings")
-        postError(errorStrings.mkString("\n"))
-        return Error(errorStrings.mkString("\n"))
-      }
-    }
-    else {
-      logger.info(s"* Per-item matches: None")
     }
 
     Ok
