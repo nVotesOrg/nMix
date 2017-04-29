@@ -340,17 +340,17 @@ object MixerTrustee extends Mixer {
    *  Returns the shuffle and proof of knowledgeas an libmix ShuffleResultDTO
    */
   def shuffleVotes(votes: Seq[String], publicKey: String, id: String, cSettings: CryptoSettings): ShuffleResultDTO = {
-    logger.info("Mixer shuffle..")
+    logger.debug("Mixer shuffle..")
 
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val keyPairGen = elGamal.getKeyPairGenerator()
     val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
 
-    logger.info("Convert votes..")
+    logger.debug("Convert votes..")
 
     val vs = votes.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v) ).seq
 
-    logger.info("Mixer creating shuffle..")
+    logger.debug("Mixer creating shuffle..")
 
     shuffle(Util.tupleFromSeq(vs), pk, cSettings, id)
   }
@@ -362,7 +362,7 @@ object MixerTrustee extends Mixer {
   def preShuffleVotes(voteCount: Int, publicKey: String, id: String,
     cSettings: CryptoSettings): (PermutationProofDTO, PermutationData) = {
 
-    logger.info("Mixer offline phase..")
+    logger.debug("Mixer offline phase..")
 
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val keyPairGen = elGamal.getKeyPairGenerator()
@@ -379,15 +379,15 @@ object MixerTrustee extends Mixer {
   def shuffleVotes(votesString: Seq[String], preData: PreShuffleData,
     publicKey: String, id: String, cSettings: CryptoSettings): ShuffleResultDTO = {
 
-    logger.info("Mixer online phase..")
+    logger.debug("Mixer online phase..")
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val keyPairGen = elGamal.getKeyPairGenerator()
     val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
-    logger.info("Convert votes..")
+    logger.debug("Convert votes..")
 
     val votes = votesString.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v) ).seq
 
-    logger.info("Mixer creating shuffle..")
+    logger.debug("Mixer creating shuffle..")
 
     shuffle(Util.tupleFromSeq(votes), preData.pData, preData.proof, pk, cSettings, id)
   }

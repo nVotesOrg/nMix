@@ -127,10 +127,14 @@ nMix implements the cryptographic core of a voting system, and does not include 
 
 a) Wait for these components to be developed by us.
 
-b) Write them yourself (they are the comparatively 'easier' parts to develop). Also, a lot of work can be taken from [Agora Voting](https://github.com/agoravoting) which is a stable, production ready system.
+b) Write them yourself (they are the comparatively 'easier' parts to develop). Also, a lot of work can be taken from [Agora Voting](https://github.com/agoravoting) which is a stable, in production system with over 1.5 million votes tallied.
 
 c) Work with us to develop them, nMix is an open source project!
 #####  Does nMix include a threshold cryptosystem?
 The current version of nMix uses a _distributed_ cryptosystem (which is a special case of a threshold system where t = n). All trustees must cooperate to complete the protocol. However, adding a threshold cryptosystem is on the table, and mostly depends on development resources and funding.
 #####  Could you replace the Git bulletin board with a Blockchain/IPFS/Tahoe-Lafs?
 Yes, in theory. The nMix protocol has been designed to decouple the crypto workflow from the bulletin board, relying only on authenticated get and put primitives. If these primitives are supported by another bulletin board implementation the replacement should be possible. See [here](TODO) for a high level design along those lines, with IPFS as a backend.
+
+#####  Where can I ask more questions?
+
+Ask your question on the [mailing list](https://groups.google.com/forum/#!forum/nmix-voting) and we'll add it to this FAQ.
