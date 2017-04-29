@@ -30,17 +30,17 @@ class ProtocolSpec extends FlatSpec with Names {
     assert(result2.isInstanceOf[Error])
   }
 
-  "Protocol" should "return error if trustees not in peers" in {
-    val auth1cfg = getBadCfg
-    val auth2cfg = getBadCfg
+  "Protocol" should "return error if config cannot be parsed" in {
+    val auth1cfg = getCfg1
+    val auth2cfg = getCfg2
     val bb = new MemoryBoardSection("test")
-    bb.addConfig(config, configStatement)
+    bb.addConfig("foo", "bar")
 
     val result1 = Protocol.execute(bb, auth1cfg)
     val result2 = Protocol.execute(bb, auth2cfg)
 
     assert(result1.isInstanceOf[Error])
-    assert(result2.isInstanceOf[Stop])
+    assert(result2.isInstanceOf[Error])
   }
 
   "Protocol" should "return error if local trustee not in election cfg" in {
@@ -56,6 +56,18 @@ class ProtocolSpec extends FlatSpec with Names {
     assert(result2.isInstanceOf[Error])
   }
 
+  "Protocol" should "return error if trustees not in peers" in {
+    val auth1cfg = getBadCfg
+    val auth2cfg = getBadCfg
+    val bb = new MemoryBoardSection("test")
+    bb.addConfig(config, configStatement)
+
+    val result1 = Protocol.execute(bb, auth1cfg)
+    val result2 = Protocol.execute(bb, auth2cfg)
+
+    assert(result1.isInstanceOf[Error])
+    assert(result2.isInstanceOf[Stop])
+  }
 
   "Protocol" should "return error for malformed ballots" in {
     val auth1cfg = getCfg1

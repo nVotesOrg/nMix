@@ -60,6 +60,15 @@ object Protocol extends Names {
    *
    *  Global rules depend on data that is global to the section
    *  Item rules depend only on item data
+   *
+   *  Actions may return Errors which are posted to the bulletin board.
+   *  In addition, a global try catches all exceptions, also posting an error
+   *  to the bulletin board.
+   *
+   *  The following errors will not be posted to the bulletin board
+   *  - no election config found
+   *  - the election config cannot be parsed
+   *  - the authority is not part of the trustees in the election config
    */
   def execute(section: BoardSectionInterface, trusteeCfg: TrusteeConfig): Result = {
 
@@ -75,29 +84,34 @@ object Protocol extends Names {
     }
 
     val configString = section.getConfig.get
-    val config = decode[Config](configString).right.get
+    val parseConfig  = decode[Config](configString)
+    if(parseConfig.isLeft) {
+      logger.error(s"Cannot parse config for section ${section.name} $parseConfig")
+      return Error(s"Cannot parse config for section ${section.name} $parseConfig")
+    }
+
+    val config = parseConfig.right.get
     logger.info(s"Found config: $config")
     val position = getMyPosition(config, trusteeCfg)
     logger.info(s"This authority at position $position")
-
-    /** Inline helper function used to post errors below */
-    def postError(message: String): Unit = {
-      val file = IO.writeTemp(message)
-      section.addError(file, position)
-    }
 
     if(position == 0) {
       logger.info(s"could not find self in list of trustees for config $config")
       return Error(s"could not find self in list of trustees for config $config")
     }
 
-    val group = GStarModSafePrime.getInstance(new BigInteger(config.modulus))
-    val generator = group.getElementFrom(config.generator)
-    val cSettings = CryptoSettings(group, generator)
-    val ctx = Context(config, section, trusteeCfg, position, cSettings)
+    /** Inline helper function used to post errors below for our given position */
+    def postError(message: String): Unit = {
+      val file = IO.writeTemp(message)
+      section.addError(file, position)
+    }
 
     try {
 
+      val group = GStarModSafePrime.getInstance(new BigInteger(config.modulus))
+      val generator = group.getElementFrom(config.generator)
+      val cSettings = CryptoSettings(group, generator)
+      val ctx = Context(config, section, trusteeCfg, position, cSettings)
 
       val rules = globalRules(ctx)
       /** first rule that matches is executed */
@@ -152,8 +166,8 @@ object Protocol extends Names {
     }
     catch {
       case e:Exception => {
-        logger.error(s"Exception caught executing actions $e")
-        postError(e.toString)
+        logger.error(s"Exception caught executing actions: $e")
+        postError("An exception occurred during processing: ${e.getClass}")
         return Error(e.toString)
       }
     }
