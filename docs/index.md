@@ -1,14 +1,41 @@
 ![alt text](http://davidruescas.com/wp-content/uploads/2017/04/nMix.png)
-# nMix User Guide
+
+<!-- MarkdownTOC depth="3" autolink="true" bracket="round"-->
+
+- [nMix User Guide](#nmix-user-guide)
+	- [Overview](#overview)
+		- [Components](#components)
+		- [Protocol](#protocol)
+	- [Keys and authentication setup](#keys-and-authentication-setup)
+	- [Bulletin Board setup](#bulletin-board-setup)
+	- [Trustee setup](#trustee-setup)
+		- [Libmix settings](#libmix-settings)
+	- [Running an election](#running-an-election)
+		- [Election configuration](#election-configuration)
+	- [Artifact reference](#artifact-reference)
+	- [FAQ](#faq)
+		- [Is nMix 100% secure?](#is-nmix-100%25-secure)
+		- [Is nMix end-to-end verifiable?](#is-nmix-end-to-end-verifiable)
+		- [What about the use of SHA1 in the Git hash chain?](#what-about-the-use-of-sha1-in-the-git-hash-chain)
+		- [What about the Registry, Ballotbox and Voting Booth? Where can I find them?](#what-about-the-registry-ballotbox-and-voting-booth-where-can-i-find-them)
+		- [Does nMix include a threshold cryptosystem?](#does-nmix-include-a-threshold-cryptosystem)
+		- [Could you replace the Git bulletin board with a Blockchain/IPFS/Tahoe-Lafs/Swarm?](#could-you-replace-the-git-bulletin-board-with-a-blockchainipfstahoe-lafsswarm)
+		- [Where can I ask more questions?](#where-can-i-ask-more-questions)
+
+<!-- /MarkdownTOC -->
+
+
+## nMix User Guide
 
 This document contains detailed information necessary to set up and run elections with nMix.
+
 ### Overview
 The following is a typical voting setup using nMix
 
 ![nMix setup](http://davidruescas.com/wp-content/uploads/2017/04/nMixSetup3.png)
 
 The nMix system components can be seen below the dotted line. The nMix software itself runs on the trustees, which cooperatively execute the protocol posting artifacts to the bulletin board, backed by Git.
-##### Components
+#### Components
 Following are descriptions the main components as seen above. Some of these are external to nMix.
 ###### Registry
 This component handles the authentication and registration of voters. The Registry is responsible for the electoral roll, which is the list of eligible voters for an election. This component is external to nMix.
@@ -18,7 +45,7 @@ Serves the (typically javascript based) voting booth interface and collects vote
 The Bulletin Board maintains the list of information artifacts necessary for the execution of the cryptographic protocol. This includes artifacts related to joint key generation, ballot casting, ballot mixes, and joint decryption, as well as all required mathematical proofs. The Bulletin Board is implemented with Git's hash-chain, and is immutable and tamper resistant.
 ###### Trustee
 Trustees cooperate to execute the voting protocol such that its privacy and verifiability properties are guaranteed. These properties are inherited from the nMix design, which in turn is based on the univote specification. Trustees are custodians of election private keys that safeguard vote secrecy. When executing the protocol, Trustees retrieve information published and collected by the Bulletin Board. Trustees run the nMix software.
-##### Protocol
+#### Protocol
 The main steps of the protocol are
 1) The election configuration is defined and posted to the bulletin board.
 2) Trustees individually validate and sign the election configuration.
@@ -41,7 +68,55 @@ These steps are performed per election item. Note that the nMix protocol does no
 
 Details related to voter registration and authentication are critical to a secure voting system, but they are decoupled from the nMix design and considered given.
 
-### Election configuration
+### Keys and authentication setup
+TODO
+
+### Bulletin Board setup
+TODO
+
+##### Disabling git compression - git server
+
+```
+git config --global pack.window 0
+git config --global core.bigFileThreshold 1
+
+git config --global core.compression 0
+git config --global core.looseCompression 0
+git config --global pack.compression 0
+```
+
+### Trustee setup
+TODO
+
+Several trustee configuration options are listed below.
+
+#### Libmix settings
+The following settings control libmix optimizations
+
+##### libmix.gmp=true/false
+
+Activates native implementation of modular exponentiation and legendre symbol via
+[jna-gmp](https://github.com/square/jna-gmp) and gmp, if available on the system.
+
+###### libmix.extractor=true/false
+
+Activates automatic extraction and parallelization of modular exponentiation calls.
+
+###### libmix.parallel-generators=true/false
+
+Activates parallel computation of generators used in Terelius-Wikstrom proofs (experimental)
+##### Git compression
+By default, git applies two types of compression to objects stored and sent across the network, one of these does not scale over cpu cores. Compression may be suboptimal on a fast network and if disk space is not a problem. In order to disable git compression
+
+
+###### Disabling git compression - nMix trustee
+
+```-Dnmix.git.disable-compression=true```
+
+### Running an election
+TODO
+
+#### Election configuration
 The Election Configuration specifies the election information, the security parameters of the election public key, and the participating trustees and ballotbox agents. It has this json encoded structure
 
 ```
@@ -69,61 +144,23 @@ runMain org.nvotes.trustee.GenConfig <election name> <public key bits> <items> <
 will produce the Election Configuration, _config.json_, and the statement file, _config.stmt.json_.
 
 These two files can then be posted to the bulletin board, executing step 1 of the protocol.
-### Bulletin Board server set up and configuration
---
-### Trustee set up and configuration
---
-
-Several trustee configuration options are listed below.
-##### Libmix settings
-The following settings control libmix optimizations
-
-###### libmix.gmp=true/false
-
-Activates native implementation of modular exponentiation and legendre symbol via
-[jna-gmp](https://github.com/square/jna-gmp) and gmp, if available on the system.
-
-###### libmix.extractor=true/false
-
-Activates automatic extraction and parallelization of modular exponentiation calls.
-
-###### libmix.parallel-generators=true/false
-
-Activates parallel computation of generators used in Terelius-Wikstrom proofs (experimental)
-##### Git compression
-By default, git applies two types of compression to objects stored and sent across the network, one of these does not scale over cpu cores. Compression may be suboptimal on a fast network and if disk space is not a problem. In order to disable git compression
-
-###### Disabling git compression - git server
-
-```
-git config --global pack.window 0
-git config --global core.bigFileThreshold 1
-
-git config --global core.compression 0
-git config --global core.looseCompression 0
-git config --global pack.compression 0
-```
-
-###### Disabling git compression - nMix trustee
-
-```-Dnmix.git.disable-compression=true```
 
 ### Artifact reference
---
+TODO
 ### FAQ
-#####  Is nMix 100% secure?
+####  Is nMix 100% secure?
 No, no computer or software system is 100% secure. nMix is secure in the specific sense that it employs cryptographic techniques to achieve strong privacy and verifiability properties, as defined in the academic literature.
 
-##### Is nMix end-to-end verifiable?
+#### Is nMix end-to-end verifiable?
 nMix provides the core cryptography to construct an end-to-end verifiable voting system. In particular, it provides a bulletin board and a verifiable mix-net together with zero knowledge proofs. These are key ingredients necessary for granting recorded-as-cast and counted-as-recorded verifiablity. When combined with suitable external components the whole system becomes end-to-end verifiable.
 
-##### What about the use of SHA1 in the Git hash chain?
+#### What about the use of SHA1 in the Git hash chain?
 The choice of git as a hash-chain was made with full awareness of the status of SHA-1, which will not be a problem because:
 
 a) Git will [transition](https://plus.google.com/+LinusTorvalds/posts/7tp2gYWQugL) away from SHA-1
 
 b) It is always possible to build a hash-chain manually with any choice of secure hash on top of git.
-#####  What about the Registry, Ballotbox and Voting Booth? Where can I find them?
+####  What about the Registry, Ballotbox and Voting Booth? Where can I find them?
 nMix implements the cryptographic core of a voting system, and does not include these software components. You can either
 
 a) Wait for these components to be developed by us.
@@ -131,11 +168,11 @@ a) Wait for these components to be developed by us.
 b) Write them yourself (they are the comparatively 'easier' parts to develop). Also, a lot of work can be taken from [Agora Voting](https://github.com/agoravoting) which is a stable, in production system with over 1.5 million votes tallied.
 
 c) Work with us to develop them, nMix is an open source project!
-#####  Does nMix include a threshold cryptosystem?
+####  Does nMix include a threshold cryptosystem?
 The current version of nMix uses a _distributed_ cryptosystem (which is a special case of a threshold system where t = n). All trustees must cooperate to complete the protocol. However, adding a threshold cryptosystem is on the table, and mostly depends on development resources and funding.
-#####  Could you replace the Git bulletin board with a Blockchain/IPFS/Tahoe-Lafs/Swarm?
+####  Could you replace the Git bulletin board with a Blockchain/IPFS/Tahoe-Lafs/Swarm?
 Yes, in theory. The nMix protocol has been designed to decouple the crypto workflow from the bulletin board, relying only on authenticated get and put primitives. If these primitives are supported by another bulletin board implementation the replacement should be possible. See [here](TODO) for a high level design along those lines, with IPFS as a backend.
 
-#####  Where can I ask more questions?
+####  Where can I ask more questions?
 
 Ask your question on the [mailing list](https://groups.google.com/forum/#!forum/nmix-voting) and we'll add it to this FAQ.
