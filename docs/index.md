@@ -74,7 +74,10 @@ TODO
 ### Bulletin Board setup
 TODO
 
-##### Disabling git compression - git server
+##### Git compression
+By default, git applies two types of compression to objects stored and sent across the network, one of these does not scale over cpu cores. Compression may be suboptimal on a fast network and if disk space is not a problem. In order to disable git compression on the bulletin board server
+
+##### Disabling git compression
 
 ```
 git config --global pack.window 0
@@ -106,10 +109,10 @@ Activates automatic extraction and parallelization of modular exponentiation cal
 
 Activates parallel computation of generators used in Terelius-Wikstrom proofs (experimental)
 ##### Git compression
-By default, git applies two types of compression to objects stored and sent across the network, one of these does not scale over cpu cores. Compression may be suboptimal on a fast network and if disk space is not a problem. In order to disable git compression
+By default, git applies two types of compression to objects stored and sent across the network, one of these does not scale over cpu cores. Compression may be suboptimal on a fast network and if disk space is not a problem. In order to disable git compression on the trustee
 
 
-###### Disabling git compression - nMix trustee
+###### Disabling git compression
 
 ```-Dnmix.git.disable-compression=true```
 
