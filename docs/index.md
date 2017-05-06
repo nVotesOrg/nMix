@@ -127,7 +127,9 @@ By default, git applies two types of compression to objects stored and sent acro
 
 ###### Disabling git compression
 
-```-Dnmix.git.disable-compression=true```
+```
+-Dnmix.git.disable-compression=true
+```
 
 ### Running an election
 TODO
