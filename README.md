@@ -58,8 +58,8 @@ run an election demo on a single machine without having to do a real world distr
 ### Documentation
 
 * [Tutorial](https://github.com/nVotes/nMix/blob/master/docs/TUTORIAL.md)
-* [User guide](https://github.com/nVotes/nMix/blob/master/docs/GUIDE.md)
-* [FAQ](https://github.com/nVotes/nMix/blob/master/docs/GUIDE.md#faq)
+* [User guide](https://github.com/nVotes/nMix/blob/master/docs/index.md)
+* [FAQ](https://github.com/nVotes/nMix/blob/master/docs/index.md#faq)
 * [Performance benchmarks](https://github.com/nVotes/nMix/blob/master/docs/BENCHMARKS.md)
 
 ### Getting help
