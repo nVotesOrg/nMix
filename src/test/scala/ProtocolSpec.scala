@@ -56,6 +56,19 @@ class ProtocolSpec extends FlatSpec with Names {
     assert(result2.isInstanceOf[Error])
   }
 
+  "Protocol" should "return error if config statement is bad" in {
+    val auth1cfg = getCfg1
+    val auth2cfg = getCfg2
+    val bb = new MemoryBoardSection("test")
+    bb.addConfig(config, "foobar")
+
+    val result1 = Protocol.execute(bb, auth1cfg)
+    val result2 = Protocol.execute(bb, auth2cfg)
+
+    assert(result1.isInstanceOf[Error])
+    assert(result2.isInstanceOf[Stop])
+  }
+
   "Protocol" should "return error if trustees not in peers" in {
     val auth1cfg = getBadCfg
     val auth2cfg = getBadCfg

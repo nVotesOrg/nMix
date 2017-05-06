@@ -39,7 +39,7 @@ These steps are performed per election item. Note that the nMix protocol does no
 2) To provide the election public key used to encrypt votes at the Voting Booth
 3) To receive the encrypted votes collected by the Ballotbox.
 
-Details related to voter registration and authentication are critical to a secure voting system, but they are decoupled from the nMix design and taken as given.
+Details related to voter registration and authentication are critical to a secure voting system, but they are decoupled from the nMix design and considered given.
 
 ### Election configuration
 The Election Configuration specifies the election information, the security parameters of the election public key, and the participating trustees and ballotbox agents. It has this json encoded structure
@@ -73,6 +73,7 @@ These two files can then be posted to the bulletin board, executing step 1 of th
 --
 ### Trustee set up and configuration
 --
+
 Several trustee configuration options are listed below.
 ##### Libmix settings
 The following settings control libmix optimizations
@@ -132,7 +133,7 @@ b) Write them yourself (they are the comparatively 'easier' parts to develop). A
 c) Work with us to develop them, nMix is an open source project!
 #####  Does nMix include a threshold cryptosystem?
 The current version of nMix uses a _distributed_ cryptosystem (which is a special case of a threshold system where t = n). All trustees must cooperate to complete the protocol. However, adding a threshold cryptosystem is on the table, and mostly depends on development resources and funding.
-#####  Could you replace the Git bulletin board with a Blockchain/IPFS/Tahoe-Lafs?
+#####  Could you replace the Git bulletin board with a Blockchain/IPFS/Tahoe-Lafs/Swarm?
 Yes, in theory. The nMix protocol has been designed to decouple the crypto workflow from the bulletin board, relying only on authenticated get and put primitives. If these primitives are supported by another bulletin board implementation the replacement should be possible. See [here](TODO) for a high level design along those lines, with IPFS as a backend.
 
 #####  Where can I ask more questions?
