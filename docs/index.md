@@ -48,22 +48,35 @@ Trustees cooperate to execute the voting protocol such that its privacy and veri
 #### Protocol
 The main steps of the protocol are
 1. The election configuration is defined and posted to the bulletin board.
+
 2. Trustees individually validate and sign the election configuration.
+
 3. Trustees jointly generate the public and private key shares of the election public key.
+
 4. Trustees mutually validate each other's shares and proofs of correctness.
+
 5. Trustees construct, validate and sign the election public key.
+
 6. Voter's cast votes encrypted the election public key signed by all trustees (this step occurs outside of nMix).
+
 7. The encrypted cast votes (ciphertexts) are uploaded to the nMix bulletin board.
+
 8. The trustees execute the mix chain, constructing sequential mixes of the ciphertexts.
+
 9. The trustees mutually validate each other's mix and proofs of correctness.
+
 10. The trustees perform joint decryption of the ciphertexts produced at the end of the mixnet.
+
 11. The trustees mutually validate each other's decryptions and proofs of correctness.
+
 12. The trustees construct, validate and sign the plaintexts resulting from decryption.
 
 These steps are performed per election item. Note that the nMix protocol does not include steps related to the Registry and Ballotbox (except 6. above, for clarity). nMix only interfaces with external components in three ways
 
 1. To receive the Election Configuration, presumably defined by some election authority.
+
 2. To provide the election public key used to encrypt votes at the Voting Booth
+
 3. To receive the encrypted votes collected by the Ballotbox.
 
 Details related to voter registration and authentication are critical to a secure voting system, but they are decoupled from the nMix design and considered given.
