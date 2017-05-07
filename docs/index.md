@@ -6,10 +6,16 @@
 	- [Overview](#overview)
 		- [Components](#components)
 		- [Protocol](#protocol)
-	- [Keys and authentication setup](#keys-and-authentication-setup)
+	- [Keys](#keys)
+		- [RSA keys](#rsa-keys)
+		- [AES keys](#aes-keys)
+		- [Key summary](#key-summary)
 	- [Bulletin Board setup](#bulletin-board-setup)
+		- [Git compression](#git-compression)
 	- [Trustee setup](#trustee-setup)
+		- [Generating trustee keys](#generating-trustee-keys)
 		- [Libmix settings](#libmix-settings)
+		- [Git compression](#git-compression-1)
 	- [Running an election](#running-an-election)
 		- [Election configuration](#election-configuration)
 	- [Artifact reference](#artifact-reference)
@@ -27,7 +33,7 @@
 
 ## nMix User Guide
 
-This document contains detailed information necessary to set up and run elections with nMix.
+This document contains detailed information necessary to set up and run elections with nMix. If you prefer a quick hands on introduction, please refer to the [quickstart tutorial](#TUTORIAL.md).
 
 ### Overview
 The following is a typical voting setup using nMix
@@ -36,7 +42,7 @@ The following is a typical voting setup using nMix
 
 The nMix system components can be seen below the dotted line. The nMix software itself runs on the trustees, which cooperatively execute the protocol posting artifacts to the bulletin board, backed by Git.
 #### Components
-Following are descriptions the main components as seen above. Some of these are external to nMix.
+Following are the main components as seen above, some of these are external to nMix.
 ###### Registry
 This component handles the authentication and registration of voters. The Registry is responsible for the electoral roll, which is the list of eligible voters for an election. This component is external to nMix.
 ###### Ballotbox
@@ -81,13 +87,50 @@ These steps are performed per election item. Note that the nMix protocol does no
 
 Details related to voter registration and authentication are critical to a secure voting system, but they are decoupled from the nMix design and considered given.
 
-### Keys and authentication setup
-TODO
+### Keys
+This section offers an overview of the cryptographic keys necessary for nMix installation. Specific configuration steps are listed in the [bulletin board](#bulletin-board-setup) and [trustee](#trustee-setup) set up sections.
+
+nMix uses RSA keys for authentication and to sign protocol artifacts. Additionally, symmetric AES keys are used to encrypt election key private shares.
+
+#### RSA keys
+
+Trustees authenticate against the bulletin board using their private RSA key. The corresponding public key must be known to the bulletin board server for the trustee to gain access. In the current implementation this behaviour is implemented through git's ssh authentication mechanism which uses linux's authorized_keys file. See the bulletin board setup for configuration details.
+
+Additionally, trustees use RSA keys to sign and mutually verify artifacts posted and retrieved from the bulletin board. Part of the election setup is specifying which trustees will take part in the protocol, and the definition of a shared configuration file which lists these RSA public keys. Finally, trustees must configure an individual list of RSA public keys that indicates the trustees they are willing to cooperate with. See the trustee configuration for details.
+
+Although strictly not part of the nMix backend, the Ballotbox must also use an RSA public key to authenticate against the bulletin board as well as to sign the set of ballots cast by voters. Recall that uploading of ballots occurs at step 7 of the protocol.
+
+#### AES keys
+
+During protocol execution trustees generate public and private shares of the election public key. The election public key is used to encrypt ballots when casting votes. At the end of the eleciton, trustees jointly decrypt the ballots once they have been mixed, preserving anonymity. This joint decryption uses the private shares created at the joint key generation phase. Private shares are encrypted using an AES key.
+
+#### Key summary
+
+The following table summarizes the use of keys in nMix.
+
+|Location   |Type|Format|Purpose
+|---|---|---|---
+|Trustee .ssh directory|RSA Private key|SSH|Authentication of trustees on bulletin board
+|Bulletin board authorized_keys|RSA Public key|SSH|Authentication of trustees on bulletin board
+|Trustee configuration|RSA Private key|PEM|Signature of protocol artifacts
+|Trustee configuration|RSA Public key|PEM|Self verification of protocol artifacts
+|Trustee configuration|RSA Public key list|PEM|Acceptance of trustees to cooperate with
+|Trustee configuration|AES key|RAW|Encryption of private key shares
+|Election Configuration|RSA Public key list|PEM|Mutual verification of protocol artifacts
+|Election Configuration|RSA Public key|PEM|Verification of ballots artifact
 
 ### Bulletin Board setup
-TODO
+The nMix implementation of the bulletin board is just a git repository. Setting up the bulletin board is basically setting up a git server with special attention paid to security and authentication. nMix uses ssh authentication based on the authorized_keys mechanism. The required steps are
 
-##### Git compression
+1. Setup a git server as per the official [git documentation](https://git-scm.com/book/en/v2/Git-on-the-Server-Setting-Up-the-Server)
+2. Ensure that the shell for the git user is set to [git-shell](https://git-scm.com/docs/git-shell). This prevents any login attempts.
+3. Ensure that trustees have ssh connectivity to the bulletin board server.
+4. Add trustee RSA public keys to the authorized_keys file for the git user. These are generated as part of the trustee [set up](#trustee-setup).
+5. Optionally configure firewall settings to accept ssh connections only from known trustees.
+
+You may consult the [quickstart tutorial](#TUTORIAL.md) for an example of how to set up a git server. Please note that this is only to be used as an example.
+
+#### Git compression
 By default, git applies two types of compression to objects stored and sent across the network, one of these does not scale over cpu cores. Compression may be suboptimal on a fast network and if disk space is not a problem. In order to disable git compression on the bulletin board server
 
 ##### Disabling git compression
@@ -104,7 +147,14 @@ git config --global pack.compression 0
 ### Trustee setup
 TODO
 
-Several trustee configuration options are listed below.
+#### Generating trustee keys
+The script _src/main/shell/keys.sh_ can be used to generate the five keys needed for each trustee, these are
+
+* RSA private key in SSH format
+* RSA public key in SSH format
+* RSA private key in PEM format
+* RSA public key in PEM format
+* AES key in raw format
 
 #### Libmix settings
 The following settings control libmix optimizations
@@ -121,7 +171,7 @@ Activates automatic extraction and parallelization of modular exponentiation cal
 ###### libmix.parallel-generators=true/false
 
 Activates parallel computation of generators used in Terelius-Wikstrom proofs (experimental)
-##### Git compression
+#### Git compression
 By default, git applies two types of compression to objects stored and sent across the network, one of these does not scale over cpu cores. Compression may be suboptimal on a fast network and if disk space is not a problem. In order to disable git compression on the trustee
 
 
