@@ -33,7 +33,7 @@
 
 ## nMix User Guide
 
-This document contains detailed information necessary to set up and run elections with nMix. If you prefer a quick hands on introduction, please refer to the [quickstart tutorial](#TUTORIAL.md).
+This document contains detailed information necessary to set up and run elections with nMix. If you prefer a quick hands on introduction, please refer to the [quickstart tutorial](TUTORIAL.md).
 
 ### Overview
 The following is a typical voting setup using nMix
@@ -128,7 +128,7 @@ The nMix implementation of the bulletin board is just a git repository. Setting 
 4. Add trustee RSA public keys to the authorized_keys file for the git user. These are generated as part of the trustee [set up](#trustee-setup).
 5. Optionally configure firewall settings to accept ssh connections only from known trustees.
 
-You may consult the [quickstart tutorial](#TUTORIAL.md) for an example of how to set up a git server. Please note that this is only to be used as an example.
+You may consult the [quickstart tutorial](TUTORIAL.md) for an example of how to set up a git server. Please note that this is only to be used as an example.
 
 #### Git compression
 By default, git applies two types of compression to objects stored and sent across the network, one of these does not scale over cpu cores. Compression may be suboptimal on a fast network and if disk space is not a problem. In order to disable git compression on the bulletin board server
