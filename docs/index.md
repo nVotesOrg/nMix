@@ -171,7 +171,7 @@ Install rng-tools for random number generation
 ```apt-get install rng-tools```
 
 ##### Configuration
-nMix configuration is specified in a file, typically named application.conf. You can find a reference configuration file in [src/main/resources/application.conf.dist](/src/main/resources/application.conf) from which to write your own. nMix will look
+nMix configuration is specified in a file, typically named application.conf. You can find a reference configuration file in [src/main/resources/application.conf.dist](https://github.com/nVotes/nMix/blob/master/src/main/resources/application.conf.dist) from which to write your own. nMix will look
 for this configuration file
 
 1. At the location passed in with -Dconfig.file=application.conf
