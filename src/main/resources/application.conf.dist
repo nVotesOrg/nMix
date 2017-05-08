@@ -19,18 +19,19 @@ repo-base-uri="ssh://git@localhost:22/~/"
 # It is recommended to create a 'keys' subdirectory to
 # store these files, as is assumed by the default values
 # below.
+#
+# The individual keys key can be generated with the
+# src/main/shell/keys.sh script. The 'peers' entry
+# is composed of public keys from other trustees.
 
 # The trustees public key, in PEM format
-# This key can be generated with the src/main/shell/keys.sh script
 public-key=keys/trustee.pub.pem
 
 # The trustees private key, in PEM format
-# This key can be generated with the src/main/shell/keys.sh script
 private-key=keys/trustee.pem
 
 # The trustee's symmetric AES key, in raw format
-# This key can be generated with
-aes-key=keys/aes.ucs
+aes-key=keys/aes.bin
 
 # Points to a list of public keys that this trustee accepts
 # as peers to participate in the protocol.

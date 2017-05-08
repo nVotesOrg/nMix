@@ -24,3 +24,6 @@ openssl rsa -in keys/id_rsa -pubout > keys/id_rsa.pub.pem
 
 # generate private key in pkcs8 pem format from ssh-keygen private key
 openssl pkcs8 -topk8 -inform PEM -outform PEM -in keys/id_rsa -out keys/id_rsa.pem -nocrypt
+
+# generate a random aes key in raw (binary) format
+openssl rand 16 > keys/aes.bin
