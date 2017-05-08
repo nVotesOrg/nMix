@@ -83,4 +83,13 @@ class CryptoSpec extends FlatSpec {
       }
     }
   }
+
+  "encryption (str) with bin key" should "decrypt ok" in {
+    val content = UUID.randomUUID().toString()
+    val key = Crypto.readAESKeyBytes(Paths.get(getClass.getResource("/test_aes.bin").toURI))
+    val encrypted = Crypto.encryptAES(content, key)
+    val decrypted = Crypto.decryptAES(encrypted, key)
+
+    assert(decrypted == content)
+  }
 }
