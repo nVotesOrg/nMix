@@ -153,17 +153,17 @@ git config --global pack.compression 0
 #### Trustee setup
 The first step is to build the project
 
-1. Clone the repository
+1 Clone the repository
 
 ```git clone https://github.com/nVotes/nMix.git```
 
-2. In order to compile the source you will need to [install sbt](http://www.scala-sbt.org/release/docs/Setup.html). Once you have sbt, build with
+2 In order to compile the source you will need to [install sbt](http://www.scala-sbt.org/release/docs/Setup.html). Once you have sbt, build with
 
 ```sbt assembly assemblyPackageDependency```
 
 Then install rng-tools for random number generation
 
-3. Install rng-tools
+3 Install rng-tools
 
 ```apt-get install rng-tools```
 
