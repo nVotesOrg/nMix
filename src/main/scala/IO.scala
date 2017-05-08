@@ -60,6 +60,11 @@ object IO {
     ret
   }
 
+  /** Returns the contents of the given file a a byte array */
+  def asBytes(path: Path): Array[Byte] = {
+    Files.readAllBytes(path)
+  }
+
   /** Returns the contents of the given file a a byte array
    *
    *  Alternative implementation to above

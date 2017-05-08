@@ -199,10 +199,17 @@ object Crypto {
     new String(unpaddedMessage.convertToByteArray.getBytes, StandardCharsets.UTF_8)
   }
 
-  /** Return the AES key in the given file as a unicrypt object */
+  /** Return the AES key in the given file string as a unicrypt object */
   def readAESKey(path: Path): FiniteByteArrayElement = {
     val keyString = IO.asString(path)
     AES.getEncryptionKeySpace.getElementFrom(keyString)
+  }
+
+  /** Return the AES key in the given file bytes as a unicrypt object */
+  def readAESKeyBytes(path: Path): FiniteByteArrayElement = {
+    val keyBytes = IO.asBytes(path)
+    val bytes = ByteArray.getInstance(keyBytes :_*)
+    AES.getEncryptionKeySpace.getElementFrom(bytes)
   }
 
   /** Return a random AES key as a byte array */

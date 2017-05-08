@@ -453,7 +453,7 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
     gitRepo.send(message)
   }
 
-  /** Returns an inputstream for a file if it exists. Caller _must_ close the stream */
+  /** Returns an inputstream for a file if it exists. Caller must close the stream */
   private def getFileStream(file: String): Option[InputStream] = synchronized {
     gitRepo.getFileInputStream(file)
   }
