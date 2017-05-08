@@ -151,6 +151,9 @@ git config --global pack.compression 0
 ```
 
 #### Trustee setup
+Trustees run the nMix software itself. You must build and then configure nMix for each trustee participating in an election.
+
+##### Build
 The first step is to build the project
 
 1 Clone the repository
@@ -161,11 +164,24 @@ The first step is to build the project
 
 ```sbt assembly assemblyPackageDependency```
 
-Then install rng-tools for random number generation
+Install rng-tools for random number generation
 
 3 Install rng-tools
 
 ```apt-get install rng-tools```
+
+##### Configuration
+nMix configuration is specified in a file, typically named application.conf. You can find a sample configuration file in src/main/resources/application.conf.dist from which to write your own. nMix will look
+for this configuration file
+
+1. At the location passed in with -Dconfig.file=application.conf
+2. On the classpath
+
+The easiest procedure is to
+
+1. Copy application.conf.dist to your own application.conf
+2. Edit the file and apply necessary changes
+3. Specify the location of this file in the run.sh script
 
 ##### Generating trustee keys
 The script _src/main/shell/keys.sh_ can be used to generate the five keys needed for each trustee, these are

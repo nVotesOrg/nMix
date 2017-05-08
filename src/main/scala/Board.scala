@@ -238,14 +238,14 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
   }
 
   /** Returns the configuration if it exists as an Option[String] */
-  def getConfig: Option[String] = getFileStream(CONFIG).map(IO.asString(_))
+  def getConfig: Option[String] = useFileStream(CONFIG)(IO.asString)
 
   /** Returns the configuration statement if it exists */
-  def getConfigStatement: Option[String] = getFileStream(CONFIG_STMT).map(IO.asString(_))
+  def getConfigStatement: Option[String] = useFileStream(CONFIG_STMT)(IO.asString)
 
   /** Returns the configuration statement signature if it exists */
   def getConfigSignature(auth: Int): Option[Array[Byte]] = {
-    getFileStream(CONFIG_SIG(auth)).map(IO.asBytes(_))
+    useFileStream(CONFIG_SIG(auth))(IO.asBytes)
   }
 
   /** Syncs the repository, adds the configuration, and sends */
@@ -273,17 +273,17 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
 
   /** Returns a share if it exists */
   def getShare(item: Int, auth: Int): Option[String] = {
-    getFileStream(SHARE(item, auth)).map(IO.asString(_))
+    useFileStream(SHARE(item, auth))(IO.asString)
   }
 
   /** Returns a share statement if it exists */
   def getShareStatement(item: Int, auth: Int): Option[String] = {
-    getFileStream(SHARE_STMT(item, auth)).map(IO.asString(_))
+    useFileStream(SHARE_STMT(item, auth))(IO.asString)
   }
 
   /** Returns a share signature if it exists */
   def getShareSignature(item: Int, auth: Int): Option[Array[Byte]] = {
-    getFileStream(SHARE_SIG(item, auth)).map(IO.asBytes(_))
+    useFileStream(SHARE_SIG(item, auth))(IO.asBytes)
   }
 
   /** Syncs the repository, adds a public key triple (Share, Statement, Signature), and sends */
@@ -304,32 +304,32 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
 
   /** Returns the public key if it exists */
   def getPublicKey(item: Int): Option[String] = {
-    getFileStream(PUBLIC_KEY(item)).map(IO.asString(_))
+    useFileStream(PUBLIC_KEY(item))(IO.asString)
   }
 
   /** Returns the public key statement if it exists */
   def getPublicKeyStatement(item: Int): Option[String] = {
-    getFileStream(PUBLIC_KEY_STMT(item)).map(IO.asString(_))
+    useFileStream(PUBLIC_KEY_STMT(item))(IO.asString)
   }
 
   /** Returns the public key signature if it exists */
   def getPublicKeySignature(item: Int, auth: Int): Option[Array[Byte]] = {
-    getFileStream(PUBLIC_KEY_SIG(item, auth)).map(IO.asBytes(_))
+    useFileStream(PUBLIC_KEY_SIG(item, auth))(IO.asBytes)
   }
 
   /** Returns the ballots if they exist */
   def getBallots(item: Int): Option[String] =  {
-    getFileStream(BALLOTS(item)).map(IO.asString(_))
+    useFileStream(BALLOTS(item))(IO.asString)
   }
 
   /** Returns the ballots statement if it exists */
   def getBallotsStatement(item: Int): Option[String] =  {
-    getFileStream(BALLOTS_STMT(item)).map(IO.asString(_))
+    useFileStream(BALLOTS_STMT(item))(IO.asString)
   }
 
   /** Returns the ballots signature if it exists */
   def getBallotsSignature(item: Int): Option[Array[Byte]] =  {
-    getFileStream(BALLOTS_SIG(item)).map(IO.asBytes(_))
+    useFileStream(BALLOTS_SIG(item))(IO.asBytes)
   }
 
   /** Syncs the repository, adds a ballots triple (Share, Statement, Signature), and sends */
@@ -358,17 +358,17 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
 
   /** Returns a mix if it exists */
   def getMix(item: Int, auth: Int): Option[String] =  {
-    getFileStream(MIX(item, auth)).map(IO.asString(_))
+    useFileStream(MIX(item, auth))(IO.asString)
   }
 
   /** Returns a mix statement if it exists */
   def getMixStatement(item: Int, auth: Int): Option[String] = {
-    getFileStream(MIX_STMT(item, auth)).map(IO.asString(_))
+    useFileStream(MIX_STMT(item, auth))(IO.asString)
   }
 
   /** Returns a mix signature if it exists */
   def getMixSignature(item: Int, auth: Int, auth2: Int): Option[Array[Byte]] = {
-    getFileStream(MIX_SIG(item, auth, auth2)).map(IO.asBytes(_))
+    useFileStream(MIX_SIG(item, auth, auth2))(IO.asBytes)
   }
 
   /** Syncs the repository, adds a mix triple (Share, Statement, Signature), and sends */
@@ -389,17 +389,17 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
 
   /** Returns a decryption if it exists */
   def getDecryption(item: Int, auth: Int): Option[String] = {
-    getFileStream(DECRYPTION(item, auth)).map(IO.asString(_))
+    useFileStream(DECRYPTION(item, auth))(IO.asString)
   }
 
   /** Returns a decryption statement if it exists */
   def getDecryptionStatement(item: Int, auth: Int): Option[String] = {
-    getFileStream(DECRYPTION_STMT(item, auth)).map(IO.asString(_))
+    useFileStream(DECRYPTION_STMT(item, auth))(IO.asString)
   }
 
   /** Returns a decryption signature if it exists */
   def getDecryptionSignature(item: Int, auth: Int): Option[Array[Byte]] = {
-    getFileStream(DECRYPTION_SIG(item, auth)).map(IO.asBytes(_))
+    useFileStream(DECRYPTION_SIG(item, auth))(IO.asBytes)
   }
 
   /** Syncs the repository, adds a decryption triple (Share, Statement, Signature), and sends */
@@ -413,17 +413,17 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
 
   /** Returns the plaintexts if they exist */
   def getPlaintexts(item: Int): Option[String] = {
-    getFileStream(PLAINTEXTS(item)).map(IO.asString(_))
+    useFileStream(PLAINTEXTS(item))(IO.asString)
   }
 
   /** Returns the plaintexts statement if it exists */
   def getPlaintextsStatement(item: Int): Option[String] = {
-    getFileStream(PLAINTEXTS_STMT(item)).map(IO.asString(_))
+    useFileStream(PLAINTEXTS_STMT(item))(IO.asString)
   }
 
   /** Returns the plaintexts signature if it exists */
   def getPlaintextsSignature(item: Int, auth: Int): Option[Array[Byte]] = {
-    getFileStream(PLAINTEXTS_SIG(item, auth)).map(IO.asBytes(_))
+    useFileStream(PLAINTEXTS_SIG(item, auth))(IO.asBytes)
   }
 
   /** Syncs the repository, adds a plaintext triple (Share, Statement, Signature), and sends */
@@ -454,9 +454,16 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
   }
 
   /** Returns an inputstream for a file if it exists. Caller _must_ close the stream */
-  // FIXME provide details as to the JGIT filter implementation to select files
   private def getFileStream(file: String): Option[InputStream] = synchronized {
     gitRepo.getFileInputStream(file)
+  }
+
+  /** Applies an operation on the inpustream, if it exsits, then closes it */
+  private def useFileStream[T](file: String)(f: InputStream => T): Option[T] = synchronized {
+    val stream = gitRepo.getFileInputStream(file)
+    val ret = stream.map(f)
+    stream.map(_.close)
+    ret
   }
 }
 
