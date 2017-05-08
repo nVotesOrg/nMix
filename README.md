@@ -31,25 +31,6 @@ which allows for
 * Simple network toplogy: centralized communication on a single ssh port
 * Simple software deployment: Java8 (+ Git on the bulletin board server)
 
-### Requirements
-
-* Java 8+
-* Git version 2.4+ (on the bulletin board server)
-
-### Installing
-
-Clone the repository
-
-```git clone https://github.com/nVotes/nMix.git```
-
-Install rng-tools
-
-```apt-get install rng-tools```
-
-In order to build the project you will need to [install sbt](http://www.scala-sbt.org/release/docs/Setup.html). Once you have sbt, build with
-
-```sbt assembly assemblyPackageDependency```
-
 ### Quickstart
 
 The best place to start is to follow the [tutorial](https://github.com/nVotes/nMix/blob/master/docs/TUTORIAL.md). You can

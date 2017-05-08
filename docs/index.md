@@ -10,12 +10,11 @@
 		- [RSA keys](#rsa-keys)
 		- [AES keys](#aes-keys)
 		- [Key summary](#key-summary)
-	- [Bulletin Board setup](#bulletin-board-setup)
+	- [Installing](#installing)
+		- [Requirements](#requirements)
+		- [Bulletin Board setup](#bulletin-board-setup)
+		- [Trustee setup](#trustee-setup)
 		- [Git compression](#git-compression)
-	- [Trustee setup](#trustee-setup)
-		- [Generating trustee keys](#generating-trustee-keys)
-		- [Libmix settings](#libmix-settings)
-		- [Git compression](#git-compression-1)
 	- [Running an election](#running-an-election)
 		- [Election configuration](#election-configuration)
 	- [Artifact reference](#artifact-reference)
@@ -119,7 +118,15 @@ The following table summarizes the use of keys in nMix.
 |Election Configuration|RSA Public key list|PEM|Mutual verification of protocol artifacts
 |Election Configuration|RSA Public key|PEM|Verification of ballots artifact
 
-### Bulletin Board setup
+### Installing
+TODO
+
+#### Requirements
+
+* Java 8+
+* Git version 2.4+ (on the bulletin board server)
+
+#### Bulletin Board setup
 The nMix bulletin board component is just a git server. Setting up the bulletin board is simply setting up a git server with special attention paid to security and authentication. nMix uses ssh authentication based on the authorized_keys mechanism. The required steps are
 
 1. Setup a git server as per the official [git documentation](https://git-scm.com/book/en/v2/Git-on-the-Server-Setting-Up-the-Server)
@@ -130,10 +137,10 @@ The nMix bulletin board component is just a git server. Setting up the bulletin 
 
 You may consult the [quickstart tutorial](tutorial.md) for an example of how to set up a git server. Please note that this is only to be used as an example.
 
-#### Git compression
+##### Git compression
 By default, git applies two types of compression to objects stored and sent across the network, one of these does not scale over cpu cores. Compression may be suboptimal on a fast network and if disk space is not a problem. In order to disable git compression on the bulletin board server
 
-##### Disabling git compression
+###### Disabling git compression
 
 ```
 git config --global pack.window 0
@@ -144,10 +151,10 @@ git config --global core.looseCompression 0
 git config --global pack.compression 0
 ```
 
-### Trustee setup
+#### Trustee setup
 TODO
 
-#### Generating trustee keys
+##### Generating trustee keys
 The script _src/main/shell/keys.sh_ can be used to generate the five keys needed for each trustee, these are
 
 * RSA private key in SSH format
@@ -156,10 +163,10 @@ The script _src/main/shell/keys.sh_ can be used to generate the five keys needed
 * RSA public key in PEM format
 * AES key in raw format
 
-#### Libmix settings
+##### Libmix settings
 The following settings control libmix optimizations
 
-##### libmix.gmp=true/false
+###### libmix.gmp=true/false
 
 Activates native implementation of modular exponentiation and legendre symbol via
 [jna-gmp](https://github.com/square/jna-gmp) and gmp, if available on the system.

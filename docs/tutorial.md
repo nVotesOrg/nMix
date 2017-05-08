@@ -34,7 +34,21 @@ Run the setup.sh script (as root) which will initialize the repository with file
 
 ```./setup.sh```
 
-##### 4. Start the protocol by running the trustees
+##### 4. Build the project
+
+Clone the repository
+
+```git clone https://github.com/nVotes/nMix.git```
+
+Install rng-tools
+
+```apt-get install rng-tools```
+
+In order to build the project you will need to [install sbt](http://www.scala-sbt.org/release/docs/Setup.html). Once you have sbt, build with
+
+```sbt assembly assemblyPackageDependency```
+
+##### 5. Start the protocol by running the trustees
 
 To do this
 
@@ -50,7 +64,7 @@ When they are first run, the trustees will execute operations for config signing
 
 It is then time to simulate the voting process by adding ballots to the bulletin board.
 
-##### 5. Add encrypted ballots
+##### 6. Add encrypted ballots
 
 For example, add 1000 encrypted ballots
 
@@ -58,7 +72,7 @@ For example, add 1000 encrypted ballots
 
 Once the ballots are on the bulletin board, the trustees will automatically begin the mixing process and continue operating all the way up to the joint decryption and signing of plaintexts. This may take a while depending on the number of ballots you have generated. Once finished, the trustees will again idle.
 
-##### 6. Done!
+##### Done!
 
 You can inspect the results of the demo by browsing through the files produced in the repository. There should be plaintexts files if the process has ended correctly. To reset the process, simply execute the setup script again. One way to monitor what's going on during execution is
 
