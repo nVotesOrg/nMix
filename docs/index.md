@@ -33,7 +33,7 @@
 
 ## nMix User Guide
 
-This document contains detailed information necessary to set up and run elections with nMix. If you prefer a quick hands on introduction, please refer to the [quickstart tutorial](TUTORIAL.md).
+This document contains detailed information necessary to set up and run elections with nMix. If you prefer a quick hands on introduction, please refer to the [quickstart tutorial](tutorial.md).
 
 ### Overview
 The following is a typical voting setup using nMix
@@ -120,7 +120,7 @@ The following table summarizes the use of keys in nMix.
 |Election Configuration|RSA Public key|PEM|Verification of ballots artifact
 
 ### Bulletin Board setup
-The nMix implementation of the bulletin board is just a git repository. Setting up the bulletin board is basically setting up a git server with special attention paid to security and authentication. nMix uses ssh authentication based on the authorized_keys mechanism. The required steps are
+The nMix bulletin board component is just a git server. Setting up the bulletin board is simply setting up a git server with special attention paid to security and authentication. nMix uses ssh authentication based on the authorized_keys mechanism. The required steps are
 
 1. Setup a git server as per the official [git documentation](https://git-scm.com/book/en/v2/Git-on-the-Server-Setting-Up-the-Server)
 2. Ensure that the shell for the git user is set to [git-shell](https://git-scm.com/docs/git-shell). This prevents any login attempts.
@@ -128,7 +128,7 @@ The nMix implementation of the bulletin board is just a git repository. Setting 
 4. Add trustee RSA public keys to the authorized_keys file for the git user. These are generated as part of the trustee [set up](#trustee-setup).
 5. Optionally configure firewall settings to accept ssh connections only from known trustees.
 
-You may consult the [quickstart tutorial](TUTORIAL.md) for an example of how to set up a git server. Please note that this is only to be used as an example.
+You may consult the [quickstart tutorial](tutorial.md) for an example of how to set up a git server. Please note that this is only to be used as an example.
 
 #### Git compression
 By default, git applies two types of compression to objects stored and sent across the network, one of these does not scale over cpu cores. Compression may be suboptimal on a fast network and if disk space is not a problem. In order to disable git compression on the bulletin board server
