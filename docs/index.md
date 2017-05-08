@@ -171,7 +171,7 @@ Install rng-tools for random number generation
 ```apt-get install rng-tools```
 
 ##### Configuration
-nMix configuration is specified in a file, typically named application.conf. You can find a sample configuration file in src/main/resources/application.conf.dist from which to write your own. nMix will look
+nMix configuration is specified in a file, typically named application.conf. You can find a reference configuration file in [src/main/resources/application.conf.dist][/src/main/resources/application.conf] from which to write your own. nMix will look
 for this configuration file
 
 1. At the location passed in with -Dconfig.file=application.conf
@@ -183,6 +183,8 @@ The easiest procedure is to
 2. Edit the file and apply necessary changes
 3. Specify the location of this file in the run.sh script
 
+Please refer to the reference configuration file for details about each configuration value.
+
 ##### Generating trustee keys
 The script _src/main/shell/keys.sh_ can be used to generate the five keys needed for each trustee, these are
 
@@ -192,7 +194,7 @@ The script _src/main/shell/keys.sh_ can be used to generate the five keys needed
 * RSA public key in PEM format
 * AES key in raw format
 
-##### Libmix settings
+##### Additional configuration: libmix settings
 The following settings control libmix optimizations
 
 ###### libmix.gmp=true/false
@@ -207,7 +209,7 @@ Activates automatic extraction and parallelization of modular exponentiation cal
 ###### libmix.parallel-generators=true/false
 
 Activates parallel computation of generators used in Terelius-Wikstrom proofs (experimental)
-##### Git compression
+##### Additional configuration: git compression
 By default, git applies two types of compression to objects stored and sent across the network, one of these does not scale over cpu cores. Compression may be suboptimal on a fast network and if disk space is not a problem. In order to disable git compression on the trustee
 
 
