@@ -6,15 +6,11 @@
 	- [Overview](#overview)
 		- [Components](#components)
 		- [Protocol](#protocol)
-	- [Keys](#keys)
-		- [RSA keys](#rsa-keys)
-		- [AES keys](#aes-keys)
-		- [Key summary](#key-summary)
 	- [Installing](#installing)
 		- [Requirements](#requirements)
+		- [Keys](#keys)
 		- [Bulletin Board setup](#bulletin-board-setup)
 		- [Trustee setup](#trustee-setup)
-		- [Git compression](#git-compression)
 	- [Running an election](#running-an-election)
 		- [Election configuration](#election-configuration)
 	- [Artifact reference](#artifact-reference)
@@ -86,12 +82,23 @@ These steps are performed per election item. Note that the nMix protocol does no
 
 Details related to voter registration and authentication are critical to a secure voting system, but they are decoupled from the nMix design and considered given.
 
-### Keys
+### Installing
+As seen above, an nMix installation is composed of one machine acting as a bulletin board together with 2 or more machines acting as trustees. The trustees must have have ssh access connectivity to the bulletin board server.
+
+#### Requirements
+The following software is required to run nMix
+
+* Java 8+ (on trustees)
+* Git version 2.4+ (on the bulletin board server)
+
+nMix has been tested against Ubuntu 16.04.
+
+#### Keys
 This section offers an overview of the cryptographic keys necessary for nMix installation. Specific configuration steps are listed in the [bulletin board](#bulletin-board-setup) and [trustee](#trustee-setup) set up sections.
 
 nMix uses RSA keys for authentication and to sign protocol artifacts. Additionally, symmetric AES keys are used to encrypt election key private shares.
 
-#### RSA keys
+##### RSA keys
 
 Trustees authenticate against the bulletin board using their private RSA key. The corresponding public key must be known to the bulletin board server for the trustee to gain access. In the current implementation this behaviour is implemented through git's ssh authentication mechanism which uses linux's authorized_keys file. See the bulletin board setup for configuration details.
 
@@ -99,11 +106,11 @@ Additionally, trustees use RSA keys to sign and mutually verify artifacts posted
 
 Although strictly not part of the nMix backend, the Ballotbox must also use an RSA public key to authenticate against the bulletin board as well as to sign the set of ballots cast by voters. Recall that uploading of ballots occurs at step 7 of the protocol.
 
-#### AES keys
+##### AES keys
 
 During protocol execution trustees generate public and private shares of the election public key. The election public key is used to encrypt ballots when casting votes. At the end of the eleciton, trustees jointly decrypt the ballots once they have been mixed, preserving anonymity. This joint decryption uses the private shares created at the joint key generation phase. Private shares are encrypted using an AES key.
 
-#### Key summary
+##### Key summary
 
 The following table summarizes the use of keys in nMix.
 
@@ -117,14 +124,6 @@ The following table summarizes the use of keys in nMix.
 |Trustee configuration|AES key|RAW|Encryption of private key shares
 |Election Configuration|RSA Public key list|PEM|Mutual verification of protocol artifacts
 |Election Configuration|RSA Public key|PEM|Verification of ballots artifact
-
-### Installing
-TODO
-
-#### Requirements
-
-* Java 8+
-* Git version 2.4+ (on the bulletin board server)
 
 #### Bulletin Board setup
 The nMix bulletin board component is just a git server. Setting up the bulletin board is simply setting up a git server with special attention paid to security and authentication. nMix uses ssh authentication based on the authorized_keys mechanism. The required steps are
@@ -152,7 +151,21 @@ git config --global pack.compression 0
 ```
 
 #### Trustee setup
-TODO
+The first step is to build the project
+
+1. Clone the repository
+
+```git clone https://github.com/nVotes/nMix.git```
+
+2. In order to compile the source you will need to [install sbt](http://www.scala-sbt.org/release/docs/Setup.html). Once you have sbt, build with
+
+```sbt assembly assemblyPackageDependency```
+
+Then install rng-tools for random number generation
+
+3. Install rng-tools
+
+```apt-get install rng-tools```
 
 ##### Generating trustee keys
 The script _src/main/shell/keys.sh_ can be used to generate the five keys needed for each trustee, these are
@@ -178,7 +191,7 @@ Activates automatic extraction and parallelization of modular exponentiation cal
 ###### libmix.parallel-generators=true/false
 
 Activates parallel computation of generators used in Terelius-Wikstrom proofs (experimental)
-#### Git compression
+##### Git compression
 By default, git applies two types of compression to objects stored and sent across the network, one of these does not scale over cpu cores. Compression may be suboptimal on a fast network and if disk space is not a problem. In order to disable git compression on the trustee
 
 

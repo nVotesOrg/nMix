@@ -34,20 +34,21 @@ Run the setup.sh script (as root) which will initialize the repository with file
 
 ```./setup.sh```
 
-##### 4. Build the project
+##### 4. Build the project + rng-tools
 
-Clone the repository
+1. Clone the repository
 
 ```git clone https://github.com/nVotes/nMix.git```
 
-Install rng-tools
-
-```apt-get install rng-tools```
-
-In order to build the project you will need to [install sbt](http://www.scala-sbt.org/release/docs/Setup.html). Once you have sbt, build with
+2. In order to compile the source you will need to [install sbt](http://www.scala-sbt.org/release/docs/Setup.html). Once you have sbt, build with
 
 ```sbt assembly assemblyPackageDependency```
 
+Then install rng-tools for random number generation
+
+3. Install rng-tools
+
+```apt-get install rng-tools```
 ##### 5. Start the protocol by running the trustees
 
 To do this
