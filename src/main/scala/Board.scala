@@ -64,27 +64,27 @@ trait Names {
   def ERROR = "error"
   def ERROR(auth: Int) = s"$auth/error"
 
-  def SHARE(item: Int, auth: Int) = s"$auth/$item/share.ucs.json"
+  def SHARE(item: Int, auth: Int) = s"$auth/$item/share.json"
   def SHARE_STMT(item: Int, auth: Int) = s"$auth/$item/share.stmt.json"
   def SHARE_SIG(item: Int, auth: Int) = s"$auth/$item/share.sig.ucb"
 
   def PUBLIC_KEY(item: Int) = s"1/$item/public_key.ucb"
   def PUBLIC_KEY_STMT(item: Int) = s"1/$item/public_key.stmt.json"
-  def PUBLIC_KEY_SIG(item: Int, auth: Int) = s"$auth/$item/public_key.sig"
+  def PUBLIC_KEY_SIG(item: Int, auth: Int) = s"$auth/$item/public_key.sig.ucb"
 
   def BALLOTS(item: Int) = s"bb/$item/ballots.ucb"
-  def BALLOTS_STMT(item: Int) = s"bb/$item/ballot.stmt.json"
-  def BALLOTS_SIG(item: Int) = s"bb/$item/ballot.sig"
+  def BALLOTS_STMT(item: Int) = s"bb/$item/ballots.stmt.json"
+  def BALLOTS_SIG(item: Int) = s"bb/$item/ballots.sig"
 
-  // since we are using a local memory storage, this entry will
-  // be used as a map key name, not a file name
-  // the entry in the map will be a libmix PreShuffleData object
+  /** since we are using a local memory storage, this entry will
+    be used as a map key name, not a file name
+    the entry in the map will be a libmix PreShuffleData object */
   def PERM_DATA(item: Int, auth: Int) = s"$auth/$item/perm_data"
 
-  def MIX(item: Int, auth: Int) = s"$auth/$item/mix.ucs"
+  def MIX(item: Int, auth: Int) = s"$auth/$item/mix.json"
   def MIX_STMT(item: Int, auth: Int) = s"$auth/$item/mix.stmt.json"
-  // auth: the auth who produced the mix, auth2: the signing auth
-  def MIX_SIG(item: Int, auth: Int, auth2: Int) = s"$auth2/$item/mix.$auth.sig.ucb"
+  /** auth: the auth who produced the mix, signingAuth: the verifying auth */
+  def MIX_SIG(item: Int, auth: Int, signingAuth: Int) = s"$auth2/$item/mix.$signingAuth.sig.ucb"
 
   def DECRYPTION(item: Int, auth: Int) = s"$auth/$item/decryption.json"
   def DECRYPTION_STMT(item: Int, auth: Int) = s"$auth/$item/decryption.stmt.json"

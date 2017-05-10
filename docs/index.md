@@ -6,6 +6,7 @@
 	- [Overview](#overview)
 		- [Components](#components)
 		- [Protocol](#protocol)
+		- [Bulletin board structure](#bulletin-board-structure)
 	- [Installing](#installing)
 		- [Requirements](#requirements)
 		- [Keys](#keys)
@@ -28,7 +29,7 @@
 
 ## nMix User Guide
 
-This document contains detailed information necessary to set up and run elections with nMix. If you prefer a quick hands on introduction, please refer to the [quickstart tutorial](tutorial.md).
+This document contains detailed information necessary to set up and run elections with nMix. If you prefer a quick hands-on introduction, check out the [quickstart tutorial](tutorial.md).
 
 ### Overview
 The following is a typical voting setup using nMix
@@ -82,6 +83,34 @@ These steps are performed per election item. Note that the nMix protocol does no
 
 Details related to voter registration and authentication are critical to a secure voting system, but they are decoupled from the nMix design and considered given.
 
+#### Bulletin board structure
+The bulletin board structure can be roughly divided into three parts, corresponding to root data, trustee data and ballotbox data. Root data defines the global configuration. The trustee and ballotbox areas contain data posted by their respective components.
+##### BNF grammar
+The bulletin board structure can be described in Backus-Naus form as
+```
+<board> = "" | <entry> | <entry> "," <entry>
+<entry> = <root_entry> | <trustee_entry> | <ballotbox_entry>
+<root_entry> = <root_path> <root_artifact>
+<trustee_entry> = <trustee_path> <trustee_artifact>
+<ballotbox_entry> = <ballotbox_path> <ballotbox_artifact>
+<root_path> = "/"
+<trustee_path> = "/" <trustee> "/" <item> "/"
+<ballotbox_path> = "/bb/"
+<root_artifact> = "error" | "pause"
+<trustee_artifact> = "error" | <trustee_artifact_name> <artifact_type> | "mix" <mix_artifact_type>
+<trustee_artifact_name> = "share" | "public_key" | "decryption" | "plaintexts"
+<artifact_type> = ".json" | ".stmt.json" | "stmt.sig.ucb"
+<mix_artifact_type> = ".json" | ".stmt.json" | "." <trustee> ".sig.ucb"
+<ballotbox_artifact_name> = "ballots"
+<ballotbox_artifact> = <ballotbox_artifact_name> <artifact_type>
+<trustee> ::= <integer>
+<item> ::= <integer>
+```
+
+##### Example
+The following is an example of a populated bulletin board after the execution of the entire protocol
+
+TODO
 ### Installing
 As seen above, an nMix installation is composed of one machine acting as a bulletin board together with 2 or more machines acting as trustees. The trustees must have have ssh access connectivity to the bulletin board server.
 

@@ -219,7 +219,6 @@ case class AddShare(ctx: Context, item: Int) extends Action {
  *  the rest of authorities validate it by recreating it themselves.
  *
  *  The public key is created and signed if
- *
  *  - the configuration is accepted
  *  - the shares have correct statements, signatures and pok
  *  - the number of shares is equal to number of authorities
@@ -374,6 +373,11 @@ case class AddPreShuffleData(ctx: Context, item: Int) extends Action {
  *
  *  The authority will add the mix, statement and signature for
  *  this mix.
+ *
+ *  Note that the authority's mix position is determined by
+ *  the general authority position in the election together with
+ *  the mix permutation. Similarly, the previous authority's mix position
+ *  is also permuted.
  */
 case class AddMix(ctx: Context, item: Int) extends Action {
   val priority = 3
@@ -435,6 +439,11 @@ case class AddMix(ctx: Context, item: Int) extends Action {
  *  Verifying the proof of shuffle requires the pre and post votes. If
  *  this is mix #1, the pre votes should be those provided by the ballot box.
  *  Otherwise they should be the output of the previous mix.
+ *
+ *  Note that the authority's mix position is determined by
+ *  the general authority position in the election together with
+ *  the mix permutation. Similarly, the previous authority's mix position
+ *  is also permuted.
  */
 case class VerifyMix(ctx: Context, item: Int, auth: Int) extends Action {
   val priority = 4
