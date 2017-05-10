@@ -8,8 +8,8 @@ nMix is an open source backend for a mixnet-based, cryptographically secure voti
 The main elements of the cryptographic scheme are
 
 * ElGamal homomorphic distributed cryptosystem[1][5]
-* Verifiable re-encryption mixnet[2][3][6]
-* Joint key-generation / decryption with correctness proofs[5]
+* Verifiable re-encryption mixnet with Terelius-Wikstrom shuffles[2][3][6]
+* Joint key-generation / decryption with zero knowledge correctness proofs[5]
 * Tamper-resistant bulletin board hash-chain[7]
 * RSA message signing and trustee authentication[8]
 

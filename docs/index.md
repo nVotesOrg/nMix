@@ -195,7 +195,7 @@ The script _src/main/shell/keys.sh_ can be used to generate the five keys needed
 * AES key in raw format
 
 ##### Libmix settings
-nMix uses the libmix library for core cryptography. The following settings control libmix optimizations
+nMix uses the libmix library for core cryptography operations, with support for multicore cpus. The following settings control libmix optimizations
 
 ###### libmix.gmp=true/false
 
@@ -237,7 +237,7 @@ The Election Configuration specifies the election information, the security para
 "trustees":["<a list of RSA public keys for each trustee>"]
 }
 ```
-Defining and posting this data to the bulletin board is the first step that kicks off the rest of the protocol execution. Besides the configuration itself, a statement file must be provided which will be signed by trustees indicating acceptance of its parameters. The statement config file has this structure
+Creating and posting this data to the bulletin board is the first step that kicks off the rest of the protocol execution. Besides the configuration itself, a statement file must be provided which will be signed by trustees indicating acceptance of its parameters. The statement config file has this structure
 
 ```
 {"configHash":"<the sha-512 hash of the configuration's json representation as a string>"}

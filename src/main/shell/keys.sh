@@ -26,4 +26,4 @@ openssl rsa -in keys/id_rsa -pubout > keys/id_rsa.pub.pem
 openssl pkcs8 -topk8 -inform PEM -outform PEM -in keys/id_rsa -out keys/id_rsa.pem -nocrypt
 
 # generate a random aes key in raw (binary) format
-openssl rand 16 > keys/aes.bin
+dd if=/dev/urandom of=keys/aes.bin bs=16 count=1
