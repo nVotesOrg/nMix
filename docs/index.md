@@ -88,21 +88,21 @@ The bulletin board structure can be roughly divided into three parts, correspond
 ##### BNF grammar
 The bulletin board structure can be described in Backus-Naus form as
 ```
-<board> = "" | <entry> | <entry> "," <entry>
-<entry> = <root_entry> | <trustee_entry> | <ballotbox_entry>
-<root_entry> = <root_path> <root_artifact>
-<trustee_entry> = <trustee_path> <trustee_artifact>
-<ballotbox_entry> = <ballotbox_path> <ballotbox_artifact>
-<root_path> = "/"
-<trustee_path> = "/" <trustee> "/" <item> "/"
-<ballotbox_path> = "/bb/"
-<root_artifact> = "error" | "pause"
-<trustee_artifact> = "error" | <trustee_artifact_name> <artifact_type> | "mix" <mix_artifact_type>
-<trustee_artifact_name> = "share" | "public_key" | "decryption" | "plaintexts"
-<artifact_type> = ".json" | ".stmt.json" | "stmt.sig.ucb"
-<mix_artifact_type> = ".json" | ".stmt.json" | "." <trustee> ".sig.ucb"
-<ballotbox_artifact_name> = "ballots"
-<ballotbox_artifact> = <ballotbox_artifact_name> <artifact_type>
+<board> ::= "" | <entry> | <entry> "," <entry>
+<entry> ::= <root_entry> | <trustee_entry> | <ballotbox_entry>
+<root_entry> ::= <root_path> <root_artifact>
+<trustee_entry> ::= <trustee_path> <trustee_artifact>
+<ballotbox_entry> ::= <ballotbox_path> <ballotbox_artifact>
+<root_path> ::= "/"
+<trustee_path> ::= "/" <trustee> "/" <item> "/"
+<ballotbox_path> ::= "/bb/"
+<root_artifact> ::= "error" | "pause"
+<trustee_artifact> ::= "error" | <trustee_artifact_name> <artifact_type> | "mix" <mix_artifact_type>
+<trustee_artifact_name> ::= "share" | "public_key" | "decryption" | "plaintexts"
+<artifact_type> ::= ".json" | ".stmt.json" | "stmt.sig.ucb"
+<mix_artifact_type> ::= ".json" | ".stmt.json" | "." <trustee> ".sig.ucb"
+<ballotbox_artifact_name> ::= "ballots"
+<ballotbox_artifact> ::= <ballotbox_artifact_name> <artifact_type>
 <trustee> ::= <integer>
 <item> ::= <integer>
 ```
