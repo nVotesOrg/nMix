@@ -101,8 +101,8 @@ The bulletin board structure can be described in Backus-Naus form as
 <trustee_artifact_name> ::= "share" | "public_key" | "decryption" | "plaintexts"
 <artifact_type> ::= ".json" | ".stmt.json" | "stmt.sig.ucb"
 <mix_artifact_type> ::= ".json" | ".stmt.json" | "." <trustee> ".sig.ucb"
-<ballotbox_artifact_name> ::= "ballots"
 <ballotbox_artifact> ::= <ballotbox_artifact_name> <artifact_type>
+<ballotbox_artifact_name> ::= "ballots"
 <trustee> ::= <integer>
 <item> ::= <integer>
 ```

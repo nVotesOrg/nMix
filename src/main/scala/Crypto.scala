@@ -73,14 +73,11 @@ object Crypto {
   val CONVERT_METHOD = ConvertMethod.getInstance(BigIntegerToByteArray.getInstance(ByteOrder.BIG_ENDIAN),
       StringToByteArray.getInstance(StandardCharsets.UTF_8))
 
-  /** AES 128-bit unicrypt encryption scheme
-   *
-   *  The unicrypt implementation delegates to javax.security.
-   *  It is unclear at this time whether there are benefits to using keylengths of 256
-   *  FIXME verify that the java aes implementation called by unicrypt is constant time
-   */
-  val AES = AESEncryptionScheme.getInstance(AESEncryptionScheme.KeyLength.KEY128, AESEncryptionScheme.Mode.CBC,
-         AESEncryptionScheme.DEFAULT_IV)
+  /** It is unclear at this time whether there are benefits to using keylengths of 256 */
+  val AES_KEY_LENGTH = AESEncryptionScheme.KeyLength.KEY128
+  val AES_MODE = AESEncryptionScheme.Mode.CBC
+  val IV_SIZE = AESEncryptionScheme.AES_BLOCK_SIZE / 8
+  val IV = ByteArray.getRandomInstance(IV_SIZE)
 
   /** Returns the sha512 hash of the given file as a String */
   def sha512(file: Path): String = {
@@ -159,7 +156,8 @@ object Crypto {
     val toEncrypt = byteSpace.getElement(content)
     val pkcs = PKCSPaddingScheme.getInstance(16)
     val paddedMessage = pkcs.pad(toEncrypt)
-    val encryptedMessage = AES.encrypt(key, paddedMessage)
+    val aes = AESEncryptionScheme.getInstance(AES_KEY_LENGTH, AES_MODE, IV)
+    val encryptedMessage = aes.encrypt(key, paddedMessage)
 
     encryptedMessage.convertToByteArray.getBytes
   }
@@ -168,7 +166,8 @@ object Crypto {
   def decryptAES(content: Array[Byte], key: FiniteByteArrayElement): Array[Byte] = {
     val byteSpace = ByteArrayMonoid.getInstance()
     val toDecrypt = byteSpace.getElement(content)
-    val decryptedMessage = AES.decrypt(key, toDecrypt)
+    val aes = AESEncryptionScheme.getInstance(AES_KEY_LENGTH, AES_MODE, IV)
+    val decryptedMessage = aes.decrypt(key, toDecrypt)
     val pkcs = PKCSPaddingScheme.getInstance(16)
     val unpaddedMessage = pkcs.unpad(decryptedMessage)
 
@@ -181,7 +180,8 @@ object Crypto {
     val toEncrypt = byteSpace.getElement(content.getBytes(StandardCharsets.UTF_8))
     val pkcs = PKCSPaddingScheme.getInstance(16)
     val paddedMessage = pkcs.pad(toEncrypt)
-    val encryptedMessage = AES.encrypt(key, paddedMessage)
+    val aes = AESEncryptionScheme.getInstance(AES_KEY_LENGTH, AES_MODE, IV)
+    val encryptedMessage = aes.encrypt(key, paddedMessage)
 
     val bytes = encryptedMessage.convertToByteArray.getBytes
     Base64.getEncoder().encodeToString(bytes)
@@ -192,7 +192,8 @@ object Crypto {
     val byteSpace = ByteArrayMonoid.getInstance()
     val bytes = Base64.getDecoder().decode(content)
     val toDecrypt = byteSpace.getElement(bytes)
-    val decryptedMessage = AES.decrypt(key, toDecrypt)
+    val aes = AESEncryptionScheme.getInstance(AES_KEY_LENGTH, AES_MODE, IV)
+    val decryptedMessage = aes.decrypt(key, toDecrypt)
     val pkcs = PKCSPaddingScheme.getInstance(16)
     val unpaddedMessage = pkcs.unpad(decryptedMessage)
 
@@ -202,29 +203,34 @@ object Crypto {
   /** Return the AES key in the given file string as a unicrypt object */
   def readAESKey(path: Path): FiniteByteArrayElement = {
     val keyString = IO.asString(path)
-    AES.getEncryptionKeySpace.getElementFrom(keyString)
+    val aes = AESEncryptionScheme.getInstance()
+    aes.getEncryptionKeySpace.getElementFrom(keyString)
   }
 
   /** Return the AES key in the given file bytes as a unicrypt object */
   def readAESKeyBytes(path: Path): FiniteByteArrayElement = {
     val keyBytes = IO.asBytes(path)
     val bytes = ByteArray.getInstance(keyBytes :_*)
-    AES.getEncryptionKeySpace.getElementFrom(bytes)
+    val aes = AESEncryptionScheme.getInstance()
+    aes.getEncryptionKeySpace.getElementFrom(bytes)
   }
 
   /** Return a random AES key as a byte array */
   def randomAESKey: Array[Byte] = {
-    AES.generateSecretKey().convertToByteArray.getBytes
+    val aes = AESEncryptionScheme.getInstance()
+    aes.generateSecretKey().convertToByteArray.getBytes
   }
 
   /** Return a random AES key as a unicrypt converted String */
   def randomAESKeyString: String = {
-    AES.generateSecretKey().convertToString
+    val aes = AESEncryptionScheme.getInstance()
+    aes.generateSecretKey().convertToString
   }
 
   /** Return a random AES key as a unicrypt object */
   def randomAESKeyElement: FiniteByteArrayElement = {
-    AES.generateSecretKey()
+    val aes = AESEncryptionScheme.getInstance()
+    aes.generateSecretKey()
   }
 
   /** Reads a private RSA key from the given file

@@ -84,7 +84,7 @@ trait Names {
   def MIX(item: Int, auth: Int) = s"$auth/$item/mix.json"
   def MIX_STMT(item: Int, auth: Int) = s"$auth/$item/mix.stmt.json"
   /** auth: the auth who produced the mix, signingAuth: the verifying auth */
-  def MIX_SIG(item: Int, auth: Int, signingAuth: Int) = s"$auth2/$item/mix.$signingAuth.sig.ucb"
+  def MIX_SIG(item: Int, auth: Int, signingAuth: Int) = s"$signingAuth/$item/mix.$auth.sig.ucb"
 
   def DECRYPTION(item: Int, auth: Int) = s"$auth/$item/decryption.json"
   def DECRYPTION_STMT(item: Int, auth: Int) = s"$auth/$item/decryption.stmt.json"
