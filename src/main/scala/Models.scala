@@ -42,7 +42,7 @@ case class Config(id: String, name: String, modulus: String, generator: String,
  *  The private part is aes encrypted by the authority.
  *
  */
-case class Share(share: EncryptionKeyShareDTO, encryptedPrivateKey: String)
+case class Share(share: EncryptionKeyShareDTO, encryptedPrivateKey: String, aesIV: String)
 
 /** Permutation data resulting from offline phase of mixing
  *

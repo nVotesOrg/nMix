@@ -77,7 +77,6 @@ object Crypto {
   val AES_KEY_LENGTH = AESEncryptionScheme.KeyLength.KEY128
   val AES_MODE = AESEncryptionScheme.Mode.CBC
   val IV_SIZE = AESEncryptionScheme.AES_BLOCK_SIZE / 8
-  val IV = ByteArray.getRandomInstance(IV_SIZE)
 
   /** Returns the sha512 hash of the given file as a String */
   def sha512(file: Path): String = {
@@ -151,22 +150,25 @@ object Crypto {
   }
 
   /** Returns the AES encryption of the given byte array as a byte array */
-  def encryptAES(content: Array[Byte], key: FiniteByteArrayElement): Array[Byte] = {
+  def encryptAES(content: Array[Byte], key: FiniteByteArrayElement): (Array[Byte], Array[Byte]) = {
     val byteSpace = ByteArrayMonoid.getInstance()
     val toEncrypt = byteSpace.getElement(content)
     val pkcs = PKCSPaddingScheme.getInstance(16)
     val paddedMessage = pkcs.pad(toEncrypt)
-    val aes = AESEncryptionScheme.getInstance(AES_KEY_LENGTH, AES_MODE, IV)
+    val iv = ByteArray.getRandomInstance(IV_SIZE)
+    val aes = AESEncryptionScheme.getInstance(AES_KEY_LENGTH, AES_MODE, iv)
     val encryptedMessage = aes.encrypt(key, paddedMessage)
 
-    encryptedMessage.convertToByteArray.getBytes
+    val encrypted = encryptedMessage.convertToByteArray.getBytes
+    (encrypted, iv.getBytes)
   }
 
   /** Returns the AES decryption of the given String as a byte array */
-  def decryptAES(content: Array[Byte], key: FiniteByteArrayElement): Array[Byte] = {
+  def decryptAES(content: Array[Byte], key: FiniteByteArrayElement, iv: Array[Byte]): Array[Byte] = {
     val byteSpace = ByteArrayMonoid.getInstance()
     val toDecrypt = byteSpace.getElement(content)
-    val aes = AESEncryptionScheme.getInstance(AES_KEY_LENGTH, AES_MODE, IV)
+    val ivBytes = ByteArray.getInstance(iv :_*)
+    val aes = AESEncryptionScheme.getInstance(AES_KEY_LENGTH, AES_MODE, ivBytes)
     val decryptedMessage = aes.decrypt(key, toDecrypt)
     val pkcs = PKCSPaddingScheme.getInstance(16)
     val unpaddedMessage = pkcs.unpad(decryptedMessage)
@@ -175,24 +177,28 @@ object Crypto {
   }
 
   /** Returns the AES encryption of the given String as a base64 encoded String */
-  def encryptAES(content: String, key: FiniteByteArrayElement): String = {
+  def encryptAES(content: String, key: FiniteByteArrayElement): (String, String) = {
     val byteSpace = ByteArrayMonoid.getInstance()
     val toEncrypt = byteSpace.getElement(content.getBytes(StandardCharsets.UTF_8))
     val pkcs = PKCSPaddingScheme.getInstance(16)
     val paddedMessage = pkcs.pad(toEncrypt)
-    val aes = AESEncryptionScheme.getInstance(AES_KEY_LENGTH, AES_MODE, IV)
+    val iv = ByteArray.getRandomInstance(IV_SIZE)
+    val aes = AESEncryptionScheme.getInstance(AES_KEY_LENGTH, AES_MODE, iv)
     val encryptedMessage = aes.encrypt(key, paddedMessage)
 
     val bytes = encryptedMessage.convertToByteArray.getBytes
-    Base64.getEncoder().encodeToString(bytes)
+    val encrypted = Base64.getEncoder().encodeToString(bytes)
+    val ivString =  Base64.getEncoder().encodeToString(iv.getBytes)
+    (encrypted, ivString)
   }
 
   /** Returns the AES decryption of the given base64 encoded String as a String */
-  def decryptAES(content: String, key: FiniteByteArrayElement): String = {
+  def decryptAES(content: String, key: FiniteByteArrayElement, iv: String): String = {
     val byteSpace = ByteArrayMonoid.getInstance()
     val bytes = Base64.getDecoder().decode(content)
     val toDecrypt = byteSpace.getElement(bytes)
-    val aes = AESEncryptionScheme.getInstance(AES_KEY_LENGTH, AES_MODE, IV)
+    val ivBytes = ByteArray.getInstance(Base64.getDecoder().decode(iv) :_*)
+    val aes = AESEncryptionScheme.getInstance(AES_KEY_LENGTH, AES_MODE, ivBytes)
     val decryptedMessage = aes.decrypt(key, toDecrypt)
     val pkcs = PKCSPaddingScheme.getInstance(16)
     val unpaddedMessage = pkcs.unpad(decryptedMessage)

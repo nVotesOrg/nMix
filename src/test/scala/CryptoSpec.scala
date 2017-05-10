@@ -37,8 +37,8 @@ class CryptoSpec extends FlatSpec {
   "encryption" should "decrypt ok" in {
     val content = UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8)
     val key = Crypto.readAESKey(Paths.get(getClass.getResource("/test_aes.ucs").toURI))
-    val encrypted = Crypto.encryptAES(content, key)
-    val decrypted = Crypto.decryptAES(encrypted, key)
+    val (encrypted,iv) = Crypto.encryptAES(content, key)
+    val decrypted = Crypto.decryptAES(encrypted, key, iv)
 
     assert(decrypted.sameElements(content))
   }
@@ -46,12 +46,12 @@ class CryptoSpec extends FlatSpec {
   "decryption with wrong key" should "fail" in {
     val content = UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8)
     val key = Crypto.readAESKey(Paths.get(getClass.getResource("/test_aes.ucs").toURI))
-    val encrypted = Crypto.encryptAES(content, key)
+    val (encrypted,iv) = Crypto.encryptAES(content, key)
 
     val wrongKey = Crypto.randomAESKeyElement
 
     assertThrows[IllegalArgumentException] {
-      val decrypted = Crypto.decryptAES(encrypted, wrongKey)
+      val decrypted = Crypto.decryptAES(encrypted, wrongKey, iv)
       // just in case there is no error in the unpadding
       if(!decrypted.sameElements(content)) {
         throw new IllegalArgumentException
@@ -62,8 +62,8 @@ class CryptoSpec extends FlatSpec {
   "encryption (str)" should "decrypt ok" in {
     val content = UUID.randomUUID().toString()
     val key = Crypto.readAESKey(Paths.get(getClass.getResource("/test_aes.ucs").toURI))
-    val encrypted = Crypto.encryptAES(content, key)
-    val decrypted = Crypto.decryptAES(encrypted, key)
+    val (encrypted,iv) = Crypto.encryptAES(content, key)
+    val decrypted = Crypto.decryptAES(encrypted, key, iv)
 
     assert(decrypted == content)
   }
@@ -71,12 +71,12 @@ class CryptoSpec extends FlatSpec {
   "decryption (str) with wrong key" should "fail" in {
     val content = UUID.randomUUID().toString()
     val key = Crypto.readAESKey(Paths.get(getClass.getResource("/test_aes.ucs").toURI))
-    val encrypted = Crypto.encryptAES(content, key)
+    val (encrypted,iv) = Crypto.encryptAES(content, key)
 
     val wrongKey = Crypto.randomAESKeyElement
 
     assertThrows[IllegalArgumentException] {
-      val decrypted = Crypto.decryptAES(encrypted, wrongKey)
+      val decrypted = Crypto.decryptAES(encrypted, wrongKey, iv)
       // just in case there is no error in the unpadding
       if(decrypted != content) {
         throw new IllegalArgumentException
@@ -87,8 +87,8 @@ class CryptoSpec extends FlatSpec {
   "encryption (str) with bin key" should "decrypt ok" in {
     val content = UUID.randomUUID().toString()
     val key = Crypto.readAESKeyBytes(Paths.get(getClass.getResource("/test_aes.bin").toURI))
-    val encrypted = Crypto.encryptAES(content, key)
-    val decrypted = Crypto.decryptAES(encrypted, key)
+    val (encrypted, iv) = Crypto.encryptAES(content, key)
+    val decrypted = Crypto.decryptAES(encrypted, key, iv)
 
     assert(decrypted == content)
   }

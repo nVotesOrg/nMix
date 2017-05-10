@@ -191,9 +191,9 @@ case class AddShare(ctx: Context, item: Int) extends Action {
     val (share, privateKey) = KeyMakerTrustee.createKeyShare(modulusStr, ctx.cSettings)
 
     // encrypt the share private key
-    val encrypted = Crypto.encryptAES(privateKey, ctx.trusteeCfg.aesKey)
+    val (encrypted, iv) = Crypto.encryptAES(privateKey, ctx.trusteeCfg.aesKey)
 
-    val fullShare = Share(share, encrypted)
+    val fullShare = Share(share, encrypted, iv)
     val statement = Statement.getShareStatement(fullShare, configHash, item)
     val signature = statement.sign(ctx.trusteeCfg.privateKey)
 
@@ -643,7 +643,7 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
 
     logger.info(s"decrypting private share on item $item")
 
-    val privateKey = Crypto.decryptAES(share.encryptedPrivateKey, ctx.trusteeCfg.aesKey)
+    val privateKey = Crypto.decryptAES(share.encryptedPrivateKey, ctx.trusteeCfg.aesKey, share.aesIV)
 
     // create decryption
     val decryption = KeyMakerTrustee.partialDecryption(modulusStr, mix.votes, privateKey, ctx.cSettings)
