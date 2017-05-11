@@ -45,7 +45,6 @@ import ch.bfh.unicrypt.math.algebra.general.classes.FiniteByteArrayElement
   *  instance running on this machine. This is implemented via
   *  binding to a port, specified by the 'nmix.singleton.port'
   *  environment property. Set to -1 to disable this check.
-  *
   */
 object TrusteeLoop extends App {
   val logger = LoggerFactory.getLogger(TrusteeLoop.getClass)
@@ -96,13 +95,14 @@ object TrusteeLoop extends App {
   *
   */
 case class TrusteeConfigRaw(dataStorePath: Path, repoBaseUri: URI, bootstrapRepoUri: URI,
-  publicKey: Path, privateKey:Path, aesKey: Path, peers: Path)
+  publicKey: Path, privateKey:Path, aesKey: Path, peers: Path, offlineSplit: Boolean)
 
 /** The trustee configuration, converted to objects
   *
   */
 case class TrusteeConfig(dataStorePath: Path, repoBaseUri: URI, bootstrapRepoUri: URI,
-  publicKey: RSAPublicKey, privateKey: RSAPrivateKey, aesKey: FiniteByteArrayElement, peers: Seq[RSAPublicKey]) {
+  publicKey: RSAPublicKey, privateKey: RSAPrivateKey, aesKey: FiniteByteArrayElement, peers: Seq[RSAPublicKey],
+  offlineSplit: Boolean) {
 
    override def toString() = s"TrusteeConfig($dataStorePath $repoBaseUri $bootstrapRepoUri ${peers.length})"
 }
@@ -126,8 +126,9 @@ object TrusteeConfig {
     val peersString = lines.mkString("\n").split("-----END PUBLIC KEY-----")
     val peers = peersString.map(Crypto.readPublicRsa(_)).toList
     val aesKey = Crypto.readAESKey(c.aesKey)
+    val offline = c.offlineSplit
 
     TrusteeConfig(c.dataStorePath, c.repoBaseUri, c.bootstrapRepoUri, publicKey,
-      privateKey, aesKey, peers)
+      privateKey, aesKey, peers, offline)
   }
 }

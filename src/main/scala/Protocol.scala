@@ -145,9 +145,15 @@ object Protocol extends Names {
 
       if(hits.size > 0) {
         logger.info(s"* Per-item hits: ${hits.map(_.toString)}")
-        // parallel execution
-        // val results = hits.par.map(action => action -> action.execute)
-        val results = hits.map(action => action -> action.execute)
+
+        /** If the action is preshuffle, we execute in parallel to eat up the serial loop */
+        val preShuffleHits = hits.filter(_.isInstanceOf[AddPreShuffleData])
+        val results = if(preShuffleHits.size == hits.size) {
+          preShuffleHits.par.map(action => action -> action.execute)
+        } else {
+          hits.map(action => action -> action.execute)
+        }
+
         logger.info(s"Per-item results: $results")
 
         val errorStrings = results.flatMap {
@@ -183,7 +189,7 @@ object Protocol extends Names {
    *  Examples of global rules are
    *
    *  1) Stop execution if a pause is requested
-   *  2) Stop execution if any authority has reported an error
+   *  2) Stop execution if any authority has reported an error or there is a global error
    *  3) Validate the global config if this authority has not yet done so
    *
    *  A list of rules has type List[(Cond, Action)]
@@ -191,7 +197,8 @@ object Protocol extends Names {
   private def globalRules(ctx: Context) = {
 
     val pauseYes = Condition.yes(PAUSE)
-    val errorsYes = Condition((1 to ctx.config.items).map(i => ERROR(i) -> false).toList).no(ERROR).neg
+    /** no errors, neither per authority, nor global */
+    val errorsYes = Condition((1 to ctx.config.trustees.size).map(i => ERROR(i) -> false).toList).no(ERROR).neg
     val configNo = Condition.yes(CONFIG).yes(CONFIG_STMT).no(CONFIG_SIG(ctx.position))
 
     ListBuffer[(Cond, Action)](
@@ -277,12 +284,16 @@ object Protocol extends Names {
 
     rules += allShares.and(noPublicKeySig) -> AddOrSignPublicKey(ctx, item)
 
-    // add pre shuffle data
-    // rules += myPreShuffleNo -> AddPreShuffleData(ctx, item)
-    // add mix (online phase)
-    // rules += myPreShuffleYes.and(myMixNo) -> AddMix(ctx, item)
-    // add mix (offline + online phases)
-    rules += myMixNo -> AddMix(ctx, item)
+    if(ctx.trusteeCfg.offlineSplit) {
+      // add pre shuffle data
+      rules += myPreShuffleNo -> AddPreShuffleData(ctx, item)
+      // add mix (online phase)
+      rules += myPreShuffleYes.and(myMixNo) -> AddMix(ctx, item)
+    }
+    else {
+      // add mix (offline + online phases)
+      rules += myMixNo -> AddMix(ctx, item)
+    }
 
     missingMixSigs.foreach { case(auth, item, noMixSig) =>
       rules += noMixSig -> VerifyMix(ctx, item, auth)

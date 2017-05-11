@@ -40,6 +40,8 @@ aes-key=keys/aes.bin
 # src/main/shell/keys.sh script.
 peers=keys/peers.pem
 
+offline-split=false
+
 # This parameter is here for future compatibility and
 # is currently unused.
 bootstrap-repo-uri="ssh://git@localhost:22/~/boostrap"
