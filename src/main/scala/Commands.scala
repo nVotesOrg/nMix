@@ -15,7 +15,7 @@
  * along with nMix.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-package org.nvotes.trustee
+package org.nvotes.mix
 
 import java.nio.file.Paths
 import java.nio.file.Path
@@ -40,7 +40,7 @@ import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
  *  The election id is generated automatically with UUID
  *
  *  Example command to run in sbt
- *  > runMain org.nvotes.trustee.GenConfig e1 2048 3 demo/keys/ballotbox.pub.pem demo/keys/trustees.pem
+ *  > runMain org.nvotes.mix.GenConfig e1 2048 3 demo/keys/ballotbox.pub.pem demo/keys/trustees.pem
  */
 object GenConfig extends App {
   println("generating config with")
@@ -89,8 +89,4 @@ object GenConfig extends App {
     val id = UUID.randomUUID().toString
     Config(id, name, modulusStr, generatorStr, items, ballotboxStr, trusteesStr)
   }
-}
-
-object GenAESKey extends App {
-
 }

@@ -15,7 +15,7 @@
  * along with nMix.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-package org.nvotes.trustee
+package org.nvotes.mix
 
 import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._, io.circe.generic.JsonCodec
 import java.security.interfaces.RSAPrivateKey

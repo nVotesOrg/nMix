@@ -1,4 +1,4 @@
-package org.nvotes.trustee
+package org.nvotes.mix
 
 import java.nio.file.Paths
 

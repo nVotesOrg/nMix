@@ -1,4 +1,4 @@
-package org.nvotes.trustee
+package org.nvotes.mix
 
 import ch.bfh.unicrypt.crypto.keygenerator.interfaces.KeyPairGenerator
 import ch.bfh.unicrypt.crypto.schemes.encryption.classes.ElGamalEncryptionScheme

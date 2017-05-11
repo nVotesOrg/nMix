@@ -15,7 +15,7 @@
  * along with nMix.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-package org.nvotes.trustee
+package org.nvotes.mix
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
