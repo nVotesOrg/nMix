@@ -270,6 +270,124 @@ class ProtocolSpec extends FlatSpec with Names {
     val bb = new MemoryBoardSection("test")
     bb.addConfig(config, configStatement)
 
+    // sign config
+    Protocol.execute(bb, auth1cfg)
+    Protocol.execute(bb, auth2cfg)
+
+    var files = bb.getFileSet
+    assert(files.contains(CONFIG_SIG(1)))
+    assert(files.contains(CONFIG_SIG(2)))
+
+    // create shares
+    Protocol.execute(bb, auth1cfg)
+    Protocol.execute(bb, auth2cfg)
+
+    files = bb.getFileSet
+    assert(files.contains(SHARE(1, 1)))
+    assert(files.contains(SHARE_STMT(1, 1)))
+    assert(files.contains(SHARE_SIG(1, 1)))
+    assert(files.contains(SHARE(1, 2)))
+    assert(files.contains(SHARE_STMT(1, 2)))
+    assert(files.contains(SHARE_SIG(1, 2)))
+
+    // first trustee combines shares and signs pk
+    Protocol.execute(bb, auth1cfg)
+    files = bb.getFileSet
+    assert(files.contains(PUBLIC_KEY(1)))
+    assert(files.contains(PUBLIC_KEY_STMT(1)))
+    assert(files.contains(PUBLIC_KEY_SIG(1, 1)))
+    assert(!files.contains(PUBLIC_KEY_SIG(1, 2)))
+
+    // second trustee signs pk
+    Protocol.execute(bb, auth2cfg)
+    files = bb.getFileSet
+    assert(files.contains(PUBLIC_KEY_SIG(1, 2)))
+
+    // cast votes
+    val votes = Seq.fill(6)(Random.nextInt(Int.MaxValue))
+    println(s"casting $votes")
+
+    genVotes(bb, votes)
+    files = bb.getFileSet
+    assert(files.contains(BALLOTS(1)))
+    assert(files.contains(BALLOTS_STMT(1)))
+    assert(files.contains(BALLOTS_SIG(1)))
+
+    // offline phase
+    Protocol.execute(bb, auth1cfg)
+    Protocol.execute(bb, auth2cfg)
+    files = bb.getFileSet
+    println(files)
+
+    // mix permutation
+    // auth 1 => first mix of question 2
+    // auth 2 => first mix of question 1, 3, second mix of 2
+    Protocol.execute(bb, auth1cfg)
+    Protocol.execute(bb, auth2cfg)
+    files = bb.getFileSet
+    assert(files.contains(MIX(2, 1)))
+    assert(files.contains(MIX(1, 2)))
+    assert(files.contains(MIX(3, 2)))
+    assert(files.contains(MIX(2, 2)))
+    assert(files.contains(MIX_SIG(2, 1, 1)))
+    assert(files.contains(MIX_SIG(1, 2, 2)))
+    assert(files.contains(MIX_SIG(3, 2, 2)))
+    assert(files.contains(MIX_SIG(2, 2, 2)))
+
+    // auth 1 => second mix of question 1, 3, verify mix 2 of auth 2
+    Protocol.execute(bb, auth1cfg)
+    files = bb.getFileSet
+    assert(files.contains(MIX(1, 1)))
+    assert(files.contains(MIX(3, 1)))
+    assert(files.contains(MIX_SIG(1, 1, 1)))
+    assert(files.contains(MIX_SIG(3, 1, 1)))
+    assert(files.contains(MIX_SIG(2, 2, 1)))
+
+    // auth2 verifies all auth 1 mixes
+    Protocol.execute(bb, auth2cfg)
+    files = bb.getFileSet
+    assert(files.contains(MIX_SIG(2, 1, 2)))
+    assert(files.contains(MIX_SIG(1, 1, 2)))
+    assert(files.contains(MIX_SIG(3, 1, 2)))
+
+    // auth1 verifies remaining auth 2 mixes and does first decryption
+    Protocol.execute(bb, auth1cfg)
+    files = bb.getFileSet
+    assert(files.contains(MIX_SIG(1, 2, 1)))
+    assert(files.contains(MIX_SIG(3, 2, 1)))
+    assert(files.contains(DECRYPTION(2, 1)))
+
+    // auth2 does all decryptions
+    Protocol.execute(bb, auth2cfg)
+    files = bb.getFileSet
+    assert(files.contains(DECRYPTION(1, 2)))
+    assert(files.contains(DECRYPTION(2, 2)))
+    assert(files.contains(DECRYPTION(3, 2)))
+
+    // auth1 does plaintexts for 2, adds remaining decryptions
+    Protocol.execute(bb, auth1cfg)
+    files = bb.getFileSet
+    assert(files.contains(PLAINTEXTS(2)))
+    assert(files.contains(DECRYPTION(1, 1)))
+    assert(files.contains(DECRYPTION(3, 1)))
+
+    // auth2 signs plaintexts for 2
+    Protocol.execute(bb, auth2cfg)
+    files = bb.getFileSet
+    assert(files.contains(PLAINTEXTS_SIG(2, 2)))
+
+    // auth1 adds remaining plaintexts
+    Protocol.execute(bb, auth1cfg)
+    files = bb.getFileSet
+    assert(files.contains(PLAINTEXTS(1)))
+    assert(files.contains(PLAINTEXTS(3)))
+
+    // auth1 adds remaining plaintexts sigs
+    Protocol.execute(bb, auth2cfg)
+    files = bb.getFileSet
+    assert(files.contains(PLAINTEXTS_SIG(1, 2)))
+    assert(files.contains(PLAINTEXTS_SIG(3, 2)))
+
 
     /*val p1 = decode[Plaintexts](bb.getPlaintexts(1).get).right.get
     val p2 = decode[Plaintexts](bb.getPlaintexts(2).get).right.get
