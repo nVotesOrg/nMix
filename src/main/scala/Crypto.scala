@@ -365,11 +365,11 @@ object MixerTrustee extends Mixer {
     val keyPairGen = elGamal.getKeyPairGenerator()
     val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
 
-    logger.debug("Convert votes..")
+    logger.trace("Convert votes..")
 
     val vs = votes.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v) ).seq
 
-    logger.debug("Mixer creating shuffle..")
+    logger.trace("Mixer creating shuffle..")
 
     shuffle(Util.tupleFromSeq(vs), pk, cSettings, id)
   }
@@ -402,11 +402,11 @@ object MixerTrustee extends Mixer {
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
     val keyPairGen = elGamal.getKeyPairGenerator()
     val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
-    logger.debug("Convert votes..")
+    logger.trace("Convert votes..")
 
     val votes = votesString.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v) ).seq
 
-    logger.debug("Mixer creating shuffle..")
+    logger.trace("Mixer creating shuffle..")
 
     shuffle(Util.tupleFromSeq(votes), preData.pData, preData.proof, pk, cSettings, id)
   }

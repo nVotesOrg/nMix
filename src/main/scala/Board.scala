@@ -95,17 +95,6 @@ trait Names {
   def PLAINTEXTS_SIG(item: Int, auth: Int) = s"$auth/$item/plaintext.sig.ucb"
 }
 
-
-/** Factory methods for Boards
- *
- */
-object Board {
-  /** Returns a Board whose datastore is the provided Path */
-  def get(dataStorePath: Path) = {
-    new Board(dataStorePath)
-  }
-}
-
 /** A Bulletin Board
  *
  *  A Board is composed of BoardSections. A Board has an associated
@@ -518,7 +507,7 @@ case class GitRepo(val repoPath: Path) {
     throw new IllegalArgumentException(s"repoPath '$repoPath' is not a directory")
   }
 
-  val removeLock = sys.props.get("nmix.git.remove.lock").getOrElse("true").toBoolean
+  val removeLock = sys.props.get("nmix.git.remove-lock").getOrElse("true").toBoolean
   if(removeLock) {
     logger.info(s"Repo '$repoPath' removing index.lock if it exists..")
     Files.deleteIfExists(repoPath.resolve(".git").resolve("index.lock"))

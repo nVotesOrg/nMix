@@ -43,8 +43,8 @@ import ch.bfh.unicrypt.math.algebra.general.classes.FiniteByteArrayElement
   *
   *  Before executing, a check is made to ensure this is the only
   *  instance running on this machine. This is implemented via
-  *  binding to a port, specified by the 'nmix.singleton.port'
-  *  environment property. Set to -1 to disable this check.
+  *  binding to a port, specified by the 'singleton-port'
+  *  configuration value. Set to 0 to disable this check.
   */
 object TrusteeLoop extends App {
   val logger = LoggerFactory.getLogger(TrusteeLoop.getClass)
@@ -53,9 +53,11 @@ object TrusteeLoop extends App {
     logger.error("No target repo argument supplied on command line")
   } else {
 
-    ensureSingleInstance()
-
     val trusteeCfg = TrusteeConfig.load
+    ensureSingleInstance(trusteeCfg.singletonPort)
+
+    System.setProperty("nmix.git.disable-compression", trusteeCfg.gitNoCompression.toString)
+    System.setProperty("nmix.git.remove-lock", trusteeCfg.gitRemoveLock.toString)
 
     val board = new Board(trusteeCfg.dataStorePath)
     val section = board.cloneOrSyncSection(trusteeCfg.repoBaseUri, Paths.get(args(0)))
@@ -70,14 +72,11 @@ object TrusteeLoop extends App {
    *  Attempts to open a socket to the specified port, if a bind
    *  exception occurs this means another instance of the application
    *  is already running.
-   *
-   *  The default port is 9999, but can be override by setting the
-   *  nmix.singleton.port property
    */
-  def ensureSingleInstance() = {
-    val port = sys.props.get("nmix.singleton.port").getOrElse("9999").toInt
+  def ensureSingleInstance(port: Int) = {
     val address = Array[Byte](127, 0, 0, 1)
-    if(port != -1) {
+    if(port != 0) {
+      println(s"port is $port")
       try {
         val socket = new ServerSocket(port,0,InetAddress.getByAddress(address))
       }
@@ -94,15 +93,16 @@ object TrusteeLoop extends App {
 /** The trustee configuration as read from the filesystem
   *
   */
-case class TrusteeConfigRaw(dataStorePath: Path, repoBaseUri: URI, bootstrapRepoUri: URI,
-  publicKey: Path, privateKey:Path, aesKey: Path, peers: Path, offlineSplit: Boolean)
+case class TrusteeConfigRaw(dataStorePath: Path, repoBaseUri: URI, bootstrapRepoUri: Option[URI],
+  publicKey: Path, privateKey:Path, aesKey: Path, peers: Path, offlineSplit: Option[Boolean],
+  gitNoCompression: Option[Boolean], gitRemoveLock: Option[Boolean], singletonPort: Option[Int])
 
 /** The trustee configuration, converted to objects
   *
   */
-case class TrusteeConfig(dataStorePath: Path, repoBaseUri: URI, bootstrapRepoUri: URI,
+case class TrusteeConfig(dataStorePath: Path, repoBaseUri: URI, bootstrapRepoUri: Option[URI],
   publicKey: RSAPublicKey, privateKey: RSAPrivateKey, aesKey: FiniteByteArrayElement, peers: Seq[RSAPublicKey],
-  offlineSplit: Boolean) {
+  offlineSplit: Boolean, gitNoCompression: Boolean, gitRemoveLock: Boolean, singletonPort: Int) {
 
    override def toString() = s"TrusteeConfig($dataStorePath $repoBaseUri $bootstrapRepoUri ${peers.length})"
 }
@@ -126,9 +126,12 @@ object TrusteeConfig {
     val peersString = lines.mkString("\n").split("-----END PUBLIC KEY-----")
     val peers = peersString.map(Crypto.readPublicRsa(_)).toList
     val aesKey = Crypto.readAESKey(c.aesKey)
-    val offline = c.offlineSplit
+    val offline = c.offlineSplit.getOrElse(false)
+    val gitNoCompression = c.gitNoCompression.getOrElse(false)
+    val gitRemoveLock = c.gitRemoveLock.getOrElse(true)
+    val singletonPort = c.singletonPort.getOrElse(9999)
 
     TrusteeConfig(c.dataStorePath, c.repoBaseUri, c.bootstrapRepoUri, publicKey,
-      privateKey, aesKey, peers, offline)
+      privateKey, aesKey, peers, offline, gitNoCompression, gitRemoveLock, singletonPort)
   }
 }

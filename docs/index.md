@@ -240,15 +240,6 @@ Activates automatic extraction and parallelization of modular exponentiation cal
 
 Activates parallel computation of generators used in Terelius-Wikstrom proofs (experimental)
 
-##### Git compression
-By default, git applies two types of compression to objects stored and sent across the network, one of these does not scale over cpu cores. Compression may be suboptimal on a fast network and if disk space is not a problem. In order to disable git compression on the trustee
-
-###### Disabling git compression
-
-```
--Dnmix.git.disable-compression=true
-```
-
 ### Running an election
 TODO
 

@@ -243,7 +243,7 @@ case class AddOrSignPublicKey(ctx: Context, item: Int) extends Action {
     // verify all shares
     (1 to ctx.config.trustees.size).map { auth =>
 
-      logger.info(s"item $item processing share $auth..")
+      logger.trace(s"item $item processing share $auth..")
       val share = ctx.section.getShare(item, auth).map(decode[Share](_).right.get).get
       val shareStmt = ctx.section.getShareStatement(item, auth).get
       val shareSig = ctx.section.getShareSignature(item, auth).get
@@ -252,14 +252,14 @@ case class AddOrSignPublicKey(ctx: Context, item: Int) extends Action {
       val expectedString = expected.asJson.noSpaces
 
       if(expectedString == shareStmt) {
-        logger.info(s"item $item processing share $auth, statement OK")
+        logger.trace(s"item $item processing share $auth, statement OK")
         val authPk = Crypto.readPublicRsa(ctx.config.trustees(auth - 1))
 
         val ok = expected.verify(shareSig, authPk)
         if(ok) {
-          logger.info(s"item $item processing share $auth, signature OK")
+          logger.trace(s"item $item processing share $auth, signature OK")
           val pokOk = Verifier.verifyKeyShare(share.share, ctx.cSettings, authPk.getModulus.toString)
-          logger.info(s"item $item processing share $auth, pok $pokOk")
+          logger.trace(s"item $item processing share $auth, pok $pokOk")
           if(pokOk) {
             collectedShares += share
           }
@@ -305,7 +305,7 @@ case class AddOrSignPublicKey(ctx: Context, item: Int) extends Action {
         val ok = ctx.section.getPublicKeyStatement(item).map(expectedString == _).getOrElse(false)
 
         if(ok) {
-          logger.info(s"item $item public key statement OK")
+          logger.trace(s"item $item public key statement OK")
           val sig = expected.sign(ctx.trusteeCfg.privateKey)
           val file1 = IO.writeTemp(sig)
 
@@ -406,10 +406,14 @@ case class AddMix(ctx: Context, item: Int) extends Action {
     val publicKey = ctx.section.getPublicKey(item).get
     val modulusStr = ctx.trusteeCfg.publicKey.getModulus.toString
 
-    val newMix = MixerTrustee.shuffleVotes(previousBallots, publicKey, modulusStr, ctx.cSettings)
-    // logger.info("Performing online phase with pre-shuffle data")
-    // val preShuffleData = ctx.section.getPreShuffleDataLocal(item, ctx.position).get
-    // val newMix = MixerTrustee.shuffleVotes(previousBallots, preShuffleData, publicKey, modulusStr, ctx.cSettings)
+    val newMix = if(ctx.trusteeCfg.offlineSplit) {
+      logger.info("Performing online phase with pre-shuffle data")
+      val preShuffleData = ctx.section.getPreShuffleDataLocal(item, ctx.position).get
+      MixerTrustee.shuffleVotes(previousBallots, preShuffleData, publicKey, modulusStr, ctx.cSettings)
+    }
+    else {
+      MixerTrustee.shuffleVotes(previousBallots, publicKey, modulusStr, ctx.cSettings)
+    }
 
     val mixHash = Crypto.sha512(newMix.asJson.noSpaces)
     val parentHash = Crypto.sha512(previousStr)
@@ -481,15 +485,15 @@ case class VerifyMix(ctx: Context, item: Int, auth: Int) extends Action {
     val publicKeyStr = ctx.section.getPublicKey(item).get
 
     if(expectedString == mixStmt) {
-      logger.info(s"item $item processing mix $auth, statement OK")
+      logger.trace(s"item $item processing mix $auth, statement OK")
       val authPk = Crypto.readPublicRsa(ctx.config.trustees(auth - 1))
       val ok = expected.verify(mixSig, authPk)
       if(ok) {
-        logger.info(s"item $item processing mix $auth, signature OK")
+        logger.trace(s"item $item processing mix $auth, signature OK")
         val pokOk = verifyShuffle(parentBallots, mix.votes, mix.shuffleProof,
           authPk.getModulus.toString, publicKeyStr, ctx.cSettings)
 
-        logger.info(s"item $item processing mix $auth, pok $pokOk")
+        logger.trace(s"item $item processing mix $auth, pok $pokOk")
         if(pokOk) {
           val signature = expected.sign(ctx.trusteeCfg.privateKey)
           val file = IO.writeTemp(signature)
@@ -570,11 +574,11 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
       val mixStmtStr = ctx.section.getMixStatement(item, auth).get
       val mixStmt = decode[MixStatement](mixStmtStr).right.get
       val mixSig = ctx.section.getMixSignature(item, auth, ctx.position).get
-      logger.info(s"checking mix self-signature on item $item auth $auth")
+      logger.trace(s"checking mix self-signature on item $item auth $auth")
       val ok = mixStmt.verify(mixSig, ctx.trusteeCfg.publicKey)
 
       if(ok) {
-        logger.info(s"mix self-signature on item $item auth $auth OK")
+        logger.trace(s"mix self-signature on item $item auth $auth OK")
         mixStmt.parentHash -> mixStmt.mixHash
       }
       else {
@@ -587,9 +591,9 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
     if(chain.size != ctx.config.trustees.size) {
       return Error(s"not enough elements in mix chain $chain")
     }
-    logger.info(s"chain size on item $item OK")
+    logger.trace(s"chain size on item $item OK")
 
-    logger.info(s"obtaining transitive chain on item $item")
+    logger.trace(s"obtaining transitive chain on item $item")
     val transitive = chain.reduceLeft{ (a,b) =>
       if(a._2 == b._1) {
         (a._1, b._2)
@@ -612,14 +616,14 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
       logger.error(s"item $item ballot statements mismatch")
       return Error(s"item $item ballot statements mismatch")
     }
-    logger.info(s"ballot statement on item $item OK")
+    logger.trace(s"ballot statement on item $item OK")
 
     val ok = expected.verify(ballotsSig, publicKey)
     if(!ok) {
       logger.error(s"ballot signature on item $item NOT ok")
       return Error(s"ballot signature on item $item NOT ok")
     }
-    logger.info(s"ballot signature on item $item OK")
+    logger.trace(s"ballot signature on item $item OK")
 
     // check the mix-end of the chain
     // PERM
@@ -635,13 +639,13 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
       logger.error(s"last mix hash does not match chain-end on item $item")
       return Error(s"last mix hash does not match chain-end on item $item")
     }
-    logger.info(s"transitive chain on item $item OK")
+    logger.trace(s"transitive chain on item $item OK")
 
     val modulusStr = ctx.trusteeCfg.publicKey.getModulus.toString
     val share = ctx.section.getShare(item, ctx.position)
       .map(decode[Share](_).right.get).get
 
-    logger.info(s"decrypting private share on item $item")
+    logger.trace(s"decrypting private share on item $item")
 
     val privateKey = Crypto.decryptAES(share.encryptedPrivateKey, ctx.trusteeCfg.aesKey, share.aesIV)
 
@@ -651,7 +655,7 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
     val statement = Statement.getDecryptionStatement(decryption, mixHash, configHash, item)
     val signature = statement.sign(ctx.trusteeCfg.privateKey)
 
-    logger.info(s"adding decryptions on item $item")
+    logger.trace(s"adding decryptions on item $item")
     val file1 = IO.writeTemp(decryption.asJson.noSpaces)
     val file2 = IO.writeTemp(statement.asJson.noSpaces)
     val file3 = IO.writeTemp(signature)
@@ -705,7 +709,7 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
     // verify all shares
     (1 to ctx.config.trustees.size).map { auth =>
 
-      logger.info(s"item $item processing decryption $auth..")
+      logger.trace(s"item $item processing decryption $auth..")
       val decryptionStr = ctx.section.getDecryption(item, auth).get
       val decryption = decode[PartialDecryptionDTO](decryptionStr).right.get
       val decryptionStmt = ctx.section.getDecryptionStatement(item, auth).get
@@ -716,7 +720,7 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
       val publicKeyStr = ctx.section.getPublicKey(item).get
 
       if(expectedString == decryptionStmt) {
-        logger.info(s"item $item processing decryption $auth, statement OK")
+        logger.trace(s"item $item processing decryption $auth, statement OK")
         val authPk = Crypto.readPublicRsa(ctx.config.trustees(auth - 1))
         val modulusStr = authPk.getModulus.toString
         val ok = expected.verify(decryptionSig, authPk)
@@ -726,7 +730,7 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
           if(auth != ctx.position) {
             val share = ctx.section.getShare(item, auth).map(decode[Share](_).right.get).get
             val pokOk = verifyDecryption(decryption, mix.votes, ctx.cSettings, modulusStr, share.share.keyShare)
-            logger.info(s"item $item processing decryption $auth, pok $pokOk")
+            logger.trace(s"item $item processing decryption $auth, pok $pokOk")
             if(pokOk) {
               collectedDecryptions += decryption
             }
@@ -736,8 +740,8 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
             }
           }
           else {
-            logger.info(s"item $item do not need to verify own decryption $auth pok")
-            logger.info(s"*** pk equality ${authPk == ctx.trusteeCfg.publicKey}")
+            logger.trace(s"item $item do not need to verify own decryption $auth pok")
+            logger.trace(s"*** pk equality ${authPk == ctx.trusteeCfg.publicKey}")
 
             collectedDecryptions += decryption
           }
@@ -764,7 +768,7 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
         val file2 = IO.writeTemp(statement.asJson.noSpaces)
         val file3 = IO.writeTemp(signature)
 
-        logger.info(s"item $item adding plaintexts")
+        logger.trace(s"item $item adding plaintexts")
         ctx.section.addPlaintexts(file1, file2, file3, item, ctx.position)
       }
       else {
@@ -774,7 +778,7 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
         val ok = ctx.section.getPlaintextsStatement(item).map(expectedString == _).getOrElse(false)
 
         if(ok) {
-          logger.info(s"item $item plaintexts statement OK")
+          logger.trace(s"item $item plaintexts statement OK")
           val sig = expected.sign(ctx.trusteeCfg.privateKey)
           val file1 = IO.writeTemp(sig)
 
