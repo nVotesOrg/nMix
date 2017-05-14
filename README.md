@@ -33,7 +33,7 @@ which allows for
 
 ### Quickstart
 
-The best place to start is to follow the [tutorial](https://github.com/nVotes/nMix/blob/master/docs/TUTORIAL.md). You can
+The best place to start is to follow the [tutorial](https://github.com/nVotes/nMix/blob/master/docs/tutorial.md). You can
 run an election demo on a single machine without having to do a real world distributed deployment.
 
 ### Documentation
