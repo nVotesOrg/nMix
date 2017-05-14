@@ -298,7 +298,7 @@ c) Work with us to develop them, nMix is an open source project!
 ####  Does nMix include a threshold cryptosystem?
 The current version of nMix uses a _distributed_ cryptosystem (which is a special case of a threshold system where t = n). All trustees must cooperate to complete the protocol. However, adding a threshold cryptosystem is on the table, and mostly depends on development resources and funding.
 ####  Could you replace the Git bulletin board with a Blockchain/IPFS/Tahoe-Lafs/Swarm?
-Yes, in theory. The nMix protocol has been designed to decouple the crypto workflow from the bulletin board, relying only on authenticated get and put primitives. If these primitives are supported by another bulletin board implementation the replacement should be possible. See [here](TODO) for a high level design along those lines, with IPFS as a backend.
+Yes, in theory. The nMix protocol has been designed to decouple the crypto workflow from the bulletin board, relying only on authenticated get and put primitives. If these primitives are supported by another bulletin board implementation the replacement should be possible. See [here](https://nvotes.com/elements-of-an-interplanetary-voting-system/) for a high level design along those lines, with IPFS as a backend.
 
 ####  Where can I ask more questions?
 
