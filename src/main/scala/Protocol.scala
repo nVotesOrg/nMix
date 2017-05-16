@@ -134,7 +134,7 @@ object Protocol extends Names {
       }
 
       val items = config.items
-      val irules = (1 to items).map(i => itemRules(ctx, i, files))
+      val irules = (1 to items).map(i => itemRules(ctx, i))
 
       /** get first rule that matches for each item, then
         collect Action's into list and sort them by priority */
@@ -214,7 +214,7 @@ object Protocol extends Names {
    *
    *  A list of rules has type List[(Cond, Action)]
    */
-  private def itemRules(ctx: Context, item: Int, files: Set[String]) = {
+  private def itemRules(ctx: Context, item: Int) = {
 
     val config = ctx.config
 
