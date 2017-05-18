@@ -40,7 +40,21 @@ aes-key=keys/aes.bin
 # src/main/shell/keys.sh script.
 peers=keys/peers.pem
 
+# Splits the Terelius-Wikstrom mixing into offline and online phases
+# This allows executing the offline phase in parallel
+# to reduce overall mixing time.
 offline-split=false
+
+# Disables git compression.
+# Compression may be suboptimal on a fast network and if disk space is not a problem.
 git-no-compression=false
+
+# Removes any pre-existing file lock on the git repository.
+# A file lock may exist if nMix terminates abruptly
+# This setting allows starting nMix without having to
+# manually delete the lock.
 git-remove-lock=true
+
+# The tcp port to bind to in order to detect
+# previous running instances of nMix.
 singleton-port=9999

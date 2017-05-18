@@ -112,7 +112,7 @@ object TrusteeConfig {
 
   /** Loads the trustee configuration and converts the raw values into objects
    *
-   *  Throws exceptions if
+   *  Throws exception if
    *  - the configuration is not found in the classpath or set by -Dconfig.file
    *  - the configuration does not parse correctly, according to TrusteeConfigRaw
    *  - the peers file does not exist or does not parse correctly into a set of RSA public keys

@@ -181,9 +181,6 @@ object Protocol extends Names {
     Ok
   }
 
-
-
-
   /** Returns the global rules.
    *
    *  Examples of global rules are
