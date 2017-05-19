@@ -627,7 +627,7 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
 
     // check the mix-end of the chain
     // PERM
-    val lastMixAuth = Protocol.getMixPositionInverse(item, ctx.config.trustees.size, ctx.config.trustees.size)
+    val lastMixAuth = Protocol.getMixPositionInverse(ctx.config.trustees.size, item, ctx.config.trustees.size)
     // val mixStr = ctx.section.getMix(item, ctx.config.trustees.size).get
     val mixStr = ctx.section.getMix(item, lastMixAuth).get
 
@@ -637,6 +637,7 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
     // the votes we will decrypt correspond to the end of the chain
     if(mixHash != transitive._2) {
       logger.error(s"last mix hash does not match chain-end on item $item")
+      sys.exit(1)
       return Error(s"last mix hash does not match chain-end on item $item")
     }
     logger.trace(s"transitive chain on item $item OK")
@@ -699,7 +700,7 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
     // get mixVotes
     // val mixStr = ctx.section.getMix(item, ctx.config.trustees.size).get
     // PERM
-    val lastMixAuth = Protocol.getMixPositionInverse(item, ctx.config.trustees.size, ctx.config.trustees.size)
+    val lastMixAuth = Protocol.getMixPositionInverse(ctx.config.trustees.size, item, ctx.config.trustees.size)
     val mixStr = ctx.section.getMix(item, lastMixAuth).get
     val mix = decode[ShuffleResultDTO](mixStr).right.get
     val mixHash = Crypto.sha512(mixStr)

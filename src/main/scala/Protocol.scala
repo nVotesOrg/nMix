@@ -134,7 +134,7 @@ object Protocol extends Names {
       }
 
       val items = config.items
-      val irules = (1 to items).map(i => itemRules(ctx, i))
+      val irules = (1 to items).map(i => itemRules(ctx, i, files))
 
       /** get first rule that matches for each item, then
         collect Action's into list and sort them by priority */
@@ -211,7 +211,7 @@ object Protocol extends Names {
    *
    *  A list of rules has type List[(Cond, Action)]
    */
-  private def itemRules(ctx: Context, item: Int) = {
+  private def itemRules(ctx: Context, item: Int, files: Set[String]) = {
 
     val config = ctx.config
 
@@ -234,6 +234,7 @@ object Protocol extends Names {
     val noPublicKeySig = Condition.yes(PUBLIC_KEY(item)).no(PUBLIC_KEY_SIG(item, ctx.position))
 
     val myMixPosition = getMixPosition(ctx.position, item, ctx.config.trustees.size)
+
     val previousMixesYes = Condition((1 to myMixPosition - 1).flatMap { auth =>
         val mixAuth = getMixPositionInverse(auth, item, ctx.config.trustees.size)
         List(MIX(item, mixAuth) -> true, MIX_STMT(item, mixAuth) -> true, MIX_SIG(item, mixAuth, mixAuth) -> true)
@@ -337,6 +338,8 @@ object Protocol extends Names {
   def getMixPositionInverse(auth: Int, item: Int, trustees: Int): Int = {
     /** for a cyclic group with generator g of order n we have
      *
+     *  FIXME revise
+     *
      * g^n = 1. Applying g to some power p we have
      *
      * g^p = x
@@ -347,10 +350,15 @@ object Protocol extends Names {
      *
      * Below, n-p is the "gap", and (item - 1) is p
      */
-    val gap = trustees - (item - 1)
+    val gap = trustees - item
 
     val permuted = (auth + gap) % trustees
-    permuted + 1
+    if(permuted == 0) {
+      trustees
+    }
+    else {
+      permuted
+    }
   }
 }
 

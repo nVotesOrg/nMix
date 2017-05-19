@@ -606,7 +606,7 @@ case class GitRepo(val repoPath: Path) {
 
   /** Adds, commits and pushes any changes in the working copy
    *
-   * If the push fails due to non-fast-forward, pulls and retries up to 7 times.
+   * If the push fails due to non-fast-forward, pulls and retries up to 20 times.
    * Atomic push is requested and needs git 2.4+ on the server.
    *
    */
@@ -671,7 +671,7 @@ case class GitRepo(val repoPath: Path) {
           status
         }
 
-        val attempts = List.fill(8)(attempt)
+        val attempts = List.fill(21)(attempt)
         attempts.takeWhile(_() != RemoteRefUpdate.Status.OK)
       }
       else {
