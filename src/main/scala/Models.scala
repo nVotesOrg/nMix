@@ -57,6 +57,8 @@ case class Share(share: EncryptionKeyShareDTO, encryptedPrivateKey: String, aesI
  */
 case class PreShuffleData(proof: PermutationProofDTO, pData: PermutationData)
 
+case class PreShuffleDataDTO(proof: String, pData: String)
+
 /** Ballots provided by the ballotbox in unicrypt format. Encrypted */
 case class Ballots(ballots: Seq[String])
 

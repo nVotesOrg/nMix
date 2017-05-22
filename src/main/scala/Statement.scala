@@ -142,14 +142,6 @@ object Statement {
     MixStatement(mixHash, parentHash, configHash, item, auth)
   }
 
-  /** Returns the mix statement for the mix ShuffleResultDTO object,
-    parent mix hash, config hash, item and authority */
-  def getMixStatement(mix: ShuffleResultDTO, parentHash: String, configHash: String, item: Int, auth: Int) = {
-    val mixHash = Crypto.sha512(mix.asJson.noSpaces)
-
-    MixStatement(mixHash, parentHash, configHash, item, auth)
-  }
-
   /** Returns the decryption statement for the decryption hash, mix hash,
     config hash, and item */
   def getDecryptionStatement(decryptionHash: String, mixHash: String, configHash: String, item: Int) = {

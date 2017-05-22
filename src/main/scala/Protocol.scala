@@ -172,7 +172,8 @@ object Protocol extends Names {
     }
     catch {
       case e:Exception => {
-        logger.error(s"Exception caught executing actions: $e")
+        logger.error(s"Exception caught executing actions: $e", e)
+        e.printStackTrace()
         postError("An exception occurred during processing: ${e.getClass}")
         return Error(e.toString)
       }

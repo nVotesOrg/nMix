@@ -79,12 +79,12 @@ object Crypto {
   val IV_SIZE = AESEncryptionScheme.AES_BLOCK_SIZE / 8
 
   /** Returns the sha512 hash of the given file as a String */
-  def sha512(file: Path): String = {
+  /*def sha512(file: Path): String = {
     sha512(Files.newInputStream(file))
-  }
+  }*/
 
   /** Returns the sha512 hash of the given Inputstream as a String */
-  def sha512(inputStream: InputStream): String = {
+  /*def sha512(inputStream: InputStream): String = {
     val sha = MessageDigest.getInstance("SHA-512")
     val in = new BufferedInputStream(inputStream, 32768)
     val din = new DigestInputStream(in, sha)
@@ -92,12 +92,13 @@ object Crypto {
     din.close()
 
     DatatypeConverter.printHexBinary(sha.digest())
-  }
+  }*/
 
   /** Returns the sha512 hash of the given String as a String */
   def sha512(input: String): String = {
     val sha = MessageDigest.getInstance("SHA-512")
     val in = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8))
+    // val in = new ByteArrayInputStream(input.chars())
     val din = new DigestInputStream(in, sha)
     while (din.read() != -1){}
     din.close()

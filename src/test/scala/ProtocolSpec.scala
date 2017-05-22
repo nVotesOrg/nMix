@@ -6,6 +6,8 @@ import java.nio.file.Files
 import java.net.URI
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
+import java.io.InputStream
+import java.io.ByteArrayInputStream
 import java.util.UUID
 import scala.util.Random
 
@@ -177,7 +179,7 @@ class ProtocolSpec extends FlatSpec with Names {
     assert(files.contains(PUBLIC_KEY_SIG(1, 2)))
 
     // cast votes
-    val votes = Seq.fill(6)(Random.nextInt(Int.MaxValue))
+    val votes = Seq.fill(1)(Random.nextInt(Int.MaxValue))
     println(s"casting $votes")
 
     genVotes(bb, votes)
@@ -263,7 +265,7 @@ class ProtocolSpec extends FlatSpec with Names {
     assert(p2.plaintexts.map(_.toInt).sorted == votes.map(_ + 2).sorted)
     assert(p3.plaintexts.map(_.toInt).sorted == votes.map(_ + 3).sorted)
   }
-
+/*
   "Protocol" should "execute full election cycle correctly with offline split" in {
     val auth1cfg = getCfg1Split
     val auth2cfg = getCfg2Split
@@ -395,7 +397,7 @@ class ProtocolSpec extends FlatSpec with Names {
     assert(p1.plaintexts.map(_.toInt).sorted == votes.map(_ + 1).sorted)
     assert(p2.plaintexts.map(_.toInt).sorted == votes.map(_ + 2).sorted)
     assert(p3.plaintexts.map(_.toInt).sorted == votes.map(_ + 3).sorted)
-  }
+  }*/
 
   def getCfg1 = {
     TrusteeConfig(bogusPath, bogusUri, None, auth1pubRsa, auth1privRsa, aesKey, peers, false, false, false, 0)
@@ -617,8 +619,8 @@ case class MemoryBoardSection(name: String) extends BoardSectionInterface with N
     preShuffleData -= PERM_DATA(item, auth)
   }
 
-  def getMix(item: Int, auth: Int): Option[String] =  {
-    contents.get(MIX(item, auth)).map(str(_))
+  def getMix(item: Int, auth: Int): Option[InputStream] =  {
+    contents.get(MIX(item, auth)).map(new ByteArrayInputStream(_))
   }
 
   def getMixStatement(item: Int, auth: Int): Option[String] = {

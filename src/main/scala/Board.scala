@@ -206,7 +206,7 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
 
   /** Returns the set of all entries in this section
    *
-   *  The preShuffleData memory storage area is included
+   *  The preShuffleData storage area is included
    *  to allow transparent access to its data as if it were
    *  a regular file in the repository
    */
@@ -340,14 +340,18 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
     preShuffleData += PERM_DATA(item, auth) -> data
   }
 
+  def addPreShuffleDataLocal2(proof: Path, data: Path, item: Int, auth: Int) = synchronized {
+    PreShuffleDataStore.put(PERM_DATA(item, auth), proof, data)
+  }
+
   /** Remove private permutation data */
   def rmPreShuffleDataLocal(item: Int, auth: Int) = synchronized {
     preShuffleData -= PERM_DATA(item, auth)
   }
 
   /** Returns a mix if it exists */
-  def getMix(item: Int, auth: Int): Option[String] =  {
-    getFileStream(MIX(item, auth)).map(IO.asString(_))
+  def getMix(item: Int, auth: Int): Option[InputStream] =  {
+    getFileStream(MIX(item, auth))
   }
 
   /** Returns a mix statement if it exists */
@@ -970,7 +974,7 @@ trait BoardSectionInterface {
   def rmPreShuffleDataLocal(item: Int, auth: Int)
 
   /** Returns a mix if it exists */
-  def getMix(item: Int, auth: Int): Option[String]
+  def getMix(item: Int, auth: Int): Option[InputStream]
 
   /** Returns a mix statement if it exists */
   def getMixStatement(item: Int, auth: Int): Option[String]
@@ -1010,4 +1014,24 @@ trait BoardSectionInterface {
 
   /** Adds a plaintexts signature */
   def addPlaintextsSignature(sig: Path, item: Int, auth: Int): Unit
+}
+
+object PreShuffleDataStore {
+  val preShuffleData = Map[String, (Path, Path)]()
+
+  def keys: scala.collection.Set[String] = {
+    preShuffleData.filter {
+      case (k, v) => Files.exists(v._1) && Files.exists(v._2)
+    }.keySet
+  }
+  def get(name: String): Option[(Path, Path)] = {
+    preShuffleData.get(name)
+  }
+  def put(name: String, proof: Path, data: Path): Unit = {
+    preShuffleData.get(name).foreach{ case (a, b) =>
+      Files.delete(a)
+      Files.delete(b)
+    }
+    preShuffleData += name -> (proof, data)
+  }
 }

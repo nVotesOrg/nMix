@@ -19,10 +19,27 @@ package org.nvotes.mix
 
 import java.nio.file.Path
 import java.nio.file.Files
+import java.io.FileOutputStream
+import java.io.BufferedOutputStream
+import java.io.BufferedWriter
+import java.io.BufferedReader
+import java.io.OutputStreamWriter
+import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
-import scala.io.Source
 import java.io.InputStream
 import sun.misc.IOUtils
+import java.security.MessageDigest
+import java.security.DigestOutputStream
+import java.security.DigestInputStream
+import javax.xml.bind.DatatypeConverter
+
+
+import scala.collection.mutable.ListBuffer
+import util.control.Breaks._
+import scala.io.Source
+import scala.collection.JavaConverters._
+
+import org.nvotes.libmix._
 
 
 /** Utility IO methods
@@ -75,10 +92,11 @@ object IO {
     var nRead: Int = 0
     val data = new Array[Byte](16384)
 
-    while(true) {
-      nRead = input.read(data, 0, data.length)
-      if(nRead == -1) scala.util.control.Breaks.break
-      buffer.write(data, 0, nRead)
+    breakable { while(true) {
+        nRead = input.read(data, 0, data.length)
+        if(nRead == -1) scala.util.control.Breaks.break
+        buffer.write(data, 0, nRead)
+      }
     }
 
     buffer.flush()
@@ -104,5 +122,135 @@ object IO {
   def writeTemp(content: Array[Byte]): Path = {
     val tmp = Files.createTempFile("trustee", ".tmp")
     Files.write(tmp, content)
+  }
+
+  /** Writes the given content byte array to a temp file */
+  def writeTemp(content: List[String]): Path = {
+    val tmp = Files.createTempFile("trustee", ".tmp")
+    Files.write(tmp, content.asJava, StandardCharsets.UTF_8)
+  }
+
+  def getLines(reader: BufferedReader) = {
+    val ret = ListBuffer[String]()
+    breakable {
+      while(true) {
+        val line = reader.readLine()
+        if(line == null || line == "") break
+        ret += line
+      }
+    }
+
+    ret
+  }
+
+  def readShuffleResult(stream: InputStream): (ShuffleResultDTO, String) = {
+    val sha = MessageDigest.getInstance("SHA-512")
+    val din = new DigestInputStream(stream, sha)
+    val reader = new BufferedReader(new InputStreamReader(din, StandardCharsets.UTF_8), 131072)
+
+    val shuffleProof = readShuffleProof(reader)
+    val votes = getLines(reader)
+    val ret = ShuffleResultDTO(shuffleProof, votes)
+
+    din.close()
+    stream.close()
+
+    val hash = DatatypeConverter.printHexBinary(sha.digest())
+
+    (ret, hash)
+  }
+
+  def readShuffleProof(reader: BufferedReader): ShuffleProofDTO = {
+    val mix = readMixProof(reader)
+    val permutation = readPermutationProof(reader)
+    val pCommitment = reader.readLine()
+    ShuffleProofDTO(mix, permutation, pCommitment)
+  }
+
+  def readPermutationProof(reader: BufferedReader): PermutationProofDTO = {
+    val commitment = reader.readLine()
+    val challenge = reader.readLine()
+    val response = reader.readLine()
+    val bCommitments = getLines(reader)
+    val eValues = getLines(reader)
+
+    PermutationProofDTO(commitment, challenge, response, bCommitments, eValues)
+  }
+
+  def readMixProof(reader: BufferedReader): MixProofDTO = {
+    val commitment = reader.readLine()
+    val challenge = reader.readLine()
+    val response = reader.readLine()
+    val eValues = getLines(reader)
+
+    MixProofDTO(commitment, challenge, response, eValues)
+  }
+
+  def writeShuffleResultTemp(data: ShuffleResultDTO): (Path, String) = {
+    val tmp = Files.createTempFile("trustee", ".tmp")
+    val outStream = new FileOutputStream(tmp.toFile)
+    val sha = MessageDigest.getInstance("SHA-512")
+    val dou = new DigestOutputStream(outStream, sha)
+    val writer = new BufferedWriter(new OutputStreamWriter(dou,StandardCharsets.UTF_8), 131072)
+
+    writeShuffleProof(data.shuffleProof, writer)
+    data.votes.foreach { v =>
+      writer.write(v)
+      writer.newLine()
+    }
+    // separator
+    writer.newLine()
+
+    writer.close()
+    outStream.close()
+    dou.close()
+
+    val hash = DatatypeConverter.printHexBinary(sha.digest())
+
+    (tmp, hash)
+  }
+
+  def writeShuffleProof(data: ShuffleProofDTO, writer: BufferedWriter): Unit = {
+    writeMixProof(data.mixProof, writer)
+    writePermutationProof(data.permutationProof, writer)
+    writer.write(data.permutationCommitment)
+    writer.newLine()
+  }
+
+  def writePermutationProof(data: PermutationProofDTO, writer: BufferedWriter): Unit = {
+    writer.write(data.commitment)
+    writer.newLine()
+    writer.write(data.challenge)
+    writer.newLine()
+    writer.write(data.response)
+    writer.newLine()
+
+    data.bridgingCommitments.foreach { b =>
+      writer.write(b)
+      writer.newLine()
+    }
+    // separator
+    writer.newLine()
+    data.eValues.foreach { e =>
+      writer.write(e)
+      writer.newLine()
+    }
+    // separator
+    writer.newLine()
+  }
+
+  def writeMixProof(data: MixProofDTO, writer: BufferedWriter): Unit = {
+    writer.write(data.commitment)
+    writer.newLine()
+    writer.write(data.challenge)
+    writer.newLine()
+    writer.write(data.response)
+    writer.newLine()
+    data.eValues.foreach { e =>
+      writer.write(e)
+      writer.newLine()
+    }
+    // separator
+    writer.newLine()
   }
 }
