@@ -405,8 +405,8 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
   }
 
   /** Returns the plaintexts if they exist */
-  def getPlaintexts(item: Int): Option[String] = {
-    getFileStream(PLAINTEXTS(item)).map(IO.asString(_))
+  def getPlaintexts(item: Int): Option[InputStream] = {
+    getFileStream(PLAINTEXTS(item))
   }
 
   /** Returns the plaintexts statement if it exists */
@@ -1001,7 +1001,7 @@ trait BoardSectionInterface {
   def addDecryption(decryption: Path, stmt: Path, sig: Path, item: Int, auth: Int): Unit
 
   /** Returns the plaintexts if they exist */
-  def getPlaintexts(item: Int): Option[String]
+  def getPlaintexts(item: Int): Option[InputStream]
 
   /** Returns the plaintexts statement if it exists */
   def getPlaintextsStatement(item: Int): Option[String]

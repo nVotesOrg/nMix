@@ -629,8 +629,6 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
 
     // val mixStr = ctx.section.getMix(item, lastMixAuth).get
     val (mix, mixHash) = ctx.section.getMix(item, lastMixAuth).map(IO.readShuffleResult).get
-    // val mix = decode[ShuffleResultDTO](mixStr).right.get
-    // val mixHash = Crypto.sha512(mixStr)
 
     // the votes we will decrypt correspond to the end of the chain
     if(mixHash != transitive._2) {
@@ -701,8 +699,6 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
     val lastMixAuth = Protocol.getMixPositionInverse(ctx.config.trustees.size, item, ctx.config.trustees.size)
     val mixStr = ctx.section.getMix(item, lastMixAuth).get
 
-    // val mix = decode[ShuffleResultDTO](mixStr).right.get
-    // val mixHash = Crypto.sha512(mixStr)
     val (mix, mixHash) = ctx.section.getMix(item, lastMixAuth).map(IO.readShuffleResult).get
 
     val collectedDecryptions = new ListBuffer[PartialDecryptionDTO]()
@@ -756,16 +752,17 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
     if(collectedDecryptions.length == ctx.config.trustees.size) {
 
       val plaintextsSeq = combineDecryptions(collectedDecryptions, mix.votes, ctx.cSettings)
-      val plaintexts = Plaintexts(plaintextsSeq).asJson.noSpaces
-      val plaintextsHash = Crypto.sha512(plaintexts)
+      val plaintexts = Plaintexts(plaintextsSeq)
       val decryptionsHash = Crypto.sha512(collectedDecryptions.asJson.noSpaces)
 
       if(ctx.position == 1) {
         //  send and sign plaintexts
+        val (file1,plaintextsHash) = IO.writePlaintextsTemp(plaintexts)
+
         val statement = Statement.getPlaintextsStatement(plaintextsHash, decryptionsHash, configHash, item)
         val signature = statement.sign(ctx.trusteeCfg.privateKey)
 
-        val file1 = IO.writeTemp(plaintexts)
+
         val file2 = IO.writeTemp(statement.asJson.noSpaces)
         val file3 = IO.writeTemp(signature)
 
@@ -774,6 +771,7 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
       }
       else {
         // sign plaintexts if statements match
+        val plaintextsHash = Crypto.sha512(plaintexts)
         val expected = Statement.getPlaintextsStatement(plaintextsHash, decryptionsHash, configHash, item)
         val expectedString = expected.asJson.noSpaces
         val ok = ctx.section.getPlaintextsStatement(item).map(expectedString == _).getOrElse(false)

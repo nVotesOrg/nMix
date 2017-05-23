@@ -179,7 +179,7 @@ class ProtocolSpec extends FlatSpec with Names {
     assert(files.contains(PUBLIC_KEY_SIG(1, 2)))
 
     // cast votes
-    val votes = Seq.fill(1)(Random.nextInt(Int.MaxValue))
+    val votes = Seq.fill(6)(Random.nextInt(Int.MaxValue))
     println(s"casting $votes")
 
     genVotes(bb, votes)
@@ -257,15 +257,15 @@ class ProtocolSpec extends FlatSpec with Names {
     assert(files.contains(PLAINTEXTS_SIG(1, 2)))
     assert(files.contains(PLAINTEXTS_SIG(3, 2)))
 
-    val p1 = decode[Plaintexts](bb.getPlaintexts(1).get).right.get
-    val p2 = decode[Plaintexts](bb.getPlaintexts(2).get).right.get
-    val p3 = decode[Plaintexts](bb.getPlaintexts(3).get).right.get
+    val (p1, _) = bb.getPlaintexts(1).map(IO.readPlaintexts).get
+    val (p2, _) = bb.getPlaintexts(2).map(IO.readPlaintexts).get
+    val (p3, _) = bb.getPlaintexts(3).map(IO.readPlaintexts).get
 
     assert(p1.plaintexts.map(_.toInt).sorted == votes.map(_ + 1).sorted)
     assert(p2.plaintexts.map(_.toInt).sorted == votes.map(_ + 2).sorted)
     assert(p3.plaintexts.map(_.toInt).sorted == votes.map(_ + 3).sorted)
   }
-/*
+
   "Protocol" should "execute full election cycle correctly with offline split" in {
     val auth1cfg = getCfg1Split
     val auth2cfg = getCfg2Split
@@ -389,15 +389,14 @@ class ProtocolSpec extends FlatSpec with Names {
     assert(files.contains(PLAINTEXTS_SIG(1, 2)))
     assert(files.contains(PLAINTEXTS_SIG(3, 2)))
 
-
-    val p1 = decode[Plaintexts](bb.getPlaintexts(1).get).right.get
-    val p2 = decode[Plaintexts](bb.getPlaintexts(2).get).right.get
-    val p3 = decode[Plaintexts](bb.getPlaintexts(3).get).right.get
+    val (p1, _) = bb.getPlaintexts(1).map(IO.readPlaintexts).get
+    val (p2, _) = bb.getPlaintexts(2).map(IO.readPlaintexts).get
+    val (p3, _) = bb.getPlaintexts(3).map(IO.readPlaintexts).get
 
     assert(p1.plaintexts.map(_.toInt).sorted == votes.map(_ + 1).sorted)
     assert(p2.plaintexts.map(_.toInt).sorted == votes.map(_ + 2).sorted)
     assert(p3.plaintexts.map(_.toInt).sorted == votes.map(_ + 3).sorted)
-  }*/
+  }
 
   def getCfg1 = {
     TrusteeConfig(bogusPath, bogusUri, None, auth1pubRsa, auth1privRsa, aesKey, peers, false, false, false, 0)
@@ -659,8 +658,8 @@ case class MemoryBoardSection(name: String) extends BoardSectionInterface with N
     add(sig, DECRYPTION_SIG(item, auth))
   }
 
-  def getPlaintexts(item: Int): Option[String] = {
-    contents.get(PLAINTEXTS(item)).map(str(_))
+  def getPlaintexts(item: Int): Option[InputStream] = {
+    contents.get(PLAINTEXTS(item)).map(new ByteArrayInputStream(_))
   }
 
   def getPlaintextsStatement(item: Int): Option[String] = {

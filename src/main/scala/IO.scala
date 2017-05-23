@@ -143,6 +143,45 @@ object IO {
     ret
   }
 
+  def readPlaintexts(stream: InputStream): (Plaintexts, String) = {
+    val sha = MessageDigest.getInstance("SHA-512")
+    val din = new DigestInputStream(stream, sha)
+    val reader = new BufferedReader(new InputStreamReader(din, StandardCharsets.UTF_8), 131072)
+
+    val plaintexts = getLines(reader)
+    val ret = Plaintexts(plaintexts)
+
+    din.close()
+    stream.close()
+
+    val hash = DatatypeConverter.printHexBinary(sha.digest())
+
+    (ret, hash)
+  }
+
+   def writePlaintextsTemp(data: Plaintexts): (Path, String) = {
+    val tmp = Files.createTempFile("trustee", ".tmp")
+    val outStream = new FileOutputStream(tmp.toFile)
+    val sha = MessageDigest.getInstance("SHA-512")
+    val dou = new DigestOutputStream(outStream, sha)
+    val writer = new BufferedWriter(new OutputStreamWriter(dou,StandardCharsets.UTF_8), 131072)
+
+    data.plaintexts.foreach { p =>
+      writer.write(p)
+      writer.newLine()
+    }
+    // separator
+    writer.newLine()
+
+    writer.close()
+    outStream.close()
+    dou.close()
+
+    val hash = DatatypeConverter.printHexBinary(sha.digest())
+
+    (tmp, hash)
+  }
+
   def readShuffleResult(stream: InputStream): (ShuffleResultDTO, String) = {
     val sha = MessageDigest.getInstance("SHA-512")
     val din = new DigestInputStream(stream, sha)

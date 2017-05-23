@@ -98,10 +98,21 @@ object Crypto {
   def sha512(input: String): String = {
     val sha = MessageDigest.getInstance("SHA-512")
     val in = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8))
-    // val in = new ByteArrayInputStream(input.chars())
     val din = new DigestInputStream(in, sha)
     while (din.read() != -1){}
     din.close()
+
+    DatatypeConverter.printHexBinary(sha.digest())
+  }
+
+  def sha512(input: Plaintexts): String = {
+    val sha = MessageDigest.getInstance("SHA-512")
+    input.plaintexts.foreach { p =>
+      val next = p + System.lineSeparator
+      sha.update(next.getBytes(StandardCharsets.UTF_8))
+    }
+    val end = System.lineSeparator
+    sha.update(end.getBytes(StandardCharsets.UTF_8))
 
     DatatypeConverter.printHexBinary(sha.digest())
   }
