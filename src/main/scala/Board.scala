@@ -307,8 +307,8 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
   }
 
   /** Returns the ballots if they exist */
-  def getBallots(item: Int): Option[String] =  {
-    getFileStream(BALLOTS(item)).map(IO.asString(_))
+  def getBallots(item: Int): Option[InputStream] =  {
+    getFileStream(BALLOTS(item))
   }
 
   /** Returns the ballots statement if it exists */
@@ -953,7 +953,7 @@ trait BoardSectionInterface {
   def getPublicKeySignature(item: Int, auth: Int): Option[Array[Byte]]
 
   /** Returns the ballots if they exist */
-  def getBallots(item: Int): Option[String]
+  def getBallots(item: Int): Option[InputStream]
 
   /** Returns the ballots statement if it exists */
   def getBallotsStatement(item: Int): Option[String]

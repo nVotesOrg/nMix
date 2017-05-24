@@ -237,7 +237,7 @@ object Protocol extends Names {
     val myMixPosition = getMixPosition(ctx.position, item, ctx.config.trustees.size)
 
     val previousMixesYes = Condition((1 to myMixPosition - 1).flatMap { auth =>
-        val mixAuth = getMixPositionInverse(auth, item, ctx.config.trustees.size)
+        val mixAuth = getTrusteeForMixPosition(auth, item, ctx.config.trustees.size)
         List(MIX(item, mixAuth) -> true, MIX_STMT(item, mixAuth) -> true, MIX_SIG(item, mixAuth, mixAuth) -> true)
       }
       .toList
@@ -336,7 +336,7 @@ object Protocol extends Names {
   }
 
   /** Returns the inverse of the permuted mix position */
-  def getMixPositionInverse(auth: Int, item: Int, trustees: Int): Int = {
+  def getTrusteeForMixPosition(auth: Int, item: Int, trustees: Int): Int = {
     /** for a cyclic group with generator g of order n we have
      *
      *  FIXME revise

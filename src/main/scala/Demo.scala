@@ -53,12 +53,10 @@ object BallotboxAdd extends App {
     val ballots = Util.getRandomVotesStr(totalVotes, generator, pk).toArray
     // val ballots = Util.encryptVotes(List(1, 3, 5, 7, 11).map(_ + item), cSettings, pk).map(_.convertToString).toArray
 
-    val ballotsString = Ballots(ballots).asJson.noSpaces
-    val ballotHash = Crypto.sha512(ballotsString)
+    val (file1,ballotHash) = IO.writeBallotsTemp(Ballots(ballots))
     val statement = Statement.getBallotsStatement(ballotHash, configHash, item)
     val signature = statement.sign(Crypto.readPrivateRsa(Paths.get("keys/ballotbox.pem")))
 
-    val file1 = IO.writeTemp(ballotsString)
     val file2 = IO.writeTemp(statement.asJson.noSpaces)
     val file3 = IO.writeTemp(signature)
 

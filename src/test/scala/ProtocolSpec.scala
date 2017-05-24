@@ -458,16 +458,14 @@ class ProtocolSpec extends FlatSpec with Names {
       val publicKey = section.getPublicKey(item).get
       val pk = Util.getPublicKeyFromString(publicKey, generator)
 
-      // val ballots = Util.getRandomVotesStr(totalVotes, generator, pk).toArray
       val ballots = Util.encryptVotes(plaintexts.map(_ + item), cSettings, pk)
         .map(_.convertToString).toArray
 
-      val ballotsString = Ballots(ballots).asJson.noSpaces
-      val ballotHash = Crypto.sha512(ballotsString)
+      val (file1,ballotHash) = IO.writeBallotsTemp(Ballots(ballots))
       val statement = Statement.getBallotsStatement(ballotHash, configHash, item)
       val signature = statement.sign(ballotboxprivRsa)
 
-      val file1 = IO.writeTemp(ballotsString)
+
       val file2 = IO.writeTemp(statement.asJson.noSpaces)
       val file3 = IO.writeTemp(signature)
 
@@ -490,17 +488,12 @@ class ProtocolSpec extends FlatSpec with Names {
       val publicKey = section.getPublicKey(item).get
       val pk = Util.getPublicKeyFromString(publicKey, generator)
 
-      // val ballots = Util.getRandomVotesStr(totalVotes, generator, pk).toArray
-      //val ballots = Util.encryptVotes(plaintexts.map(_ + item), cSettings, pk)
-      //  .map(_.convertToString).toArray
+      // generate bogus votes
       val ballots = Seq.fill(10)("[0|0]")
-
-      val ballotsString = Ballots(ballots).asJson.noSpaces
-      val ballotHash = Crypto.sha512(ballotsString)
+      val (file1,ballotHash) = IO.writeBallotsTemp(Ballots(ballots))
       val statement = Statement.getBallotsStatement(ballotHash, configHash, item)
       val signature = statement.sign(ballotboxprivRsa)
 
-      val file1 = IO.writeTemp(ballotsString)
       val file2 = IO.writeTemp(statement.asJson.noSpaces)
       val file3 = IO.writeTemp(signature)
 
@@ -588,8 +581,8 @@ case class MemoryBoardSection(name: String) extends BoardSectionInterface with N
     contents.get(PUBLIC_KEY_SIG(item, auth))
   }
 
-  def getBallots(item: Int): Option[String] =  {
-    contents.get(BALLOTS(item)).map(str(_))
+  def getBallots(item: Int): Option[InputStream] =  {
+    contents.get(BALLOTS(item)).map(new ByteArrayInputStream(_))
   }
 
   def getBallotsStatement(item: Int): Option[String] =  {

@@ -350,7 +350,7 @@ case class AddPreShuffleData(ctx: Context, item: Int) extends Action {
     }
     logger.info(s"Starting $this...")
 
-    val ballots = decode[Ballots](ctx.section.getBallots(item).get).right.get
+    val (ballots, _) = ctx.section.getBallots(item).map(IO.readBallots).get
     val publicKey = ctx.section.getPublicKey(item).get
     val modulusStr = ctx.trusteeCfg.publicKey.getModulus.toString
 
@@ -391,11 +391,9 @@ case class AddMix(ctx: Context, item: Int) extends Action {
     }
     logger.info(s"Starting $this...")
 
-    val previousMixAuth = Protocol.getMixPositionInverse(myMixPosition - 1, item, ctx.config.trustees.size)
+    val previousMixAuth = Protocol.getTrusteeForMixPosition(myMixPosition - 1, item, ctx.config.trustees.size)
     val (previousBallots, parentHash) = if(myMixPosition == 1) {
-      val ballots = ctx.section.getBallots(item).get
-      val bs = decode[Ballots](ballots).right.get
-      val hash = Crypto.sha512(ballots)
+      val (bs, hash) = ctx.section.getBallots(item).map(IO.readBallots).get
       (bs.ballots, hash)
     }
     else {
@@ -465,11 +463,9 @@ case class VerifyMix(ctx: Context, item: Int, auth: Int) extends Action {
     val mixSig = ctx.section.getMixSignature(item, auth, auth).get
 
     val mixPosition = Protocol.getMixPosition(auth, item, ctx.config.trustees.size)
-    val previousMixAuth = Protocol.getMixPositionInverse(mixPosition - 1, item, ctx.config.trustees.size)
+    val previousMixAuth = Protocol.getTrusteeForMixPosition(mixPosition - 1, item, ctx.config.trustees.size)
     val (parentBallots, parentHash) = if(mixPosition == 1) {
-      val ballots = ctx.section.getBallots(item).get
-      val bs = decode[Ballots](ballots).right.get
-      val hash = Crypto.sha512(ballots)
+      val (bs, hash) = ctx.section.getBallots(item).map(IO.readBallots).get
       (bs.ballots, hash)
     }
     else {
@@ -566,7 +562,7 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
     val chain = (1 to ctx.config.trustees.size).map { a =>
 
       // PERM
-      val auth = Protocol.getMixPositionInverse(a, item, ctx.config.trustees.size)
+      val auth = Protocol.getTrusteeForMixPosition(a, item, ctx.config.trustees.size)
 
       val mixStmtStr = ctx.section.getMixStatement(item, auth).get
       val mixStmt = decode[MixStatement](mixStmtStr).right.get
@@ -624,8 +620,7 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
 
     // check the mix-end of the chain
     // PERM
-    val lastMixAuth = Protocol.getMixPositionInverse(ctx.config.trustees.size, item, ctx.config.trustees.size)
-    // val mixStr = ctx.section.getMix(item, ctx.config.trustees.size).get
+    val lastMixAuth = Protocol.getTrusteeForMixPosition(ctx.config.trustees.size, item, ctx.config.trustees.size)
 
     val (mix, mixHash) = ctx.section.getMix(item, lastMixAuth).map(IO.readShuffleResult).get
 
@@ -695,9 +690,8 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
     logger.info(s"Starting $this...")
 
     // get mixVotes
-    // val mixStr = ctx.section.getMix(item, ctx.config.trustees.size).get
     // PERM
-    val lastMixAuth = Protocol.getMixPositionInverse(ctx.config.trustees.size, item, ctx.config.trustees.size)
+    val lastMixAuth = Protocol.getTrusteeForMixPosition(ctx.config.trustees.size, item, ctx.config.trustees.size)
     val (mix, mixHash) = ctx.section.getMix(item, lastMixAuth).map(IO.readShuffleResult).get
 
     val collectedDecryptions = new ListBuffer[PartialDecryptionDTO]()

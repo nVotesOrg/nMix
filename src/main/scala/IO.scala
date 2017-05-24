@@ -179,6 +179,35 @@ object IO {
     writer.newLine()
   }
 
+   def readBallots(stream: InputStream): (Ballots, String) = {
+    val reader = new HashingReader(stream)
+
+    val ballots = getLines(reader)
+    val ret = Ballots(ballots)
+
+    val hash = reader.close()
+
+    (ret, hash)
+  }
+
+   def writeBallotsTemp(data: Ballots): (Path, String) = {
+    val tmp = Files.createTempFile("trustee", ".tmp")
+    val outStream = new FileOutputStream(tmp.toFile)
+    val writer = new HashingWriter(outStream)
+
+    data.ballots.foreach { p =>
+      writer.write(p)
+      writer.newLine()
+    }
+    // separator
+    writer.newLine()
+
+    val hash = writer.close()
+
+    (tmp, hash)
+  }
+
+
   def readPlaintexts(stream: InputStream): (Plaintexts, String) = {
     val reader = new HashingReader(stream)
 
