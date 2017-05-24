@@ -381,8 +381,8 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
   }
 
   /** Returns a decryption if it exists */
-  def getDecryption(item: Int, auth: Int): Option[String] = {
-    getFileStream(DECRYPTION(item, auth)).map(IO.asString(_))
+  def getDecryption(item: Int, auth: Int): Option[InputStream] = {
+    getFileStream(DECRYPTION(item, auth))
   }
 
   /** Returns a decryption statement if it exists */
@@ -989,7 +989,7 @@ trait BoardSectionInterface {
   def addMixSignature(sig: Path, item: Int, authMixer: Int, authSigner: Int): Unit
 
   /** Returns a decryption if it exists */
-  def getDecryption(item: Int, auth: Int): Option[String]
+  def getDecryption(item: Int, auth: Int): Option[InputStream]
 
   /** Returns a decryption statement if it exists */
   def getDecryptionStatement(item: Int, auth: Int): Option[String]

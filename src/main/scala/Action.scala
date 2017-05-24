@@ -571,6 +571,7 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
       val mixStmtStr = ctx.section.getMixStatement(item, auth).get
       val mixStmt = decode[MixStatement](mixStmtStr).right.get
       val mixSig = ctx.section.getMixSignature(item, auth, ctx.position).get
+
       logger.trace(s"checking mix self-signature on item $item auth $auth")
       val ok = mixStmt.verify(mixSig, ctx.trusteeCfg.publicKey)
 
@@ -601,7 +602,6 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
     }
 
     // check the ballots-end of the chain
-    val ballots = ctx.section.getBallots(item).get
     val ballotStmt = ctx.section.getBallotsStatement(item).get
     val ballotsSig = ctx.section.getBallotsSignature(item).get
 
@@ -627,7 +627,6 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
     val lastMixAuth = Protocol.getMixPositionInverse(ctx.config.trustees.size, item, ctx.config.trustees.size)
     // val mixStr = ctx.section.getMix(item, ctx.config.trustees.size).get
 
-    // val mixStr = ctx.section.getMix(item, lastMixAuth).get
     val (mix, mixHash) = ctx.section.getMix(item, lastMixAuth).map(IO.readShuffleResult).get
 
     // the votes we will decrypt correspond to the end of the chain
@@ -649,11 +648,13 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
     // create decryption
     val decryption = KeyMakerTrustee.partialDecryption(modulusStr, mix.votes, privateKey, ctx.cSettings)
 
-    val statement = Statement.getDecryptionStatement(decryption, mixHash, configHash, item)
+    val (file1,decryptionHash) = IO.writeDecryptionTemp(decryption)
+
+    val statement = Statement.getDecryptionStatement(decryptionHash, mixHash, configHash, item)
     val signature = statement.sign(ctx.trusteeCfg.privateKey)
 
     logger.trace(s"adding decryptions on item $item")
-    val file1 = IO.writeTemp(decryption.asJson.noSpaces)
+
     val file2 = IO.writeTemp(statement.asJson.noSpaces)
     val file3 = IO.writeTemp(signature)
 
@@ -697,8 +698,6 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
     // val mixStr = ctx.section.getMix(item, ctx.config.trustees.size).get
     // PERM
     val lastMixAuth = Protocol.getMixPositionInverse(ctx.config.trustees.size, item, ctx.config.trustees.size)
-    val mixStr = ctx.section.getMix(item, lastMixAuth).get
-
     val (mix, mixHash) = ctx.section.getMix(item, lastMixAuth).map(IO.readShuffleResult).get
 
     val collectedDecryptions = new ListBuffer[PartialDecryptionDTO]()
@@ -707,12 +706,11 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
     (1 to ctx.config.trustees.size).map { auth =>
 
       logger.trace(s"item $item processing decryption $auth..")
-      val decryptionStr = ctx.section.getDecryption(item, auth).get
-      val decryption = decode[PartialDecryptionDTO](decryptionStr).right.get
+      val (decryption, decryptionHash) = ctx.section.getDecryption(item, auth).map(IO.readDecryption).get
       val decryptionStmt = ctx.section.getDecryptionStatement(item, auth).get
       val decryptionSig = ctx.section.getDecryptionSignature(item, auth).get
 
-      val expected = Statement.getDecryptionStatement(decryption, mixHash, configHash, item)
+      val expected = Statement.getDecryptionStatement(decryptionHash, mixHash, configHash, item)
       val expectedString = expected.asJson.noSpaces
       val publicKeyStr = ctx.section.getPublicKey(item).get
 
@@ -753,7 +751,7 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
 
       val plaintextsSeq = combineDecryptions(collectedDecryptions, mix.votes, ctx.cSettings)
       val plaintexts = Plaintexts(plaintextsSeq)
-      val decryptionsHash = Crypto.sha512(collectedDecryptions.asJson.noSpaces)
+      val decryptionsHash = Crypto.sha512(collectedDecryptions)
 
       if(ctx.position == 1) {
         //  send and sign plaintexts

@@ -148,14 +148,6 @@ object Statement {
     DecryptionStatement(decryptionHash, mixHash, configHash, item)
   }
 
-  /** Returns the decryption statement for the decryption PartialDecryptionDTO
-    object, mix hash, config hash, and item */
-  def getDecryptionStatement(decryption: PartialDecryptionDTO, mixHash: String, configHash: String, item: Int) = {
-    val decryptionHash = Crypto.sha512(decryption.asJson.noSpaces)
-
-    DecryptionStatement(decryptionHash, mixHash, configHash, item)
-  }
-
   /** Returns the plaintexts statement for the plaintexts hash,
     decryptions hash, config hash and item */
   def getPlaintextsStatement(plaintextsHash: String, decryptionsHash: String, configHash: String, item: Int) = {

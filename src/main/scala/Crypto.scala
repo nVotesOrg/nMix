@@ -78,22 +78,6 @@ object Crypto {
   val AES_MODE = AESEncryptionScheme.Mode.CBC
   val IV_SIZE = AESEncryptionScheme.AES_BLOCK_SIZE / 8
 
-  /** Returns the sha512 hash of the given file as a String */
-  /*def sha512(file: Path): String = {
-    sha512(Files.newInputStream(file))
-  }*/
-
-  /** Returns the sha512 hash of the given Inputstream as a String */
-  /*def sha512(inputStream: InputStream): String = {
-    val sha = MessageDigest.getInstance("SHA-512")
-    val in = new BufferedInputStream(inputStream, 32768)
-    val din = new DigestInputStream(in, sha)
-    while (din.read() != -1){}
-    din.close()
-
-    DatatypeConverter.printHexBinary(sha.digest())
-  }*/
-
   /** Returns the sha512 hash of the given String as a String */
   def sha512(input: String): String = {
     val sha = MessageDigest.getInstance("SHA-512")
@@ -108,10 +92,38 @@ object Crypto {
   def sha512(input: Plaintexts): String = {
     val sha = MessageDigest.getInstance("SHA-512")
     input.plaintexts.foreach { p =>
-      val next = p + System.lineSeparator
+      val next = p + HashingWriter.NEWLINE
       sha.update(next.getBytes(StandardCharsets.UTF_8))
     }
-    val end = System.lineSeparator
+    val end = HashingWriter.NEWLINE
+    sha.update(end.getBytes(StandardCharsets.UTF_8))
+
+    DatatypeConverter.printHexBinary(sha.digest())
+  }
+
+  def sha512(input: Seq[PartialDecryptionDTO]): String = {
+    val sha = MessageDigest.getInstance("SHA-512")
+    input.map(Crypto.sha512).foreach { hash =>
+      sha.update(hash.getBytes(StandardCharsets.UTF_8))
+    }
+
+    DatatypeConverter.printHexBinary(sha.digest())
+  }
+
+  def sha512(input: PartialDecryptionDTO): String = {
+    val sha = MessageDigest.getInstance("SHA-512")
+    var next = input.proofDTO.commitment + HashingWriter.NEWLINE
+    sha.update(next.getBytes(StandardCharsets.UTF_8))
+    next = input.proofDTO.challenge + HashingWriter.NEWLINE
+    sha.update(next.getBytes(StandardCharsets.UTF_8))
+    next = input.proofDTO.response + HashingWriter.NEWLINE
+    sha.update(next.getBytes(StandardCharsets.UTF_8))
+
+    input.partialDecryptions.foreach { p =>
+      next = p + HashingWriter.NEWLINE
+      sha.update(next.getBytes(StandardCharsets.UTF_8))
+    }
+    val end = HashingWriter.NEWLINE
     sha.update(end.getBytes(StandardCharsets.UTF_8))
 
     DatatypeConverter.printHexBinary(sha.digest())
@@ -355,7 +367,6 @@ object KeyMakerTrustee extends KeyMaker {
     partialDecrypt(v, secretKey, id, cSettings)
   }
 }
-
 
 /** Represents a shuffling trustee
  *

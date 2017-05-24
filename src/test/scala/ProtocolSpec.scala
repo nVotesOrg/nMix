@@ -640,8 +640,8 @@ case class MemoryBoardSection(name: String) extends BoardSectionInterface with N
     add(sig, MIX_SIG(item, authMixer, authSigner))
   }
 
-  def getDecryption(item: Int, auth: Int): Option[String] = {
-    contents.get(DECRYPTION(item, auth)).map(str(_))
+  def getDecryption(item: Int, auth: Int): Option[InputStream] = {
+    contents.get(DECRYPTION(item, auth)).map(new ByteArrayInputStream(_))
   }
 
   def getDecryptionStatement(item: Int, auth: Int): Option[String] = {
