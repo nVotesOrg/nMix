@@ -11,7 +11,6 @@
 |5/20   |2   |3 x 100k   |2048   |2 x m4.16,1 x m4.10   |10G|all |YYY|46
 |5/23   |2   |3 x 100k   |2048   |2 x m4.16,1 x m4.10   |10G|all |YYY|43
 |5/24   |2   |3 x 100k   |2048   |2 x m4.16,1 x m4.10   |10G|all |YYY|41
-|5/24   |2   |3 x 100k   |2048   |2 x m4.16,1 x m4.10   |10G|all |YYY|41
 |5/24   |2   |3 x 300k   |2048   |2 x m4.16,1 x m4.10   |22G|all |YYY|121
 
 *The Trustee optimization settings column has the following syntax.
