@@ -90,8 +90,8 @@ trait Names {
   def DECRYPTION_STMT(item: Int, auth: Int) = s"$auth/$item/decryption.stmt.json"
   def DECRYPTION_SIG(item: Int, auth: Int) = s"$auth/$item/decryption.sig.ucb"
 
-  def PLAINTEXTS(item: Int) = s"1/$item/plaintexts.json"
-  def PLAINTEXTS_STMT(item: Int) = s"1/$item/plaintext.stmt.json"
+  def PLAINTEXTS(item: Int, auth: Int) = s"$auth/$item/plaintexts.json"
+  def PLAINTEXTS_STMT(item: Int, auth: Int) = s"$auth/$item/plaintext.stmt.json"
   def PLAINTEXTS_SIG(item: Int, auth: Int) = s"$auth/$item/plaintext.sig.ucb"
 }
 
@@ -405,13 +405,13 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
   }
 
   /** Returns the plaintexts if they exist */
-  def getPlaintexts(item: Int): Option[InputStream] = {
-    getFileStream(PLAINTEXTS(item))
+  def getPlaintexts(item: Int, auth: Int): Option[InputStream] = {
+    getFileStream(PLAINTEXTS(item, auth))
   }
 
   /** Returns the plaintexts statement if it exists */
-  def getPlaintextsStatement(item: Int): Option[String] = {
-    getFileStream(PLAINTEXTS_STMT(item)).map(IO.asString(_))
+  def getPlaintextsStatement(item: Int, auth: Int): Option[String] = {
+    getFileStream(PLAINTEXTS_STMT(item, auth)).map(IO.asString(_))
   }
 
   /** Returns the plaintexts signature if it exists */
@@ -422,10 +422,10 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
   /** Syncs the repository, adds a plaintext triple (Share, Statement, Signature), and sends */
   def addPlaintexts(plaintexts: Path, stmt: Path, sig: Path, item: Int, auth: Int): Unit = synchronized {
     gitRepo.sync()
-    gitRepo.addToWorkingCopy(plaintexts, PLAINTEXTS(item))
-    gitRepo.addToWorkingCopy(stmt, PLAINTEXTS_STMT(item))
+    gitRepo.addToWorkingCopy(plaintexts, PLAINTEXTS(item, auth))
+    gitRepo.addToWorkingCopy(stmt, PLAINTEXTS_STMT(item, auth))
     gitRepo.addToWorkingCopy(sig, PLAINTEXTS_SIG(item, auth))
-    gitRepo.send("added plaintexts", PLAINTEXTS(item), PLAINTEXTS_STMT(item), PLAINTEXTS_SIG(item, auth))
+    gitRepo.send("added plaintexts", PLAINTEXTS(item, auth), PLAINTEXTS_STMT(item, auth), PLAINTEXTS_SIG(item, auth))
   }
 
   /** Syncs the repository, adds a plaintexts signature, and sends */
@@ -1001,10 +1001,10 @@ trait BoardSectionInterface {
   def addDecryption(decryption: Path, stmt: Path, sig: Path, item: Int, auth: Int): Unit
 
   /** Returns the plaintexts if they exist */
-  def getPlaintexts(item: Int): Option[InputStream]
+  def getPlaintexts(item: Int, auth: Int): Option[InputStream]
 
   /** Returns the plaintexts statement if it exists */
-  def getPlaintextsStatement(item: Int): Option[String]
+  def getPlaintextsStatement(item: Int, auth: Int): Option[String]
 
   /** Returns the plaintexts signature if it exists */
   def getPlaintextsSignature(item: Int, auth: Int): Option[Array[Byte]]

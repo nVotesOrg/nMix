@@ -233,33 +233,34 @@ class ProtocolSpec extends FlatSpec with Names {
     assert(files.contains(DECRYPTION(2, 2)))
     assert(files.contains(DECRYPTION(3, 2)))
 
-    // auth1 does plaintexts for 2, adds remaining decryptions
+    // auth1 adds remaining decryptions
     Protocol.execute(bb, auth1cfg)
     files = bb.getFileSet
-    assert(files.contains(PLAINTEXTS(2)))
     assert(files.contains(DECRYPTION(1, 1)))
     assert(files.contains(DECRYPTION(3, 1)))
 
-    // auth2 signs plaintexts for 2
+    // auth2 generates and signs plaintexts for 2
     Protocol.execute(bb, auth2cfg)
     files = bb.getFileSet
+    assert(files.contains(PLAINTEXTS(2, 2)))
     assert(files.contains(PLAINTEXTS_SIG(2, 2)))
 
     // auth1 adds remaining plaintexts
     Protocol.execute(bb, auth1cfg)
     files = bb.getFileSet
-    assert(files.contains(PLAINTEXTS(1)))
-    assert(files.contains(PLAINTEXTS(3)))
+    assert(files.contains(PLAINTEXTS(1, 1)))
+    assert(files.contains(PLAINTEXTS(3, 1)))
+    assert(files.contains(PLAINTEXTS_SIG(2, 1)))
 
-    // auth1 adds remaining plaintexts sigs
+    // auth2 adds remaining plaintexts sigs
     Protocol.execute(bb, auth2cfg)
     files = bb.getFileSet
     assert(files.contains(PLAINTEXTS_SIG(1, 2)))
     assert(files.contains(PLAINTEXTS_SIG(3, 2)))
 
-    val (p1, _) = bb.getPlaintexts(1).map(IO.readPlaintexts).get
-    val (p2, _) = bb.getPlaintexts(2).map(IO.readPlaintexts).get
-    val (p3, _) = bb.getPlaintexts(3).map(IO.readPlaintexts).get
+    val (p1, _) = bb.getPlaintexts(1, 1).map(IO.readPlaintexts).get
+    val (p2, _) = bb.getPlaintexts(2, 2).map(IO.readPlaintexts).get
+    val (p3, _) = bb.getPlaintexts(3, 1).map(IO.readPlaintexts).get
 
     assert(p1.plaintexts.map(_.toInt).sorted == votes.map(_ + 1).sorted)
     assert(p2.plaintexts.map(_.toInt).sorted == votes.map(_ + 2).sorted)
@@ -365,33 +366,35 @@ class ProtocolSpec extends FlatSpec with Names {
     assert(files.contains(DECRYPTION(2, 2)))
     assert(files.contains(DECRYPTION(3, 2)))
 
-    // auth1 does plaintexts for 2, adds remaining decryptions
+    // auth1 adds remaining decryptions
     Protocol.execute(bb, auth1cfg)
     files = bb.getFileSet
-    assert(files.contains(PLAINTEXTS(2)))
+
     assert(files.contains(DECRYPTION(1, 1)))
     assert(files.contains(DECRYPTION(3, 1)))
 
     // auth2 signs plaintexts for 2
     Protocol.execute(bb, auth2cfg)
     files = bb.getFileSet
+    assert(files.contains(PLAINTEXTS(2, 2)))
     assert(files.contains(PLAINTEXTS_SIG(2, 2)))
 
     // auth1 adds remaining plaintexts
     Protocol.execute(bb, auth1cfg)
     files = bb.getFileSet
-    assert(files.contains(PLAINTEXTS(1)))
-    assert(files.contains(PLAINTEXTS(3)))
+    assert(files.contains(PLAINTEXTS(1, 1)))
+    assert(files.contains(PLAINTEXTS(3, 1)))
+    assert(files.contains(PLAINTEXTS_SIG(2, 1)))
 
-    // auth1 adds remaining plaintexts sigs
+    // auth2 adds remaining plaintexts sigs
     Protocol.execute(bb, auth2cfg)
     files = bb.getFileSet
     assert(files.contains(PLAINTEXTS_SIG(1, 2)))
     assert(files.contains(PLAINTEXTS_SIG(3, 2)))
 
-    val (p1, _) = bb.getPlaintexts(1).map(IO.readPlaintexts).get
-    val (p2, _) = bb.getPlaintexts(2).map(IO.readPlaintexts).get
-    val (p3, _) = bb.getPlaintexts(3).map(IO.readPlaintexts).get
+    val (p1, _) = bb.getPlaintexts(1, 1).map(IO.readPlaintexts).get
+    val (p2, _) = bb.getPlaintexts(2, 2).map(IO.readPlaintexts).get
+    val (p3, _) = bb.getPlaintexts(3, 1).map(IO.readPlaintexts).get
 
     assert(p1.plaintexts.map(_.toInt).sorted == votes.map(_ + 1).sorted)
     assert(p2.plaintexts.map(_.toInt).sorted == votes.map(_ + 2).sorted)
@@ -651,12 +654,12 @@ case class MemoryBoardSection(name: String) extends BoardSectionInterface with N
     add(sig, DECRYPTION_SIG(item, auth))
   }
 
-  def getPlaintexts(item: Int): Option[InputStream] = {
-    contents.get(PLAINTEXTS(item)).map(new ByteArrayInputStream(_))
+  def getPlaintexts(item: Int, auth: Int): Option[InputStream] = {
+    contents.get(PLAINTEXTS(item, auth)).map(new ByteArrayInputStream(_))
   }
 
-  def getPlaintextsStatement(item: Int): Option[String] = {
-    contents.get(PLAINTEXTS_STMT(item)).map(str(_))
+  def getPlaintextsStatement(item: Int, auth: Int): Option[String] = {
+    contents.get(PLAINTEXTS_STMT(item, auth)).map(str(_))
   }
 
   def getPlaintextsSignature(item: Int, auth: Int): Option[Array[Byte]] = {
@@ -664,8 +667,8 @@ case class MemoryBoardSection(name: String) extends BoardSectionInterface with N
   }
 
   def addPlaintexts(plaintexts: Path, stmt: Path, sig: Path, item: Int, auth: Int): Unit = synchronized {
-    add(plaintexts, PLAINTEXTS(item))
-    add(stmt, PLAINTEXTS_STMT(item))
+    add(plaintexts, PLAINTEXTS(item, auth))
+    add(stmt, PLAINTEXTS_STMT(item, auth))
     add(sig, PLAINTEXTS_SIG(item, auth))
   }
 

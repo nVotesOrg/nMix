@@ -173,7 +173,6 @@ object Protocol extends Names {
     catch {
       case e:Exception => {
         logger.error(s"Exception caught executing actions: $e", e)
-        e.printStackTrace()
         postError("An exception occurred during processing: ${e.getClass}")
         return Error(e.toString)
       }
@@ -226,7 +225,11 @@ object Protocol extends Names {
     val myShareNo = Condition.no(SHARE(item, ctx.position)).no(SHARE_STMT(item, ctx.position))
       .no(SHARE_SIG(item, ctx.position))
     val allShares = Condition((1 to config.trustees.size).flatMap { auth =>
-        List(SHARE(item, auth) -> true, SHARE_STMT(item, auth) -> true, SHARE_SIG(item, auth) -> true)
+        List(
+          SHARE(item, auth) -> true,
+          SHARE_STMT(item, auth) -> true,
+          SHARE_SIG(item, auth) -> true
+        )
       }
       .toList
     )
@@ -238,7 +241,11 @@ object Protocol extends Names {
 
     val previousMixesYes = Condition((1 to myMixPosition - 1).flatMap { auth =>
         val mixAuth = getTrusteeForMixPosition(auth, item, ctx.config.trustees.size)
-        List(MIX(item, mixAuth) -> true, MIX_STMT(item, mixAuth) -> true, MIX_SIG(item, mixAuth, mixAuth) -> true)
+        List(
+          MIX(item, mixAuth) -> true,
+          MIX_STMT(item, mixAuth) -> true,
+          MIX_SIG(item, mixAuth, mixAuth) -> true
+        )
       }
       .toList
     )
@@ -252,8 +259,12 @@ object Protocol extends Names {
 
     /** verify mixes other than our own */
     val missingMixSigs = (1 to config.trustees.size).filter(_ != ctx.position).map { auth =>
-      (auth, item, Condition(List(MIX(item, auth) -> true, MIX_STMT(item, auth) -> true,
-        MIX_SIG(item, auth, auth) -> true, MIX_SIG(item, auth, ctx.position) -> false)))
+      (auth, item, Condition(
+        List(MIX(item, auth) -> true,
+        MIX_STMT(item, auth) -> true,
+        MIX_SIG(item, auth, auth) -> true,
+        MIX_SIG(item, auth, ctx.position) -> false)
+      ))
     }
     val allMixSigs = Condition((1 to config.trustees.size).map { auth =>
       MIX_SIG(item, auth, ctx.position) -> true
@@ -261,15 +272,21 @@ object Protocol extends Names {
 
     val noDecryptions = Condition.no(DECRYPTION(item, ctx.position))
       .no(DECRYPTION_STMT(item, ctx.position)).no(DECRYPTION_SIG(item, ctx.position))
+
     val allDecryptions = Condition((1 to config.trustees.size).flatMap { auth =>
-        List(DECRYPTION(item, auth) -> true, DECRYPTION_STMT(item, auth) -> true,
-          DECRYPTION_SIG(item, auth) -> true)
+        List(
+          DECRYPTION(item, auth) -> true,
+          DECRYPTION_STMT(item, auth) -> true,
+          DECRYPTION_SIG(item, auth) -> true
+        )
       }
       .toList
     )
 
-    val noPlaintexts = Condition.no(PLAINTEXTS(item))
-    val noPlaintextsSig = Condition.yes(PLAINTEXTS(item)).no(PLAINTEXTS_SIG(item, ctx.position))
+    val decryptor = getDecryptingTrustee(item, config.trustees.size)
+
+    val noPlaintexts = Condition.no(PLAINTEXTS(item, decryptor))
+    val noPlaintextsSig = Condition.yes(PLAINTEXTS(item, decryptor)).no(PLAINTEXTS_SIG(item, ctx.position))
 
     /** construct rules */
 
@@ -299,11 +316,10 @@ object Protocol extends Names {
     }
 
     rules += allMixSigs.and(noDecryptions) -> AddDecryption(ctx, item)
-    if(ctx.position == 1) {
 
+    if(ctx.position == decryptor) {
       rules += allDecryptions.and(noPlaintexts) -> AddOrSignPlaintexts(ctx, item)
     }
-
     rules += allDecryptions.and(noPlaintextsSig) -> AddOrSignPlaintexts(ctx, item)
 
     rules
@@ -360,6 +376,12 @@ object Protocol extends Names {
     else {
       permuted
     }
+  }
+
+  /** Specifies which trustee will generate the plaintexts */
+  def getDecryptingTrustee(item: Int, trustees: Int): Int = {
+    val permuted = (item - 1) % trustees
+    permuted + 1
   }
 }
 

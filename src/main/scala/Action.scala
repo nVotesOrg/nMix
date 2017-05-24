@@ -741,19 +741,20 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
       }
     }
 
+    val decryptingTrustee = Protocol.getDecryptingTrustee(item, ctx.config.trustees.size)
+
     if(collectedDecryptions.length == ctx.config.trustees.size) {
 
       val plaintextsSeq = combineDecryptions(collectedDecryptions, mix.votes, ctx.cSettings)
       val plaintexts = Plaintexts(plaintextsSeq)
       val decryptionsHash = Crypto.sha512(collectedDecryptions)
 
-      if(ctx.position == 1) {
+      if(ctx.position == decryptingTrustee) {
         //  send and sign plaintexts
         val (file1,plaintextsHash) = IO.writePlaintextsTemp(plaintexts)
 
         val statement = Statement.getPlaintextsStatement(plaintextsHash, decryptionsHash, configHash, item)
         val signature = statement.sign(ctx.trusteeCfg.privateKey)
-
 
         val file2 = IO.writeTemp(statement.asJson.noSpaces)
         val file3 = IO.writeTemp(signature)
@@ -766,7 +767,8 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
         val plaintextsHash = Crypto.sha512(plaintexts)
         val expected = Statement.getPlaintextsStatement(plaintextsHash, decryptionsHash, configHash, item)
         val expectedString = expected.asJson.noSpaces
-        val ok = ctx.section.getPlaintextsStatement(item).map(expectedString == _).getOrElse(false)
+        val ok = ctx.section.getPlaintextsStatement(item, decryptingTrustee)
+          .map(expectedString == _).getOrElse(false)
 
         if(ok) {
           logger.trace(s"item $item plaintexts statement OK")
@@ -777,6 +779,7 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
         }
         else {
           logger.error(s"plaintexts statement mismatch")
+          logger.error("expected " + expected + " " + ctx.section.getPlaintextsStatement(item, decryptingTrustee))
           return Error(s"plaintexts statement mismatch")
         }
       }
