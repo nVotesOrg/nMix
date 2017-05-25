@@ -78,15 +78,20 @@ object Crypto {
   val AES_MODE = AESEncryptionScheme.Mode.CBC
   val IV_SIZE = AESEncryptionScheme.AES_BLOCK_SIZE / 8
 
+  /** Hash function for standalone hashing (outside of unicrypt) */
+  val HASH_FUNCTION = "SHA-512"
+
+  def getMessageDigest() = MessageDigest.getInstance(HASH_FUNCTION)
+
   /** Returns the sha512 hash of the given String as a String */
   def sha512(input: String): String = {
-    val sha = MessageDigest.getInstance("SHA-512")
+    val hash = getMessageDigest()
     val in = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8))
-    val din = new DigestInputStream(in, sha)
+    val din = new DigestInputStream(in, hash)
     while (din.read() != -1){}
     din.close()
 
-    DatatypeConverter.printHexBinary(sha.digest())
+    DatatypeConverter.printHexBinary(hash.digest())
   }
 
   /** The following methods return hashes for objects
@@ -98,45 +103,45 @@ object Crypto {
 
   /** Returns the sha512 hash of the Plaintexts object as a String */
   def sha512(input: Plaintexts): String = {
-    val sha = MessageDigest.getInstance("SHA-512")
+    val hash = getMessageDigest()
     input.plaintexts.foreach { p =>
       val next = p + HashingWriter.NEWLINE
-      sha.update(next.getBytes(StandardCharsets.UTF_8))
+      hash.update(next.getBytes(StandardCharsets.UTF_8))
     }
     val end = HashingWriter.NEWLINE
-    sha.update(end.getBytes(StandardCharsets.UTF_8))
+    hash.update(end.getBytes(StandardCharsets.UTF_8))
 
-    DatatypeConverter.printHexBinary(sha.digest())
+    DatatypeConverter.printHexBinary(hash.digest())
   }
 
   /** Returns the sha512 hash of a sequence of PartialDecryptionDTO's as a String */
   def sha512(input: Seq[PartialDecryptionDTO]): String = {
-    val sha = MessageDigest.getInstance("SHA-512")
-    input.map(Crypto.sha512).foreach { hash =>
-      sha.update(hash.getBytes(StandardCharsets.UTF_8))
+    val hash = getMessageDigest()
+    input.map(Crypto.sha512).foreach { h =>
+      hash.update(h.getBytes(StandardCharsets.UTF_8))
     }
 
-    DatatypeConverter.printHexBinary(sha.digest())
+    DatatypeConverter.printHexBinary(hash.digest())
   }
 
   /** Returns the sha512 hash of the PartialDecryptionDTO object as a String */
   def sha512(input: PartialDecryptionDTO): String = {
-    val sha = MessageDigest.getInstance("SHA-512")
+    val hash = getMessageDigest()
     var next = input.proofDTO.commitment + HashingWriter.NEWLINE
-    sha.update(next.getBytes(StandardCharsets.UTF_8))
+    hash.update(next.getBytes(StandardCharsets.UTF_8))
     next = input.proofDTO.challenge + HashingWriter.NEWLINE
-    sha.update(next.getBytes(StandardCharsets.UTF_8))
+    hash.update(next.getBytes(StandardCharsets.UTF_8))
     next = input.proofDTO.response + HashingWriter.NEWLINE
-    sha.update(next.getBytes(StandardCharsets.UTF_8))
+    hash.update(next.getBytes(StandardCharsets.UTF_8))
 
     input.partialDecryptions.foreach { p =>
       next = p + HashingWriter.NEWLINE
-      sha.update(next.getBytes(StandardCharsets.UTF_8))
+      hash.update(next.getBytes(StandardCharsets.UTF_8))
     }
     val end = HashingWriter.NEWLINE
-    sha.update(end.getBytes(StandardCharsets.UTF_8))
+    hash.update(end.getBytes(StandardCharsets.UTF_8))
 
-    DatatypeConverter.printHexBinary(sha.digest())
+    DatatypeConverter.printHexBinary(hash.digest())
   }
 
   /** Returns a RSA signature of the given String as a byte array */

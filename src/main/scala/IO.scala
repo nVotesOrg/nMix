@@ -385,7 +385,7 @@ object HashingWriter {
 class HashingWriter(out: OutputStream) {
   val sha = MessageDigest.getInstance("SHA-512")
   val dou = new DigestOutputStream(out, sha)
-  val writer = new BufferedWriter(new OutputStreamWriter(dou,StandardCharsets.UTF_8), 131072)
+  val writer = new BufferedWriter(new OutputStreamWriter(dou,StandardCharsets.UTF_8), 1000000)
 
   /** Writes the data into the stream */
   def write(str: String): Unit = writer.write(str)
@@ -405,7 +405,7 @@ class HashingWriter(out: OutputStream) {
 class HashingReader(in: InputStream) {
   val sha = MessageDigest.getInstance("SHA-512")
   val din = new DigestInputStream(in, sha)
-  val reader = new BufferedReader(new InputStreamReader(din, StandardCharsets.UTF_8), 131072)
+  val reader = new BufferedReader(new InputStreamReader(din, StandardCharsets.UTF_8), 1000000)
 
   /** Reads a line of data. It is assumed that all platforms will
     recognize the NEWLINE character as a new line */
