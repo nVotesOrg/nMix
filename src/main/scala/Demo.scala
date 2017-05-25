@@ -51,7 +51,6 @@ object BallotboxAdd extends App {
     val pk = Util.getPublicKeyFromString(publicKey, generator)
 
     val ballots = Util.getRandomVotesStr(totalVotes, generator, pk).toArray
-    // val ballots = Util.encryptVotes(List(1, 3, 5, 7, 11).map(_ + item), cSettings, pk).map(_.convertToString).toArray
 
     val (file1,ballotHash) = IO.writeBallotsTemp(Ballots(ballots))
     val statement = Statement.getBallotsStatement(ballotHash, configHash, item)
@@ -65,14 +64,4 @@ object BallotboxAdd extends App {
 
   val t1 = System.nanoTime()
   println("Generating ballots time: " + ((t1 - t0) / 1000000000.0) + " s")
-}
-
-// FIXME remove
-object PushTest extends App {
-  val trusteeCfg = TrusteeConfig.load
-  val board = new Board(trusteeCfg.dataStorePath)
-  val section = board.cloneOrSyncSection(trusteeCfg.repoBaseUri, Paths.get("repo"))
-
-  Files.copy(Paths.get("bigfile"), section.gitRepo.repoPath.resolve("bigfile"))
-  section.gitRepo.send("test", "bigfile")
 }

@@ -14,47 +14,79 @@ class MixAuthorityPermutationSpec extends FlatSpec {
   val files = Set("config.json", "config_1.stmt", "config_1.sig", "1/error")
 
   "permutation and inverse should" should "be consistent" in {
-    // position of authority 1 in question 1
     var auth = 1
     var position = Protocol.getMixPosition(auth, 1, 2)
-    // who is doing mix n in question
     var auth_match = Protocol.getTrusteeForMixPosition(position, 1, 2)
     assert(auth == auth_match)
 
     auth = 1
     position = Protocol.getMixPosition(auth, 2, 2)
-    // who is doing mix n in question
     auth_match = Protocol.getTrusteeForMixPosition(position, 2, 2)
     assert(auth == auth_match)
 
     auth = 1
     position = Protocol.getMixPosition(auth, 3, 2)
-    // who is doing mix n in question
     auth_match = Protocol.getTrusteeForMixPosition(position, 3, 2)
     assert(auth == auth_match)
 
     auth = 2
     position = Protocol.getMixPosition(auth, 1, 2)
-    // who is doing mix n in question
     auth_match = Protocol.getTrusteeForMixPosition(position, 1, 2)
     assert(auth == auth_match)
 
     auth = 2
     position = Protocol.getMixPosition(auth, 2, 2)
-    // who is doing mix n in question
     auth_match = Protocol.getTrusteeForMixPosition(position, 2, 2)
     assert(auth == auth_match)
 
     auth = 2
     position = Protocol.getMixPosition(auth, 3, 2)
-    // who is doing mix n in question
     auth_match = Protocol.getTrusteeForMixPosition(position, 3, 2)
     assert(auth == auth_match)
 
     auth = 1
     position = Protocol.getMixPosition(auth, 1, 3)
-    // who is doing mix n in question
     auth_match = Protocol.getTrusteeForMixPosition(position, 1, 3)
+    assert(auth == auth_match)
+
+    auth = 1
+    position = Protocol.getMixPosition(auth, 2, 3)
+    auth_match = Protocol.getTrusteeForMixPosition(position, 2, 3)
+    assert(auth == auth_match)
+
+    auth = 1
+    position = Protocol.getMixPosition(auth, 3, 3)
+    auth_match = Protocol.getTrusteeForMixPosition(position, 3, 3)
+    assert(auth == auth_match)
+
+    auth = 2
+    position = Protocol.getMixPosition(auth, 1, 3)
+    auth_match = Protocol.getTrusteeForMixPosition(position, 1, 3)
+    assert(auth == auth_match)
+
+    auth = 2
+    position = Protocol.getMixPosition(auth, 2, 3)
+    auth_match = Protocol.getTrusteeForMixPosition(position, 2, 3)
+    assert(auth == auth_match)
+
+    auth = 2
+    position = Protocol.getMixPosition(auth, 3, 3)
+    auth_match = Protocol.getTrusteeForMixPosition(position, 3, 3)
+    assert(auth == auth_match)
+
+    auth = 3
+    position = Protocol.getMixPosition(auth, 1, 3)
+    auth_match = Protocol.getTrusteeForMixPosition(position, 1, 3)
+    assert(auth == auth_match)
+
+    auth = 3
+    position = Protocol.getMixPosition(auth, 2, 3)
+    auth_match = Protocol.getTrusteeForMixPosition(position, 2, 3)
+    assert(auth == auth_match)
+
+    auth = 3
+    position = Protocol.getMixPosition(auth, 3, 3)
+    auth_match = Protocol.getTrusteeForMixPosition(position, 3, 3)
     assert(auth == auth_match)
   }
 }

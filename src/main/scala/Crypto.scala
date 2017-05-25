@@ -89,6 +89,14 @@ object Crypto {
     DatatypeConverter.printHexBinary(sha.digest())
   }
 
+  /** The following methods return hashes for objects
+   *  that are too large to be hashed as one entire String.
+   *  They are hashed using newline characters as field separators
+   *  so that they match the implementation of the HashingWriter
+   *  and HashingReader in the IO.scala file.
+   */
+
+  /** Returns the sha512 hash of the Plaintexts object as a String */
   def sha512(input: Plaintexts): String = {
     val sha = MessageDigest.getInstance("SHA-512")
     input.plaintexts.foreach { p =>
@@ -101,6 +109,7 @@ object Crypto {
     DatatypeConverter.printHexBinary(sha.digest())
   }
 
+  /** Returns the sha512 hash of a sequence of PartialDecryptionDTO's as a String */
   def sha512(input: Seq[PartialDecryptionDTO]): String = {
     val sha = MessageDigest.getInstance("SHA-512")
     input.map(Crypto.sha512).foreach { hash =>
@@ -110,6 +119,7 @@ object Crypto {
     DatatypeConverter.printHexBinary(sha.digest())
   }
 
+  /** Returns the sha512 hash of the PartialDecryptionDTO object as a String */
   def sha512(input: PartialDecryptionDTO): String = {
     val sha = MessageDigest.getInstance("SHA-512")
     var next = input.proofDTO.commitment + HashingWriter.NEWLINE

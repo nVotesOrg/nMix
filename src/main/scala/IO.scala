@@ -132,6 +132,13 @@ object IO {
     Files.write(tmp, content.asJava, StandardCharsets.UTF_8)
   }
 
+  /** The following methods write and produce hashes for
+   *  objects that are too large to be converted to json
+   *  strings and then hashed. Platform independent new
+   *  line characters are used as field separators.
+   */
+
+  /** Reads a PartialDecryptionDTO object and obtains hash */
   def readDecryption(stream: InputStream): (PartialDecryptionDTO, String) = {
     val reader = new HashingReader(stream)
 
@@ -144,6 +151,7 @@ object IO {
     (ret, hash)
   }
 
+  /** Helper, reads a SigmaProofDTO object */
   def readSigmaProof(reader: HashingReader): SigmaProofDTO = {
     val commitment = reader.readLine()
     val challenge = reader.readLine()
@@ -152,6 +160,7 @@ object IO {
     SigmaProofDTO(commitment, challenge, response)
   }
 
+  /** Writes a PartialDecryptionDTO and obtains hash */
   def writeDecryptionTemp(data: PartialDecryptionDTO): (Path, String) = {
     val tmp = Files.createTempFile("trustee", ".tmp")
     val outStream = new FileOutputStream(tmp.toFile)
@@ -170,6 +179,7 @@ object IO {
     (tmp, hash)
   }
 
+  /** Helper, writes a SigmaProofDTO object */
   def writeSigmaProof(data: SigmaProofDTO, writer: HashingWriter): Unit = {
     writer.write(data.commitment)
     writer.newLine()
@@ -179,7 +189,8 @@ object IO {
     writer.newLine()
   }
 
-   def readBallots(stream: InputStream): (Ballots, String) = {
+  /** Reads a Ballots object and obtains hash */
+  def readBallots(stream: InputStream): (Ballots, String) = {
     val reader = new HashingReader(stream)
 
     val ballots = getLines(reader)
@@ -190,7 +201,8 @@ object IO {
     (ret, hash)
   }
 
-   def writeBallotsTemp(data: Ballots): (Path, String) = {
+  /** Writes a Ballots object and obtains hash */
+  def writeBallotsTemp(data: Ballots): (Path, String) = {
     val tmp = Files.createTempFile("trustee", ".tmp")
     val outStream = new FileOutputStream(tmp.toFile)
     val writer = new HashingWriter(outStream)
@@ -207,7 +219,7 @@ object IO {
     (tmp, hash)
   }
 
-
+  /** Reads a Plaintexts object and obtains hash */
   def readPlaintexts(stream: InputStream): (Plaintexts, String) = {
     val reader = new HashingReader(stream)
 
@@ -219,7 +231,8 @@ object IO {
     (ret, hash)
   }
 
-   def writePlaintextsTemp(data: Plaintexts): (Path, String) = {
+  /** Writes a Plaintexts object and obtains hash */
+  def writePlaintextsTemp(data: Plaintexts): (Path, String) = {
     val tmp = Files.createTempFile("trustee", ".tmp")
     val outStream = new FileOutputStream(tmp.toFile)
     val writer = new HashingWriter(outStream)
@@ -236,6 +249,7 @@ object IO {
     (tmp, hash)
   }
 
+  /** Reads a ShuffleResultDTO object and obtains hash */
   def readShuffleResult(stream: InputStream): (ShuffleResultDTO, String) = {
     val reader = new HashingReader(stream)
 
@@ -248,6 +262,7 @@ object IO {
     (ret, hash)
   }
 
+  /** Helper, reads a ShuffleProofDTO object */
   def readShuffleProof(reader: HashingReader): ShuffleProofDTO = {
     val mix = readMixProof(reader)
     val permutation = readPermutationProof(reader)
@@ -255,6 +270,7 @@ object IO {
     ShuffleProofDTO(mix, permutation, pCommitment)
   }
 
+  /** Helper, reads a PermutationProofDTO object */
   def readPermutationProof(reader: HashingReader): PermutationProofDTO = {
     val commitment = reader.readLine()
     val challenge = reader.readLine()
@@ -265,6 +281,7 @@ object IO {
     PermutationProofDTO(commitment, challenge, response, bCommitments, eValues)
   }
 
+  /** Helper, reads a MixProofDTO object */
   def readMixProof(reader: HashingReader): MixProofDTO = {
     val commitment = reader.readLine()
     val challenge = reader.readLine()
@@ -274,6 +291,7 @@ object IO {
     MixProofDTO(commitment, challenge, response, eValues)
   }
 
+  /** Writes a ShuffleResultDTO object and obtains hash */
   def writeShuffleResultTemp(data: ShuffleResultDTO): (Path, String) = {
     val tmp = Files.createTempFile("trustee", ".tmp")
     val outStream = new FileOutputStream(tmp.toFile)
@@ -292,6 +310,7 @@ object IO {
     (tmp, hash)
   }
 
+  /** Helper, writes a ShuffleProofDTO object */
   def writeShuffleProof(data: ShuffleProofDTO, writer: HashingWriter): Unit = {
     writeMixProof(data.mixProof, writer)
     writePermutationProof(data.permutationProof, writer)
@@ -299,6 +318,7 @@ object IO {
     writer.newLine()
   }
 
+  /** Helper, writes a PermutationProofDTO object */
   def writePermutationProof(data: PermutationProofDTO, writer: HashingWriter): Unit = {
     writer.write(data.commitment)
     writer.newLine()
@@ -321,6 +341,7 @@ object IO {
     writer.newLine()
   }
 
+  /** Helper, writes a MixProofDTO object */
   def writeMixProof(data: MixProofDTO, writer: HashingWriter): Unit = {
     writer.write(data.commitment)
     writer.newLine()
@@ -354,28 +375,43 @@ object IO {
   }
 }
 
+/** Defines the new line character to be used as a field separator.
+  This value is also used by several Crypto.scala methods */
 object HashingWriter {
   val NEWLINE = "\n"
 }
+
+/** An Outputstream writer that produces a hash of passed through data */
 class HashingWriter(out: OutputStream) {
   val sha = MessageDigest.getInstance("SHA-512")
   val dou = new DigestOutputStream(out, sha)
   val writer = new BufferedWriter(new OutputStreamWriter(dou,StandardCharsets.UTF_8), 131072)
 
+  /** Writes the data into the stream */
   def write(str: String): Unit = writer.write(str)
+
+  /** Writes a platform independent newline into the stream */
   def newLine(): Unit = writer.write(HashingWriter.NEWLINE)
+
+  /** Closes the stream and returns the hash */
   def close(): String = {
     writer.close()
     dou.close()
     DatatypeConverter.printHexBinary(sha.digest())
   }
 }
+
+/** An InputStream reader that produces a hash of passed through data */
 class HashingReader(in: InputStream) {
   val sha = MessageDigest.getInstance("SHA-512")
   val din = new DigestInputStream(in, sha)
   val reader = new BufferedReader(new InputStreamReader(din, StandardCharsets.UTF_8), 131072)
 
+  /** Reads a line of data. It is assumed that all platforms will
+    recognize the NEWLINE character as a new line */
   def readLine(): String = reader.readLine()
+
+  /** Closes the stream and returns the hash */
   def close(): String = {
     reader.close()
     din.close()
