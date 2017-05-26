@@ -284,7 +284,7 @@ nMix provides the core cryptography to construct an end-to-end verifiable voting
 
 #### Where can I find a formal specification of the system?
 
-We are working on this. For now you can refer to the (univote specification)[https://github.com/bfh-evg/univote2/raw/development/doc/report/report.pdf that describes the core cryptography used in nMix. You may also follow the references on this [blog post](http://davidruescas.com/a-mixnet-based-secure-voting-protocol/)
+We are working on this. For now you can refer to the [univote specification](https://github.com/bfh-evg/univote2/raw/development/doc/report/report.pdf) that describes the core cryptography used in nMix. You may also follow the references on this [blog post](http://davidruescas.com/a-mixnet-based-secure-voting-protocol/)
 
 #### What about the use of SHA1 in the Git hash chain?
 The choice of git as a hash-chain was made with full awareness of the status of SHA-1, which will not be a problem because:
