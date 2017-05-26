@@ -39,9 +39,9 @@ run an election demo on a single machine without having to do a real world distr
 ### Documentation
 
 * [Tutorial](https://nvotesorg.github.io/nMix/tutorial.html)
-* [User guide](https://nvotesorg.github.io/nMix/guide.md)
-* [FAQ](https://nvotesorg.github.io/nMix/guide.md#faq)
-* [Performance benchmarks](https://nvotesorg.github.io/nMix/benchmarks.md)
+* [User guide](https://nvotesorg.github.io/nMix/guide.html)
+* [FAQ](https://nvotesorg.github.io/nMix/guide.html#faq)
+* [Performance benchmarks](https://nvotesorg.github.io/nMix/benchmarks.html)
 
 ### Getting help
 
