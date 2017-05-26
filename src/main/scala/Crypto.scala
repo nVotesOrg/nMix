@@ -77,6 +77,7 @@ object Crypto {
   val AES_KEY_LENGTH = AESEncryptionScheme.KeyLength.KEY128
   val AES_MODE = AESEncryptionScheme.Mode.CBC
   val IV_SIZE = AESEncryptionScheme.AES_BLOCK_SIZE / 8
+  val PADDING_SIZE = AESEncryptionScheme.AES_BLOCK_SIZE / 8
 
   /** Hash function for standalone hashing (outside of unicrypt) */
   val HASH_FUNCTION = "SHA-512"
@@ -192,7 +193,7 @@ object Crypto {
   def encryptAES(content: Array[Byte], key: FiniteByteArrayElement): (Array[Byte], Array[Byte]) = {
     val byteSpace = ByteArrayMonoid.getInstance()
     val toEncrypt = byteSpace.getElement(content)
-    val pkcs = PKCSPaddingScheme.getInstance(16)
+    val pkcs = PKCSPaddingScheme.getInstance(PADDING_SIZE)
     val paddedMessage = pkcs.pad(toEncrypt)
     val iv = ByteArray.getRandomInstance(IV_SIZE)
     val aes = AESEncryptionScheme.getInstance(AES_KEY_LENGTH, AES_MODE, iv)
@@ -209,7 +210,7 @@ object Crypto {
     val ivBytes = ByteArray.getInstance(iv :_*)
     val aes = AESEncryptionScheme.getInstance(AES_KEY_LENGTH, AES_MODE, ivBytes)
     val decryptedMessage = aes.decrypt(key, toDecrypt)
-    val pkcs = PKCSPaddingScheme.getInstance(16)
+    val pkcs = PKCSPaddingScheme.getInstance(PADDING_SIZE)
     val unpaddedMessage = pkcs.unpad(decryptedMessage)
 
     unpaddedMessage.convertToByteArray.getBytes
@@ -219,7 +220,7 @@ object Crypto {
   def encryptAES(content: String, key: FiniteByteArrayElement): (String, String) = {
     val byteSpace = ByteArrayMonoid.getInstance()
     val toEncrypt = byteSpace.getElement(content.getBytes(StandardCharsets.UTF_8))
-    val pkcs = PKCSPaddingScheme.getInstance(16)
+    val pkcs = PKCSPaddingScheme.getInstance(PADDING_SIZE)
     val paddedMessage = pkcs.pad(toEncrypt)
     val iv = ByteArray.getRandomInstance(IV_SIZE)
     val aes = AESEncryptionScheme.getInstance(AES_KEY_LENGTH, AES_MODE, iv)
@@ -239,7 +240,7 @@ object Crypto {
     val ivBytes = ByteArray.getInstance(Base64.getDecoder().decode(iv) :_*)
     val aes = AESEncryptionScheme.getInstance(AES_KEY_LENGTH, AES_MODE, ivBytes)
     val decryptedMessage = aes.decrypt(key, toDecrypt)
-    val pkcs = PKCSPaddingScheme.getInstance(16)
+    val pkcs = PKCSPaddingScheme.getInstance(PADDING_SIZE)
     val unpaddedMessage = pkcs.unpad(decryptedMessage)
 
     new String(unpaddedMessage.convertToByteArray.getBytes, StandardCharsets.UTF_8)

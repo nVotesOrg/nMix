@@ -15,6 +15,9 @@ import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
 import org.scalatest.FlatSpec
 
+import org.nvotes.libmix._
+import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
+
 /** Tests the protocol using an in memory bulletin board
  *
  */
@@ -447,9 +450,6 @@ class ProtocolSpec extends FlatSpec with Names {
   val configStatement = """{"configHash":"EFF86B73B1A046EE45B6F18E23B0EE98C6E4CF845C6B9ABEF7A3A72A083BAF9FCC6D6F8AEB321A08FCB53B13117466FCB4D32EE5FD284A020023DAF094BE1BBB"}"""
 
   def genVotes(section: MemoryBoardSection, plaintexts: Seq[Int]) = {
-    import org.nvotes.libmix._
-    import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
-
     val configString = section.getConfig.get
     val configHash = Crypto.hash(configString)
     val config = decode[Config](configString).right.get
@@ -477,20 +477,11 @@ class ProtocolSpec extends FlatSpec with Names {
   }
 
   def genBadVotes(section: MemoryBoardSection) = {
-    import org.nvotes.libmix._
-    import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
-
     val configString = section.getConfig.get
     val configHash = Crypto.hash(configString)
     val config = decode[Config](configString).right.get
 
-    val group = GStarModSafePrime.getInstance(new BigInteger(config.modulus))
-    val generator = group.getElementFrom(config.generator)
-    val cSettings = CryptoSettings(group, generator)
     val votes = (1 to config.items).map { item =>
-      val publicKey = section.getPublicKey(item).get
-      val pk = Util.getPublicKeyFromString(publicKey, generator)
-
       // generate bogus votes
       val ballots = Seq.fill(10)("[0|0]")
       val (file1,ballotHash) = IO.writeBallotsTemp(Ballots(ballots))
@@ -505,7 +496,7 @@ class ProtocolSpec extends FlatSpec with Names {
   }
 }
 
-/** An in memory implementation of a bulletin board section
+/** An in-memory implementation of a bulletin board section
  *
  *  This is only meant to be used for the test above
  */

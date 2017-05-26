@@ -55,21 +55,22 @@ sealed trait Action extends Ordered[Action] {
     val expectedString = expected.asJson.noSpaces
 
     val ok = ctx.section.getConfigStatement.map(expectedString == _).getOrElse(false)
-    if(!ok) {
-      logger.error("statement mismatch")
-      return ""
+    if(ok) {
+      ctx.section.getConfigSignature(ctx.position).map{ sig =>
+        val ok = expected.verify(sig, ctx.trusteeCfg.publicKey)
+        if(ok) {
+          expected.configHash
+        }
+        else {
+          logger.error("config signature error")
+          ""
+        }
+      }.getOrElse("")
     }
-
-    ctx.section.getConfigSignature(ctx.position).map{ sig =>
-      val ok = expected.verify(sig, ctx.trusteeCfg.publicKey)
-      if(ok) {
-        expected.configHash
-      }
-      else {
-        logger.error("config signature error")
-        ""
-      }
-    }.getOrElse("")
+    else {
+      logger.error("statement mismatch")
+      ""
+    }
   }
 
   /** Action operations go here */
@@ -88,7 +89,7 @@ sealed trait Action extends Ordered[Action] {
    *
    *  Lower values have higher priority
    */
-  def compare (that: Action) = {
+  def compare (that: Action): Int = {
     priority.compare(that.priority)
   }
 }

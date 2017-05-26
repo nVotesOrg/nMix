@@ -30,7 +30,7 @@ import org.nvotes.libmix._
  *  Generate files with this format with the GenConfig Command
  */
 case class Config(id: String, name: String, modulus: String, generator: String,
-	items: Int, ballotbox: String, trustees: Array[String]) {
+  items: Int, ballotbox: String, trustees: Array[String]) {
   override def toString() = s"Config($id $name $items)"
 }
 

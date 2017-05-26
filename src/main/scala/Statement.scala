@@ -106,25 +106,25 @@ case class PlaintextsStatement(plaintextsHash: String, decryptionsHash: String, 
 object Statement {
 
   /** Returns the config statement for the given Config object */
-  def getConfigStatement(config: Config) = {
+  def getConfigStatement(config: Config): ConfigStatement = {
     val hash = Crypto.hash(config.asJson.noSpaces)
     ConfigStatement(hash)
   }
 
   /** Returns the share statement for the given Share object, config hash and item */
-  def getShareStatement(share: Share, configHash: String, item: Int) = {
+  def getShareStatement(share: Share, configHash: String, item: Int): ShareStatement = {
     val shareHash = Crypto.hash(share.asJson.noSpaces)
     ShareStatement(shareHash, configHash, item)
   }
 
   /** Returns the share statement for the given share shash, config hash and item */
-  def getShareStatement(shareHash: String, configHash: String, item: Int) = {
+  def getShareStatement(shareHash: String, configHash: String, item: Int): ShareStatement = {
     ShareStatement(shareHash, configHash, item)
   }
 
   /** Returns the public key statement for the given public key String,
     sequence of share Strings, config hash and item */
-  def getPublicKeyStatement(publicKey: String, shares: Seq[String], configHash: String, item: Int) = {
+  def getPublicKeyStatement(publicKey: String, shares: Seq[String], configHash: String, item: Int): PublicKeyStatement = {
     val publicKeyHash = Crypto.hash(publicKey.asJson.noSpaces)
     val sharesHash = Crypto.hash(shares.asJson.noSpaces)
 
@@ -132,26 +132,25 @@ object Statement {
   }
 
   /** Returns the ballots statement for the ballot hash, config hash and item */
-  def getBallotsStatement(ballotHash: String, configHash: String, item: Int) = {
+  def getBallotsStatement(ballotHash: String, configHash: String, item: Int): BallotsStatement = {
     BallotsStatement(ballotHash, configHash, item)
   }
 
   /** Returns the mix statement for the mix hash, parent mix hash,
     config hash, item and authority */
-  def getMixStatement(mixHash: String, parentHash: String, configHash: String, item: Int, auth: Int) = {
+  def getMixStatement(mixHash: String, parentHash: String, configHash: String, item: Int, auth: Int): MixStatement = {
     MixStatement(mixHash, parentHash, configHash, item, auth)
   }
 
   /** Returns the decryption statement for the decryption hash, mix hash,
     config hash, and item */
-  def getDecryptionStatement(decryptionHash: String, mixHash: String, configHash: String, item: Int) = {
+  def getDecryptionStatement(decryptionHash: String, mixHash: String, configHash: String, item: Int): DecryptionStatement = {
     DecryptionStatement(decryptionHash, mixHash, configHash, item)
   }
 
   /** Returns the plaintexts statement for the plaintexts hash,
     decryptions hash, config hash and item */
-  def getPlaintextsStatement(plaintextsHash: String, decryptionsHash: String, configHash: String, item: Int) = {
-
+  def getPlaintextsStatement(plaintextsHash: String, decryptionsHash: String, configHash: String, item: Int): PlaintextsStatement = {
     PlaintextsStatement(plaintextsHash, decryptionsHash, configHash, item)
   }
 }

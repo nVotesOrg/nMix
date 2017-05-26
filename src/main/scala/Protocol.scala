@@ -100,44 +100,45 @@ object Protocol extends Names {
       return Error(s"could not find self in list of trustees for config $config")
     }
 
-    /** Inline helper function used to post errors below for our given position */
-    def postError(message: String): Unit = {
-      val file = IO.writeTemp(message)
-      section.addError(file, position)
-    }
+    val group = GStarModSafePrime.getInstance(new BigInteger(config.modulus))
+    val generator = group.getElementFrom(config.generator)
+    val cSettings = CryptoSettings(group, generator)
+    val ctx = Context(config, section, trusteeCfg, position, cSettings)
 
     try {
-
-      val group = GStarModSafePrime.getInstance(new BigInteger(config.modulus))
-      val generator = group.getElementFrom(config.generator)
-      val cSettings = CryptoSettings(group, generator)
-      val ctx = Context(config, section, trusteeCfg, position, cSettings)
-
-      val rules = globalRules(ctx)
-      /** first rule that matches is executed */
-      val hit = rules.find{ case (c, a) => c.eval(files)}
-        .map(_._2)
-
-      logger.info(s"* Global matches: $hit")
-      val result = hit.map(_.execute()).getOrElse(Ok)
-      if(hit.size > 0) logger.info(s"* Global rules result: $result")
-
-      if(result != Ok) {
-        logger.warn(s"Got pause or error signal: $result")
-
-        result match {
-          case Error(message) => postError(message)
-          case _ =>
-        }
-
-        return result
+      execute(ctx)
+    }
+    catch {
+      case e:Exception => {
+        logger.error(s"Exception caught executing actions: $e", e)
+        postError("An exception occurred during processing: ${e.getClass}", ctx)
+        Error(e.toString)
       }
+    }
+  }
 
-      val items = config.items
+  private def postError(message: String, ctx: Context): Unit = {
+    val file = IO.writeTemp(message)
+    ctx.section.addError(file, ctx.position)
+  }
+
+  private def execute(ctx: Context): Result = {
+    val files = ctx.section.getFileSet
+    val rules = globalRules(ctx)
+
+    /** first rule that matches is executed */
+    val hit = rules.find{ case (c, a) => c.eval(files)}
+      .map(_._2)
+    logger.info(s"* Global matches: $hit")
+
+    val result = hit.map(_.execute()).getOrElse(Ok)
+    logger.info(s"* Global rules result: $result")
+
+    if(result == Ok) {
+      val items = ctx.config.items
       val irules = (1 to items).map(i => itemRules(ctx, i, files))
 
-      /** get first rule that matches for each item, then
-        collect Action's into list and sort them by priority */
+      /** get first rule that matches for each item, sort Actions by priority */
       val hits = irules.flatMap { rules =>
         rules.find{ case (c, a) => c.eval(files)}
         .map(_._2)
@@ -162,23 +163,27 @@ object Protocol extends Names {
         }
         if(errorStrings.size > 0) {
           logger.error(s"Results returned errors: $errorStrings")
-          postError(errorStrings.mkString("\n"))
-          return Error(errorStrings.mkString("\n"))
+          postError(errorStrings.mkString("\n"), ctx)
+          Error(errorStrings.mkString("\n"))
+        } else {
+          Ok
         }
       }
       else {
         logger.info(s"* Per-item matches: None")
+        Ok
       }
     }
-    catch {
-      case e:Exception => {
-        logger.error(s"Exception caught executing actions: $e", e)
-        postError("An exception occurred during processing: ${e.getClass}")
-        return Error(e.toString)
-      }
-    }
+    else {
+      logger.warn(s"Got pause or error signal: $result")
 
-    Ok
+      result match {
+        case Error(message) => postError(message, ctx)
+        case _ =>
+      }
+
+      result
+    }
   }
 
   /** Returns the global rules.
@@ -325,15 +330,6 @@ object Protocol extends Names {
     rules
   }
 
-  /** Returns the position of the trustee for the given config.
-   *
-   *  Positions start at 1. If the trustee is not found, returns 0.
-   */
-  private def getMyPosition(config: Config, trusteeConfig: TrusteeConfig): Int = {
-    val pks = config.trustees.map(Crypto.readPublicRsa(_))
-    pks.indexOf(trusteeConfig.publicKey) + 1
-  }
-
   /** Returns the permuted mix position of the trustee for the given config.
    *
    *  The permutation is a 1 shift left permutation
@@ -382,6 +378,15 @@ object Protocol extends Names {
   def getDecryptingTrustee(item: Int, trustees: Int): Int = {
     val permuted = (item - 1) % trustees
     permuted + 1
+  }
+
+  /** Returns the position of the trustee for the given config.
+   *
+   *  Positions start at 1. If the trustee is not found, returns 0.
+   */
+  private def getMyPosition(config: Config, trusteeConfig: TrusteeConfig): Int = {
+    val pks = config.trustees.map(Crypto.readPublicRsa(_))
+    pks.indexOf(trusteeConfig.publicKey) + 1
   }
 }
 

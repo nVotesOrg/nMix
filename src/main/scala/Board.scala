@@ -131,7 +131,7 @@ class Board (val dataStorePath: Path) {
    *  - the target does not exist
    *  - the target is not a directory
    */
-  def openSection(path: Path) = {
+  def openSection(path: Path): BoardSection = {
     val repoPath = dataStorePath.resolve(path)
     if(!Files.exists(repoPath)) {
       throw new IllegalArgumentException(s"datastore '$dataStorePath' does not exist")
@@ -336,16 +336,16 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
   }
 
   /** Adds private permutation data */
-  def addPreShuffleDataLocal(data: PreShuffleData, item: Int, auth: Int) = synchronized {
+  def addPreShuffleDataLocal(data: PreShuffleData, item: Int, auth: Int): Unit = synchronized {
     preShuffleData += PERM_DATA(item, auth) -> data
   }
 
-  def addPreShuffleDataLocal2(proof: Path, data: Path, item: Int, auth: Int) = synchronized {
+  def addPreShuffleDataLocal2(proof: Path, data: Path, item: Int, auth: Int): Unit = synchronized {
     PreShuffleDataStore.put(PERM_DATA(item, auth), proof, data)
   }
 
   /** Remove private permutation data */
-  def rmPreShuffleDataLocal(item: Int, auth: Int) = synchronized {
+  def rmPreShuffleDataLocal(item: Int, auth: Int): Unit = synchronized {
     preShuffleData -= PERM_DATA(item, auth)
   }
 
@@ -614,7 +614,7 @@ case class GitRepo(val repoPath: Path) {
    * Atomic push is requested and needs git 2.4+ on the server.
    *
    */
-  def send(message: String, files: String*) = {
+  def send(message: String, files: String*): Unit = {
     val t0 = System.nanoTime()
 
     val repository = buildRepo
@@ -837,7 +837,7 @@ object GitRepo {
    *  FIXME: this method is unused, and should create bare repositories
    *  if necessary for the boostrap process (eg electionmanager)
    */
-  def create(repoPath: Path) = {
+  def create(repoPath: Path): GitRepo = {
     if(Files.exists(repoPath)) {
       throw new IllegalArgumentException(s"repoPath '$repoPath' already exists")
     }
@@ -851,7 +851,7 @@ object GitRepo {
    *
    *  Throws exception if the target directory already exists
    */
-  def clone(url: URI, target: Path) = {
+  def clone(url: URI, target: Path): GitRepo = {
     if(Files.exists(target)) {
       throw new IllegalArgumentException(s"target directory '$target' already exists")
     }

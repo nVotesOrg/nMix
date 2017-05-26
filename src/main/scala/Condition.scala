@@ -37,15 +37,15 @@ sealed trait Cond {
   def eval(files: Set[String]): Boolean
 
   /** Returns the logical conjunction of this Condition and the one provided */
-  def and(other: Cond) = {
+  def and(other: Cond): JointCondition = {
     JointCondition(this, other)
   }
   /** Returns true if this condition is true and the provided file exists */
-  def and(file: String) = {
+  def and(file: String): JointCondition = {
     JointCondition(this, Condition.yes(file))
   }
   /** Returns true if this condition is true and the provided file does not exist */
-  def andNot(file: String) = {
+  def andNot(file: String): JointCondition = {
     JointCondition(this, Condition.no(file))
   }
 }
@@ -73,17 +73,17 @@ case class Condition(terms: List[(String, Boolean)], name: String = "condition",
   }
 
   /** Returns the result of adding the provided positive term to this Condition */
-  def yes(file: String) = {
+  def yes(file: String): Condition = {
     copy((file, true) :: terms)
   }
 
   /** Returns the result of adding the provided negative term to this Condition */
-  def no(file: String) = {
+  def no(file: String): Condition = {
     copy((file, false) :: terms)
   }
 
   /** Returns the result of globally negating this Condition */
-  def neg = {
+  def neg: Condition = {
     copy(negate = true)
   }
 
