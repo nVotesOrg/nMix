@@ -1,5 +1,3 @@
-![alt text](http://davidruescas.com/wp-content/uploads/2017/04/nMix.png)
-
 ## nMix documentation
 
 Welcome to the nMix documentation page. You can access the following resources
