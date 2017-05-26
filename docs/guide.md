@@ -18,6 +18,7 @@
 	- [FAQ](#faq)
 		- [Is nMix 100% secure?](#is-nmix-100%25-secure)
 		- [Is nMix end-to-end verifiable?](#is-nmix-end-to-end-verifiable)
+		- [Where can I find a formal specification of the system?](#where-can-i-find-a-formal-specification-of-the-system)
 		- [What about the use of SHA1 in the Git hash chain?](#what-about-the-use-of-sha1-in-the-git-hash-chain)
 		- [What about the Registry, Ballotbox and Voting Booth? Where can I find them?](#what-about-the-registry-ballotbox-and-voting-booth-where-can-i-find-them)
 		- [Does nMix include a threshold cryptosystem?](#does-nmix-include-a-threshold-cryptosystem)
@@ -280,6 +281,10 @@ No, no computer or software system is 100% secure. nMix is secure in the specifi
 
 #### Is nMix end-to-end verifiable?
 nMix provides the core cryptography to construct an end-to-end verifiable voting system. In particular, it provides a bulletin board and a verifiable mix-net together with zero knowledge proofs. These are key ingredients necessary for granting recorded-as-cast and counted-as-recorded verifiablity. When combined with suitable external components the whole system becomes end-to-end verifiable.
+
+#### Where can I find a formal specification of the system?
+
+We are working on this. For now you can refer to the (univote specification)[https://github.com/bfh-evg/univote2/raw/development/doc/report/report.pdf that describes the core cryptography used in nMix. You may also follow the references on this [blog post](http://davidruescas.com/a-mixnet-based-secure-voting-protocol/)
 
 #### What about the use of SHA1 in the Git hash chain?
 The choice of git as a hash-chain was made with full awareness of the status of SHA-1, which will not be a problem because:
