@@ -84,7 +84,7 @@ object Crypto {
   def getMessageDigest() = MessageDigest.getInstance(HASH_FUNCTION)
 
   /** Returns the sha512 hash of the given String as a String */
-  def sha512(input: String): String = {
+  def hash(input: String): String = {
     val hash = getMessageDigest()
     val in = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8))
     val din = new DigestInputStream(in, hash)
@@ -102,7 +102,7 @@ object Crypto {
    */
 
   /** Returns the sha512 hash of the Plaintexts object as a String */
-  def sha512(input: Plaintexts): String = {
+  def hash(input: Plaintexts): String = {
     val hash = getMessageDigest()
     input.plaintexts.foreach { p =>
       val next = p + HashingWriter.NEWLINE
@@ -115,9 +115,9 @@ object Crypto {
   }
 
   /** Returns the sha512 hash of a sequence of PartialDecryptionDTO's as a String */
-  def sha512(input: Seq[PartialDecryptionDTO]): String = {
+  def hash(input: Seq[PartialDecryptionDTO]): String = {
     val hash = getMessageDigest()
-    input.map(Crypto.sha512).foreach { h =>
+    input.map(Crypto.hash).foreach { h =>
       hash.update(h.getBytes(StandardCharsets.UTF_8))
     }
 
@@ -125,7 +125,7 @@ object Crypto {
   }
 
   /** Returns the sha512 hash of the PartialDecryptionDTO object as a String */
-  def sha512(input: PartialDecryptionDTO): String = {
+  def hash(input: PartialDecryptionDTO): String = {
     val hash = getMessageDigest()
     var next = input.proofDTO.commitment + HashingWriter.NEWLINE
     hash.update(next.getBytes(StandardCharsets.UTF_8))

@@ -451,7 +451,7 @@ class ProtocolSpec extends FlatSpec with Names {
     import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
 
     val configString = section.getConfig.get
-    val configHash = Crypto.sha512(configString)
+    val configHash = Crypto.hash(configString)
     val config = decode[Config](configString).right.get
 
     val group = GStarModSafePrime.getInstance(new BigInteger(config.modulus))
@@ -481,7 +481,7 @@ class ProtocolSpec extends FlatSpec with Names {
     import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
 
     val configString = section.getConfig.get
-    val configHash = Crypto.sha512(configString)
+    val configHash = Crypto.hash(configString)
     val config = decode[Config](configString).right.get
 
     val group = GStarModSafePrime.getInstance(new BigInteger(config.modulus))

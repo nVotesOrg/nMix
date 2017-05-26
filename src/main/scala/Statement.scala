@@ -107,13 +107,13 @@ object Statement {
 
   /** Returns the config statement for the given Config object */
   def getConfigStatement(config: Config) = {
-    val hash = Crypto.sha512(config.asJson.noSpaces)
+    val hash = Crypto.hash(config.asJson.noSpaces)
     ConfigStatement(hash)
   }
 
   /** Returns the share statement for the given Share object, config hash and item */
   def getShareStatement(share: Share, configHash: String, item: Int) = {
-    val shareHash = Crypto.sha512(share.asJson.noSpaces)
+    val shareHash = Crypto.hash(share.asJson.noSpaces)
     ShareStatement(shareHash, configHash, item)
   }
 
@@ -125,8 +125,8 @@ object Statement {
   /** Returns the public key statement for the given public key String,
     sequence of share Strings, config hash and item */
   def getPublicKeyStatement(publicKey: String, shares: Seq[String], configHash: String, item: Int) = {
-    val publicKeyHash = Crypto.sha512(publicKey.asJson.noSpaces)
-    val sharesHash = Crypto.sha512(shares.asJson.noSpaces)
+    val publicKeyHash = Crypto.hash(publicKey.asJson.noSpaces)
+    val sharesHash = Crypto.hash(shares.asJson.noSpaces)
 
     PublicKeyStatement(publicKeyHash, sharesHash, configHash, item)
   }

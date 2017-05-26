@@ -40,7 +40,7 @@ object BallotboxAdd extends App {
   val board = new Board(trusteeCfg.dataStorePath)
   val section = board.cloneOrSyncSection(trusteeCfg.repoBaseUri, Paths.get(args(0)))
   val configString = section.getConfig.get
-  val configHash = Crypto.sha512(configString)
+  val configHash = Crypto.hash(configString)
   val config = decode[Config](configString).right.get
 
   val group = GStarModSafePrime.getInstance(new BigInteger(config.modulus))

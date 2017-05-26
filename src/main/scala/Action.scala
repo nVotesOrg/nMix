@@ -747,7 +747,7 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
 
       val plaintextsSeq = combineDecryptions(collectedDecryptions, mix.votes, ctx.cSettings)
       val plaintexts = Plaintexts(plaintextsSeq)
-      val decryptionsHash = Crypto.sha512(collectedDecryptions)
+      val decryptionsHash = Crypto.hash(collectedDecryptions)
 
       if(ctx.position == decryptingTrustee) {
         //  send and sign plaintexts
@@ -764,7 +764,7 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
       }
       else {
         // sign plaintexts if statements match
-        val plaintextsHash = Crypto.sha512(plaintexts)
+        val plaintextsHash = Crypto.hash(plaintexts)
         val expected = Statement.getPlaintextsStatement(plaintextsHash, decryptionsHash, configHash, item)
         val expectedString = expected.asJson.noSpaces
         val ok = ctx.section.getPlaintextsStatement(item, decryptingTrustee)
