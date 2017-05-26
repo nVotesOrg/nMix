@@ -1,4 +1,4 @@
-![alt text](http://davidruescas.com/wp-content/uploads/2017/04/nMix.png)
+![alt text](http://davidruescas.com/wp-content/uploads/2017/04/nMix.png) [![Build Status](https://travis-ci.org/travis-ci/travis-web.svg?branch=master)](https://travis-ci.org/travis-ci/travis-web)
 # nMix: Mixnet-based secure voting
 
 nMix is an open source backend for a mixnet-based, cryptographically secure voting system, featuring strong privacy and verifiability properties. It is a reactive implementation of the core [univote](https://e-voting.bfh.ch/projects/univote/) crypto specification, with a few changes.
