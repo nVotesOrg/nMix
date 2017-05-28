@@ -84,27 +84,6 @@ object IO {
     Files.readAllBytes(path)
   }
 
-  /** Returns the contents of the given file a a byte array
-   *
-   *  Alternative implementation to above
-   */
-  def asBytes2(input: InputStream): Array[Byte] = {
-    val buffer = new java.io.ByteArrayOutputStream()
-
-    var nRead: Int = 0
-    val data = new Array[Byte](16384)
-
-    breakable { while(true) {
-        nRead = input.read(data, 0, data.length)
-        if(nRead == -1) scala.util.control.Breaks.break
-        buffer.write(data, 0, nRead)
-      }
-    }
-
-    buffer.flush()
-    buffer.toByteArray()
-  }
-
   /** Writes the given content String to file, in UTF-8 */
   def write(path: Path, content: String): Path = {
     write(path, content.getBytes(StandardCharsets.UTF_8))
@@ -383,9 +362,11 @@ object HashingWriter {
 
 /** An Outputstream writer that produces a hash of passed through data */
 class HashingWriter(out: OutputStream) {
+  val BUFFER_1MB = 1048576
+
   val sha = MessageDigest.getInstance("SHA-512")
   val dou = new DigestOutputStream(out, sha)
-  val writer = new BufferedWriter(new OutputStreamWriter(dou,StandardCharsets.UTF_8), 1048576)
+  val writer = new BufferedWriter(new OutputStreamWriter(dou,StandardCharsets.UTF_8), BUFFER_1MB)
 
   /** Writes the data into the stream */
   def write(str: String): Unit = writer.write(str)
@@ -403,9 +384,11 @@ class HashingWriter(out: OutputStream) {
 
 /** An InputStream reader that produces a hash of passed through data */
 class HashingReader(in: InputStream) {
+  val BUFFER_1MB = 1048576
+
   val sha = MessageDigest.getInstance("SHA-512")
   val din = new DigestInputStream(in, sha)
-  val reader = new BufferedReader(new InputStreamReader(din, StandardCharsets.UTF_8), 1048576)
+  val reader = new BufferedReader(new InputStreamReader(din, StandardCharsets.UTF_8), BUFFER_1MB)
 
   /** Reads a line of data. It is assumed that all platforms will
     recognize the NEWLINE character as a new line */

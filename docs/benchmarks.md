@@ -1,5 +1,3 @@
-![alt text](http://davidruescas.com/wp-content/uploads/2017/04/nMix.png)
-
 ### Benchmarks
 
 |Date   |Trustees|Ballots    |Public key bits |Hardware**   |Heap   |Libmix opt.|Trustee opt.*|Time (min)

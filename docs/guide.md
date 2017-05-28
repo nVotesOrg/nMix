@@ -60,19 +60,19 @@ The main steps of the protocol are
 
 5. Trustees construct, validate and sign the election public key.
 
-6. Voter's cast votes encrypted the election public key signed by all trustees (this step occurs outside of nMix).
+6. Voters cast votes, encrypting them with the election public key.
 
 7. The encrypted cast votes (ciphertexts) are uploaded to the nMix bulletin board.
 
-8. The trustees execute the mix chain, constructing sequential mixes of the ciphertexts.
+8. Trustees execute the mix chain, constructing sequential mixes of the ciphertexts.
 
-9. The trustees mutually validate each other's mix and proofs of correctness.
+9. Trustees mutually validate each other's mix and proofs of correctness.
 
-10. The trustees perform joint decryption of the ciphertexts produced at the end of the mixnet.
+10. Trustees perform joint decryption of the ciphertexts produced at the end of the mixnet.
 
-11. The trustees mutually validate each other's decryptions and proofs of correctness.
+11. Trustees mutually validate each other's decryptions and proofs of correctness.
 
-12. The trustees construct, validate and sign the plaintexts resulting from decryption.
+12. Trustees construct, validate and sign the plaintexts resulting from decryption.
 
 These steps are performed per election item. Note that the nMix protocol does not include steps related to the Registry and Ballotbox (except 6. above, for clarity). nMix only interfaces with external components in three ways
 
@@ -130,7 +130,7 @@ nMix uses RSA keys for authentication and to sign protocol artifacts. Additional
 
 ##### RSA keys
 
-Trustees authenticate against the bulletin board using their private RSA key. The corresponding public key must be known to the bulletin board server for the trustee to gain access. In the current implementation this behaviour is implemented through git's ssh authentication mechanism which uses linux's authorized_keys file. See the bulletin board setup for configuration details.
+Trustees authenticate against the bulletin board using their private RSA key. The corresponding public key must be known to the bulletin board server for the trustee to gain access. In the current implementation this behavior is implemented through git's ssh authentication mechanism, which uses linux's authorized_keys file. See the bulletin board setup for configuration details.
 
 Additionally, trustees use RSA keys to sign and mutually verify artifacts posted and retrieved from the bulletin board. Part of the election setup is specifying which trustees will take part in the protocol, and the definition of a shared configuration file which lists these RSA public keys. Finally, trustees must configure an individual list of RSA public keys that indicates the trustees they are willing to cooperate with. See the trustee configuration for details.
 
@@ -138,7 +138,7 @@ Although strictly not part of the nMix backend, the Ballotbox must also use an R
 
 ##### AES keys
 
-During protocol execution trustees generate public and private shares of the election public key. The election public key is used to encrypt ballots when casting votes. At the end of the eleciton, trustees jointly decrypt the ballots once they have been mixed, preserving anonymity. This joint decryption uses the private shares created at the joint key generation phase. Private shares are encrypted using an AES key.
+During protocol execution trustees generate public and private shares of the election public key. The election public key is used to encrypt ballots when casting votes. At the end of the election, trustees jointly decrypt the ballots once they have been mixed, preserving anonymity. This joint decryption uses the private shares created at the joint key generation phase. Private shares are encrypted using an AES key.
 
 ##### Key summary
 
@@ -284,7 +284,7 @@ nMix provides the core cryptography to construct an end-to-end verifiable voting
 
 #### Where can I find a formal specification of the system?
 
-We are working on this. For now you can refer to the [univote specification](https://github.com/bfh-evg/univote2/raw/development/doc/report/report.pdf) that describes the core cryptography used in nMix. You may also follow the references on this [blog post](http://davidruescas.com/a-mixnet-based-secure-voting-protocol/)
+We are working on this. For now you can refer to the [univote specification](https://github.com/bfh-evg/univote2/raw/development/doc/report/report.pdf) that describes the core cryptography used in nMix. You may also follow the references on this [blog post](http://davidruescas.com/a-mixnet-based-secure-voting-protocol/).
 
 #### What about the use of SHA1 in the Git hash chain?
 The choice of git as a hash-chain was made with full awareness of the status of SHA-1, which will not be a problem because:
@@ -297,7 +297,7 @@ nMix implements the cryptographic core of a voting system, and does not include 
 
 a) Wait for these components to be developed by us.
 
-b) Write them yourself (they are the comparatively 'easier' parts to develop). Also, a lot of work can be taken from [Agora Voting](https://github.com/agoravoting) which is a stable, in production system with over 1.5 million votes tallied.
+b) Write them yourself (they are the comparatively 'easier' parts to develop). Also, a lot of work can be taken from [Agora Voting](https://github.com/agoravoting) which is a stable, in production system with over 2 million votes tallied.
 
 c) Work with us to develop them, nMix is an open source project!
 ####  Does nMix include a threshold cryptosystem?

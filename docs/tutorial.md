@@ -26,7 +26,7 @@ Then add a key, for example
 
 ```cat $HOME/.ssh/id_rsa.pub >> /srv/data/git/.ssh/authorized_keys```
 
-NOTE: you should NOT use the keys in the 'keys' subfolder for anything, these keys are used merely for the DEMO and should be removed after you've finished testing it.
+NOTE: you should NOT use the keys in the 'keys' subfolder nMix for anything; these keys are used only for the DEMO and should be removed after you've finished testing it.
 
 ### Initialize the repository
 
@@ -71,7 +71,7 @@ For example, add 1000 encrypted ballots
 
 ```./ballots.sh 1000```
 
-Once the ballots are on the bulletin board, the trustees will automatically begin the mixing process and continue operating all the way up to the joint decryption and signing of plaintexts. This may take a while depending on the number of ballots you have generated. Once finished, the trustees will again idle.
+Once the ballots are on the bulletin board, the trustees will automatically begin the mixing process and continue operating all the way up to the joint decryption and signing of plaintexts. This may take a while [depending](benchmarks.md) on the number of ballots you have generated. Once finished, the trustees will again idle.
 
 ### Done!
 
