@@ -26,7 +26,7 @@ Then add a key, for example
 
 ```cat $HOME/.ssh/id_rsa.pub >> /srv/data/git/.ssh/authorized_keys```
 
-NOTE: you should NOT use the keys in the 'keys' subfolder nMix for anything; these keys are used only for the DEMO and should be removed after you've finished testing it.
+NOTE: you should NOT use the keys in the 'keys' subfolder of the demo for anything; these keys are used only for the DEMO and should be removed after you've finished testing it.
 
 ### Initialize the repository
 
@@ -79,6 +79,6 @@ You can inspect the results of the demo by browsing through the files produced i
 
 ```while :; do tree datastore/repo --noreport; sleep 3; done```
 
-which will show you the contents of the repository periodically.
+which will show you the contents of the repository periodically. You can also try the [pViz](https://github.com/ruescasd/pViz) tool, which provides a simple visualization of the protocol on a browser.
 
 Although the demo is set up for 2 trustees and 3 ballot sets, you can extend it to run with more authorities and ballot sets.
