@@ -82,6 +82,7 @@ object Crypto {
   /** Hash function for standalone hashing (outside of unicrypt) */
   val HASH_FUNCTION = "SHA-512"
 
+  /** All hashes use the hash function specified here */
   def getMessageDigest() = MessageDigest.getInstance(HASH_FUNCTION)
 
   /** Returns the sha512 hash of the given String as a String */
@@ -99,7 +100,7 @@ object Crypto {
    *  that are too large to be hashed as one entire String.
    *  They are hashed using newline characters as field separators
    *  so that they match the implementation of the HashingWriter
-   *  and HashingReader in the IO.scala file.
+   *  and HashingReader in IO.scala.
    */
 
   /** Returns the sha512 hash of the Plaintexts object as a String */

@@ -117,11 +117,15 @@ object Protocol extends Names {
     }
   }
 
-  private def postError(message: String, ctx: Context): Unit = {
-    val file = IO.writeTemp(message)
-    ctx.section.addError(file, ctx.position)
-  }
-
+  /** Helper, executes the global and per-item rules
+   *
+   *  The first matching rule is executed, both for global
+   *  and per-item rules. If the actions are of type
+   *  AddPreShuffleData, they are executed in parallel.
+   *
+   *  Explicit errors are posted to the bulletin board. Any other erros
+   *  in the form of Exceptions must be caught by the caller.
+   */
   private def execute(ctx: Context): Result = {
     val files = ctx.section.getFileSet
     val rules = globalRules(ctx)
@@ -157,6 +161,7 @@ object Protocol extends Names {
 
         logger.info(s"Per-item results: $results")
 
+        /** collect all the errors into a list */
         val errorStrings = results.flatMap {
           case (_, Error(message)) => Some(message)
           case _ => None
@@ -220,7 +225,7 @@ object Protocol extends Names {
 
     val config = ctx.config
 
-    /** construct conditions */
+    /** We first construct conditions, they are used below to construct rules */
 
     val allConfigsYes = Condition(
       (1 to config.trustees.size).map(auth => CONFIG_SIG(auth) -> true)
@@ -350,7 +355,16 @@ object Protocol extends Names {
     rules
   }
 
-  /** Returns the permuted mix position of the trustee for the given config.
+  /** Posts an ERROR to the bulletin board
+   *
+   *  The error is specific to the trustee, specified in the Context
+   */
+  private def postError(message: String, ctx: Context): Unit = {
+    val file = IO.writeTemp(message)
+    ctx.section.addError(file, ctx.position)
+  }
+
+  /** Returns the permuted mix position of the trustee for the given item.
    *
    *  The permutation is a 1 shift left permutation
    *
@@ -367,7 +381,7 @@ object Protocol extends Names {
     permuted + 1
   }
 
-  /** Returns the inverse of the permuted mix position */
+  /** Returns the trustee responsible for the given mix position */
   def getTrusteeForMixPosition(auth: Int, item: Int, trustees: Int): Int = {
     /** for a cyclic group with generator g of order n we have
      *

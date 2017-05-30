@@ -340,10 +340,6 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
     preShuffleData += PERM_DATA(item, auth) -> data
   }
 
-  def addPreShuffleDataLocal2(proof: Path, data: Path, item: Int, auth: Int): Unit = synchronized {
-    PreShuffleDataStore.put(PERM_DATA(item, auth), proof, data)
-  }
-
   /** Remove private permutation data */
   def rmPreShuffleDataLocal(item: Int, auth: Int): Unit = synchronized {
     preShuffleData -= PERM_DATA(item, auth)
@@ -612,7 +608,6 @@ case class GitRepo(val repoPath: Path) {
    *
    * If the push fails due to non-fast-forward, pulls and retries up to 20 times.
    * Atomic push is requested and needs git 2.4+ on the server.
-   *
    */
   def send(message: String, files: String*): Unit = {
     val t0 = System.nanoTime()
@@ -627,7 +622,6 @@ case class GitRepo(val repoPath: Path) {
       addCommand.call()
       var end = System.nanoTime()
       logger.debug("Add time: " + ((end - start) / 1000000000.0) + " s")
-
 
       val status = git.status().call()
       val added = status.getAdded()
@@ -1014,24 +1008,4 @@ trait BoardSectionInterface {
 
   /** Adds a plaintexts signature */
   def addPlaintextsSignature(sig: Path, item: Int, auth: Int): Unit
-}
-
-object PreShuffleDataStore {
-  val preShuffleData = Map[String, (Path, Path)]()
-
-  def keys: scala.collection.Set[String] = {
-    preShuffleData.filter {
-      case (k, v) => Files.exists(v._1) && Files.exists(v._2)
-    }.keySet
-  }
-  def get(name: String): Option[(Path, Path)] = {
-    preShuffleData.get(name)
-  }
-  def put(name: String, proof: Path, data: Path): Unit = {
-    preShuffleData.get(name).foreach{ case (a, b) =>
-      Files.delete(a)
-      Files.delete(b)
-    }
-    preShuffleData += name -> (proof, data)
-  }
 }
