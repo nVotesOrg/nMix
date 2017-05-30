@@ -558,7 +558,7 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
     }
     logger.info(s"Starting $this...")
 
-    /** the chain is composed of elements of the from
+    /** the chain is composed of elements of the form
       input votes hash -> output votes hash */
     val chain = (1 to ctx.config.trustees.size).map { a =>
 
@@ -628,14 +628,12 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
     // the votes we will decrypt correspond to the end of the chain
     if(mixHash != transitive._2) {
       logger.error(s"last mix hash does not match chain-end on item $item")
-      sys.exit(1)
       return Error(s"last mix hash does not match chain-end on item $item")
     }
     logger.trace(s"transitive chain on item $item OK")
 
     val modulusStr = ctx.trusteeCfg.publicKey.getModulus.toString
-    val share = ctx.section.getShare(item, ctx.position)
-      .map(decode[Share](_).right.get).get
+    val share = ctx.section.getShare(item, ctx.position).map(decode[Share](_).right.get).get
 
     logger.trace(s"decrypting private share on item $item")
 
@@ -697,7 +695,7 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
 
     val collectedDecryptions = new ListBuffer[PartialDecryptionDTO]()
 
-    // verify all shares
+    // verify all decryptions
     (1 to ctx.config.trustees.size).map { auth =>
 
       logger.trace(s"item $item processing decryption $auth..")

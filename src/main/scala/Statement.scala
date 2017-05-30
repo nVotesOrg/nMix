@@ -25,12 +25,11 @@ import org.nvotes.libmix._
 /** A Statement represents some assertion an authority makes when signing
  *  the Statement's data.
  *
- *  Signatures corresponding to statements allow verifying the correct
+ *  Signatures of statements allow verifying the correct
  *  execution of the protocol. These checks must be carried out by the
  *  protocol's Actions.
  *
  *  Statements are serialized as json Strings before being signed.
- *
  */
 sealed trait Statement {
   /** Returns the RSA signature of this statement */
@@ -44,12 +43,12 @@ sealed trait Statement {
   }
 }
 
-/** Produced by bootstrap. Each authority signs the configuration. Cardinality = (1, n)
+/** Produced by the election manager. Each authority signs the configuration. Cardinality = (1, n)
  *
  */
 case class ConfigStatement(configHash: String) extends Statement
 
-/** Produce by each authority. Each authority signs their share. Cardinality = (n, 1)
+/** Produced by each authority. Each authority signs their share. Cardinality = (n, 1)
  *
  *  The share S belongs to configuration C and item I
  */
@@ -70,7 +69,6 @@ case class PublicKeyStatement(publicKeyHash: String, sharesHash: String, configH
 /** Produced by ballot box. The ballot box signs the ballots. Cardinality = (1, 1)
  *
  *  The ballots B belong to configuration C
- *
  */
  case class BallotsStatement(ballotsHash: String, configHash: String, item: Int) extends Statement
 

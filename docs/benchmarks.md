@@ -1,6 +1,6 @@
 ### Benchmarks
 
-|Date   |Trustees|Ballots    |Public key bits |Hardware**   |Heap   |Libmix opt.|Trustee opt.*|Time (min)
+|Date   |Trustees|Ballots    |Group bits |Hardware**   |Heap   |Libmix opt.|Trustee opt.*|Time (min)
 |---|---|---|---|---|---|---|---|---|
 |3/21   |2   |3 x 100k   |2048   |2 x m4.16, 1 x m4.10   |5G|all |NNN|92
 |3/25   |2   |3 x 100k   |2048   |2 x m4.16,1 x m4.10   |10G|all |NYN|72

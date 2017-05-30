@@ -227,8 +227,11 @@ object Protocol extends Names {
       .toList
     )
 
-    val myShareNo = Condition.no(SHARE(item, ctx.position)).no(SHARE_STMT(item, ctx.position))
+    val myShareNo = Condition
+      .no(SHARE(item, ctx.position))
+      .no(SHARE_STMT(item, ctx.position))
       .no(SHARE_SIG(item, ctx.position))
+
     val allShares = Condition((1 to config.trustees.size).flatMap { auth =>
         List(
           SHARE(item, auth) -> true,
@@ -240,7 +243,10 @@ object Protocol extends Names {
     )
 
     val noPublicKey = Condition.no(PUBLIC_KEY(item))
-    val noPublicKeySig = Condition.yes(PUBLIC_KEY(item)).no(PUBLIC_KEY_SIG(item, ctx.position))
+
+    val noPublicKeySig = Condition
+      .yes(PUBLIC_KEY(item))
+      .no(PUBLIC_KEY_SIG(item, ctx.position))
 
     val myMixPosition = getMixPosition(ctx.position, item, ctx.config.trustees.size)
 
@@ -255,12 +261,22 @@ object Protocol extends Names {
       .toList
     )
 
-    val ballotsYes = Condition.yes(BALLOTS(item)).yes(BALLOTS_STMT(item)).yes(BALLOTS_SIG(item))
+    val ballotsYes = Condition
+      .yes(BALLOTS(item))
+      .yes(BALLOTS_STMT(item))
+      .yes(BALLOTS_SIG(item))
 
-    val myPreShuffleNo = ballotsYes.andNot(MIX(item, ctx.position)).andNot(PERM_DATA(item, ctx.position))
+    val myPreShuffleNo =
+      ballotsYes
+      .andNot(MIX(item, ctx.position))
+      .andNot(PERM_DATA(item, ctx.position))
+
     val myPreShuffleYes = Condition.yes(PERM_DATA(item, ctx.position))
 
-    val myMixNo = ballotsYes.and(previousMixesYes).andNot(MIX(item, ctx.position))
+    val myMixNo =
+      ballotsYes
+      .and(previousMixesYes)
+      .andNot(MIX(item, ctx.position))
 
     /** verify mixes other than our own */
     val missingMixSigs = (1 to config.trustees.size).filter(_ != ctx.position).map { auth =>
@@ -271,6 +287,7 @@ object Protocol extends Names {
         MIX_SIG(item, auth, ctx.position) -> false)
       ))
     }
+
     val allMixSigs = Condition((1 to config.trustees.size).map { auth =>
       MIX_SIG(item, auth, ctx.position) -> true
     }.toList)
@@ -291,7 +308,10 @@ object Protocol extends Names {
     val decryptor = getDecryptingTrustee(item, config.trustees.size)
 
     val noPlaintexts = Condition.no(PLAINTEXTS(item, decryptor))
-    val noPlaintextsSig = Condition.yes(PLAINTEXTS(item, decryptor)).no(PLAINTEXTS_SIG(item, ctx.position))
+
+    val noPlaintextsSig = Condition
+      .yes(PLAINTEXTS(item, decryptor))
+      .no(PLAINTEXTS_SIG(item, ctx.position))
 
     /** construct rules */
 
