@@ -21,9 +21,6 @@ import org.nvotes.libmix._
 
 /** The configuration for a protocol run, typically for an election
  *
- *  Some of these are parameterized by authority and item, needing
- *  methods.
- *
  *  The trustees and ballotbox field are public keys. They must be formatted without
  *  spaces, using \n as markers for newlines. Read by Crypto.ReadPublicRSA
  *
@@ -40,7 +37,6 @@ case class Config(id: String, name: String, modulus: String, generator: String,
  *  contains the share and the proof of knowledge.
  *
  *  The private part is aes encrypted by the authority.
- *
  */
 case class Share(share: EncryptionKeyShareDTO, encryptedPrivateKey: String, aesIV: String)
 
@@ -56,8 +52,6 @@ case class Share(share: EncryptionKeyShareDTO, encryptedPrivateKey: String, aesI
  *  include encryption of permutation data.
  */
 case class PreShuffleData(proof: PermutationProofDTO, pData: PermutationData)
-
-case class PreShuffleDataDTO(proof: String, pData: String)
 
 /** Ballots provided by the ballotbox in unicrypt format. Encrypted */
 case class Ballots(ballots: Seq[String])

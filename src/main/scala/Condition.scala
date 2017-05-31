@@ -60,7 +60,6 @@ sealed trait Cond {
  *
  *  Additionally, a Condition can be globally negated. Among other things,
  *  this allows encoding Or expressions via De Morgan's law
- *
  */
 case class Condition(terms: List[(String, Boolean)], name: String = "condition", negate: Boolean = false) extends Cond {
   val logger = LoggerFactory.getLogger(classOf[Condition])

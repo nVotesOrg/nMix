@@ -194,7 +194,6 @@ class Board (val dataStorePath: Path) {
  *  out of date.
  *
  *  Methods that retrieve files always return Options as they may not exist.
- *
  */
 case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface with Names {
   val logger = LoggerFactory.getLogger(classOf[BoardSection])
@@ -461,7 +460,6 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
  *  If a Board Section has no target diretory, it can be created by
  *  - creating a new repository
  *  - cloning a repository
- *
  */
 object BoardSection {
 
@@ -882,7 +880,7 @@ object GitRepo {
 
 /** Defines the contact point between the Protocol and the Bulletin board
  *
- *  Currently there is only the git implementation.
+ *  Currently there is only the git implementation (above)
  */
 trait BoardSectionInterface {
 

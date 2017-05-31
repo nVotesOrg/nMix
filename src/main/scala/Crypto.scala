@@ -82,7 +82,7 @@ object Crypto {
   /** Hash function for standalone hashing (outside of unicrypt) */
   val HASH_FUNCTION = "SHA-512"
 
-  /** All hashes use the hash function specified here */
+  /** All hashes (outside of unicrypt) use the hash function specified here */
   def getMessageDigest() = MessageDigest.getInstance(HASH_FUNCTION)
 
   /** Returns the sha512 hash of the given String as a String */
@@ -283,11 +283,10 @@ object Crypto {
   /** Reads a private RSA key from the given file
    *
    *  The file must be in pkcs8 PEM format. Example generating and
-   *  converting commands (the second produces the right file)
+   *  converting commands (the second produces the right file):
    *
    *  ssh-keygen -t rsa -b 4096 -f keys/id_rsa -q -N ""
    *  openssl pkcs8 -topk8 -inform PEM -outform PEM -in keys/id_rsa -out keys/id_rsa.pem -nocrypt
-   *
    */
   def readPrivateRsa(path: Path): RSAPrivateKey = {
     var pkpem = IO.asString(path)
@@ -301,7 +300,6 @@ object Crypto {
    *
    *  ssh-keygen -t rsa -b 4096 -f keys/id_rsa -q -N ""
    *  openssl rsa -in keys/id_rsa -pubout > keys/id_rsa.pub.pem
-   *
    */
   def readPublicRsa(path: Path): RSAPublicKey = {
     val pkpem = IO.asString(path)
@@ -315,7 +313,6 @@ object Crypto {
    *
    *  ssh-keygen -t rsa -b 4096 -f keys/id_rsa -q -N ""
    *  openssl pkcs8 -topk8 -inform PEM -outform PEM -in keys/id_rsa -out keys/id_rsa.pem -nocrypt
-   *
    */
   def readPrivateRsa(str: String): RSAPrivateKey = {
     var pkpem = str
@@ -335,7 +332,6 @@ object Crypto {
    *
    *  ssh-keygen -t rsa -b 4096 -f keys/id_rsa -q -N ""
    *  openssl rsa -in keys/id_rsa -pubout > keys/id_rsa.pub.pem
-   *
    */
   def readPublicRsa(str: String): RSAPublicKey = {
     var pkpem = str
@@ -432,8 +428,8 @@ object MixerTrustee extends Mixer {
 
   /** Performs the online phase of the shuffle
    *
-   *  Requires data from the online phase
-   *  Returns the shuffle and proof of knowledgeas an libmix ShuffleResultDTO
+   *  Requires data from the offline phase
+   *  Returns the shuffle and proof of knowledge as an libmix ShuffleResultDTO
    */
   def shuffleVotes(votesString: Seq[String], preData: PreShuffleData,
     publicKey: String, id: String, cSettings: CryptoSettings): ShuffleResultDTO = {

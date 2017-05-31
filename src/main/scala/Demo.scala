@@ -23,14 +23,16 @@ import java.math.BigInteger
 
 import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
+import org.nvotes.libmix._
+  import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
+
 /** Generates demo votes and posts them to the bulletin board
  *
  *  This code is used as part of the quick start demo. Please
  *  see the README.md.
  */
 object BallotboxAdd extends App {
-  import org.nvotes.libmix._
-  import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
+
   val t0 = System.nanoTime()
 
   val totalVotes = args(1).toInt

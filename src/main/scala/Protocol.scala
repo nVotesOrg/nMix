@@ -111,7 +111,7 @@ object Protocol extends Names {
     catch {
       case e:Exception => {
         logger.error(s"Exception caught executing actions: $e", e)
-        postError("An exception occurred during processing: ${e.getClass}", ctx)
+        postError(s"An exception occurred during processing: ${e.getClass}", ctx)
         Error(e.toString)
       }
     }
@@ -133,11 +133,23 @@ object Protocol extends Names {
     /** first rule that matches is executed */
     val hit = rules.find{ case (c, a) => c.eval(files)}
       .map(_._2)
-    logger.info(s"* Global matches: $hit")
 
+    logger.info(s"* Global matches: $hit")
     val result = hit.map(_.execute()).getOrElse(Ok)
     logger.info(s"* Global rules result: $result")
 
+    /** Global actions can result in Ok,Stop,Error
+     *
+     *  Ok: continue processing per-item hits
+     *  Stop: do not process per-item hits
+     *  Error: do not process per-item hits, post errors
+     *
+     *  Stop occurs when a pause request or errors
+     *  are found on the bulletin board
+     *
+     *  The Error case occurs when an invalid config
+     *  is detected by the ValidateConfig Action
+     */
     if(result == Ok) {
       val items = ctx.config.items
       val irules = (1 to items).map(i => itemRules(ctx, i, files))
@@ -148,34 +160,28 @@ object Protocol extends Names {
         .map(_._2)
       }.sorted
 
-      if(hits.size > 0) {
-        logger.info(s"* Per-item hits: ${hits.map(_.toString)}")
+      logger.info(s"* Per-item hits: ${hits.map(_.toString)}")
 
-        /** If the action is preshuffle, we execute in parallel to eat up the serial loop */
-        val preShuffleHits = hits.filter(_.isInstanceOf[AddPreShuffleData])
-        val results = if(preShuffleHits.size == hits.size) {
-          preShuffleHits.par.map(action => action -> action.execute)
-        } else {
-          hits.map(action => action -> action.execute)
-        }
-
-        logger.info(s"Per-item results: $results")
-
-        /** collect all the errors into a list */
-        val errorStrings = results.flatMap {
-          case (_, Error(message)) => Some(message)
-          case _ => None
-        }
-        if(errorStrings.size > 0) {
-          logger.error(s"Results returned errors: $errorStrings")
-          postError(errorStrings.mkString("\n"), ctx)
-          Error(errorStrings.mkString("\n"))
-        } else {
-          Ok
-        }
+      /** If the action is preshuffle, we execute in parallel to eat up the serial loop */
+      val preShuffleHits = hits.filter(_.isInstanceOf[AddPreShuffleData])
+      val results = if(preShuffleHits.size == hits.size) {
+        preShuffleHits.par.map(action => action -> action.execute)
+      } else {
+        hits.map(action => action -> action.execute)
       }
-      else {
-        logger.info(s"* Per-item matches: None")
+
+      logger.info(s"Per-item results: $results")
+
+      /** collect all the errors into a list */
+      val errorStrings = results.flatMap {
+        case (_, Error(message)) => Some(message)
+        case _ => None
+      }
+      if(errorStrings.size > 0) {
+        logger.error(s"Results returned errors: $errorStrings")
+        postError(errorStrings.mkString("\n"), ctx)
+        Error(errorStrings.mkString("\n"))
+      } else {
         Ok
       }
     }
@@ -196,22 +202,32 @@ object Protocol extends Names {
    *  Examples of global rules are
    *
    *  1) Stop execution if a pause is requested
-   *  2) Stop execution if any authority has reported an error or there is a global error
+   *  2) Stop execution if any trustee has reported an error or there is a global error
    *  3) Validate the global config if this authority has not yet done so
    *
    *  A list of rules has type List[(Cond, Action)]
    */
   private def globalRules(ctx: Context) = {
 
+    /** the protocol is paused */
     val pauseYes = Condition.yes(PAUSE)
-    /** no errors, neither per authority, nor global */
-    val errorsYes = Condition((1 to ctx.config.trustees.size).map(i => ERROR(i) -> false).toList).no(ERROR).neg
-    val configNo = Condition.yes(CONFIG).yes(CONFIG_STMT).no(CONFIG_SIG(ctx.position))
+
+    /** any error exists, either per trustee, or global */
+    val errorsYes = Condition((1 to ctx.config.trustees.size)
+      .map(i => ERROR(i) -> false).toList)
+      .no(ERROR)
+      .neg
+
+    /** this trustee has not accepted the election config */
+    val configNoSig = Condition
+      .yes(CONFIG)
+      .yes(CONFIG_STMT)
+      .no(CONFIG_SIG(ctx.position))
 
     ListBuffer[(Cond, Action)](
       pauseYes -> StopAction("pause found"),
       errorsYes -> StopAction("error found"),
-      configNo -> ValidateConfig(ctx)
+      configNoSig -> ValidateConfig(ctx)
     )
   }
 
@@ -225,7 +241,7 @@ object Protocol extends Names {
 
     val config = ctx.config
 
-    /** We first construct conditions, they are used below to construct rules */
+    /** We first construct conditions, they are used further below to construct rules */
 
     val allConfigsYes = Condition(
       (1 to config.trustees.size).map(auth => CONFIG_SIG(auth) -> true)
@@ -355,13 +371,13 @@ object Protocol extends Names {
     rules
   }
 
-  /** Posts an ERROR to the bulletin board
+  /** Returns the position of the trustee for the given config.
    *
-   *  The error is specific to the trustee, specified in the Context
+   *  Positions start at 1. If the trustee is not found, returns 0.
    */
-  private def postError(message: String, ctx: Context): Unit = {
-    val file = IO.writeTemp(message)
-    ctx.section.addError(file, ctx.position)
+  private def getMyPosition(config: Config, trusteeConfig: TrusteeConfig): Int = {
+    val pks = config.trustees.map(Crypto.readPublicRsa(_))
+    pks.indexOf(trusteeConfig.publicKey) + 1
   }
 
   /** Returns the permuted mix position of the trustee for the given item.
@@ -414,13 +430,13 @@ object Protocol extends Names {
     permuted + 1
   }
 
-  /** Returns the position of the trustee for the given config.
+  /** Helper to post an error to the bulletin board
    *
-   *  Positions start at 1. If the trustee is not found, returns 0.
+   *  The error is specific to the trustee, which specified in the Context
    */
-  private def getMyPosition(config: Config, trusteeConfig: TrusteeConfig): Int = {
-    val pks = config.trustees.map(Crypto.readPublicRsa(_))
-    pks.indexOf(trusteeConfig.publicKey) + 1
+  private def postError(message: String, ctx: Context): Unit = {
+    val file = IO.writeTemp(message)
+    ctx.section.addError(file, ctx.position)
   }
 }
 

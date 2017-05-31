@@ -31,9 +31,11 @@ import scala.collection.mutable.ListBuffer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-/** Actions are operations that advance the protocol.
+/** Base trait for Actions
  *
- *  Actions are called as a result of matching conditions.
+ *  Actions are operations that advance the protocol, they are called
+ *  by the Protocol as a result of matching Conditions. These operations
+ *  are implemented in the execute method.
  */
 sealed trait Action extends Ordered[Action] {
 
@@ -169,7 +171,7 @@ case class ValidateConfig(ctx: Context) extends Action {
   override def toString = s"ValidateConfig"
 }
 
-/** Adds this authority's share.
+/** Adds this trustee's share.
  *
  *  The authority creates the share, creates the statement, and signs it.
  *  The private share is encrypted with aes, and included in the share.
@@ -210,12 +212,12 @@ case class AddShare(ctx: Context, item: Int) extends Action {
   override def toString = s"AddShare($item)"
 }
 
-/** Add the public key, or signs it if we are not #1 authority.
+/** Add the public key, or signs it if we are not #1 trustee.
  *
  *  This Action should be implemented carefully as privacy properties
  *  depend on the public key being generated jointly by all the authorities.
  *
- *  Authority #1 is responsible for creating the public
+ *  Trustee #1 is responsible for creating the public
  *  key from the shares of all the authorities. Once this has occured,
  *  the rest of authorities validate it by recreating it themselves.
  *
@@ -224,7 +226,7 @@ case class AddShare(ctx: Context, item: Int) extends Action {
  *  - the shares have correct statements, signatures and pok
  *  - the number of shares is equal to number of authorities
  *
- *  Authorities other than #1 reuse the statement created by #1
+ *  Trustee other than #1 reuse the statement created by #1
  *  and sign it if everything is correct and the public key is
  *  identical to their locally created one.
  */
@@ -232,6 +234,7 @@ case class AddOrSignPublicKey(ctx: Context, item: Int) extends Action {
   val priority = 2
 
   def execute(): Result = {
+
     val configHash = getValidConfigHash(ctx)
     if(configHash.length == 0) {
       logger.error(s"invalid config")
@@ -287,6 +290,7 @@ case class AddOrSignPublicKey(ctx: Context, item: Int) extends Action {
       // the public key is the multiplcation of each share (or the addition of each exponent)
       val publicKey = shares.reduce( (a,b) => a.apply(b) ).convertToString
 
+      // by convention the first trustee posts the public key
       if(ctx.position == 1) {
         //  send and sign public key
         val statement = Statement.getPublicKeyStatement(publicKey, sharesStr, configHash, item)
@@ -300,7 +304,6 @@ case class AddOrSignPublicKey(ctx: Context, item: Int) extends Action {
       }
       else {
         // sign public key if statements match
-        val publicKey = ctx.section.getPublicKey(item).getOrElse("")
         val expected = Statement.getPublicKeyStatement(publicKey, sharesStr, configHash, item)
         val expectedString = expected.asJson.noSpaces
         val ok = ctx.section.getPublicKeyStatement(item).map(expectedString == _).getOrElse(false)
@@ -366,18 +369,18 @@ case class AddPreShuffleData(ctx: Context, item: Int) extends Action {
 }
 
 
-/** Adds this authority's mix
+/** Adds this trustee's mix
  *
- *  If this authority is #1, it will mix the votes provided by the
+ *  If this trustee is #1, it will mix the votes provided by the
  *  ballot box. Otherwise it will mix the votes resulting from
  *  mix n - 1, where n is this authority's position.
  *
- *  The authority will add the mix, statement and signature for
+ *  The trustee will add the mix, statement and signature for
  *  this mix.
  *
- *  Note that the authority's mix position is determined by
- *  the general authority position in the election together with
- *  the mix permutation. Similarly, the previous authority's mix position
+ *  Note that the trustee's mix position is determined by
+ *  the general trustee position in the election together with
+ *  the mix permutation. Similarly, the previous trustee's mix position
  *  is also permuted.
  */
 case class AddMix(ctx: Context, item: Int) extends Action {
@@ -385,6 +388,7 @@ case class AddMix(ctx: Context, item: Int) extends Action {
   val myMixPosition = Protocol.getMixPosition(ctx.position, item, ctx.config.trustees.size)
 
   def execute(): Result = {
+
     val configHash = getValidConfigHash(ctx)
     if(configHash.length == 0) {
       logger.error(s"invalid config")
@@ -418,7 +422,6 @@ case class AddMix(ctx: Context, item: Int) extends Action {
     val statement = Statement.getMixStatement(mixHash, parentHash, configHash, item, ctx.position)
     val signature = statement.sign(ctx.trusteeCfg.privateKey)
 
-    // val file1 = IO.writeTemp(mixJson)
     val file2 = IO.writeTemp(statement.asJson.noSpaces)
     val file3 = IO.writeTemp(signature)
 
@@ -450,7 +453,6 @@ case class VerifyMix(ctx: Context, item: Int, auth: Int) extends Action {
   val priority = 4
 
   def execute(): Result = {
-    logger.info(s"item $item, target auth $auth")
 
     val configHash = getValidConfigHash(ctx)
     if(configHash.length == 0) {
@@ -531,8 +533,8 @@ case class VerifyMix(ctx: Context, item: Int, auth: Int) extends Action {
 /** Add this authority's partial decryption of the output of the last mix.
  *
  *  This Action should be implemented carefully as privacy properties
- *  depend on decrypting ONLY those votes that have been mixed the
- *  required number of times by each of the authorities, in turn.
+ *  depend on decrypting votes that have been mixed the
+ *  REQUIRED number of times by each of the authorities, in turn.
  *
  *  To do this, a validation chain is constructed based on checking for
  *  self signatures on previous mixes. These signatures ensure that
@@ -545,7 +547,6 @@ case class VerifyMix(ctx: Context, item: Int, auth: Int) extends Action {
  *
  *  To partially decrypt, this authority retrieves its share and
  *  decrypts the private part using its master aes key.
- *
  */
 case class AddDecryption(ctx: Context, item: Int) extends Action {
   val priority = 5
@@ -558,7 +559,7 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
     }
     logger.info(s"Starting $this...")
 
-    /** the chain is composed of elements of the form
+    /** the chain is composed of elements of the form:
       input votes hash -> output votes hash */
     val chain = (1 to ctx.config.trustees.size).map { a =>
 
@@ -620,7 +621,6 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
     logger.trace(s"ballot signature on item $item OK")
 
     // check the mix-end of the chain
-    // PERM
     val lastMixAuth = Protocol.getTrusteeForMixPosition(ctx.config.trustees.size, item, ctx.config.trustees.size)
 
     val (mix, mixHash) = ctx.section.getMix(item, lastMixAuth).map(IO.readShuffleResult).get
@@ -660,9 +660,9 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
   override def toString = s"AddDecryption($item)"
 }
 
-/** Add the plaintexts, or signs them if we are not #1 authority.
+/** Add the plaintexts, or signs them if we are not #1 trustee.
  *
- *  Authority #1 is responsible for creating the plaintexts
+ *  One of the trustees is responsible for creating the plaintexts
  *  from the partial decryptions of each of the authorities. Once this
  *  has occured, the rest of authorities validate it by recreating the
  *  plaintexts themselves.
@@ -673,9 +673,9 @@ case class AddDecryption(ctx: Context, item: Int) extends Action {
  *  - the decryptions have correct statements, signatures and pok
  *  - the number of decryptions is equal to number of authorities
  *
- *  Authorities other than #1 reuse the statement created by #1
- *  and sign it if everything is correct and the plaintexts are
- *  identical to their locally created ones.
+ *  Trustees other than the one posting plaintexts reuse the statement
+ *  and sign it if the plaintexts are identical to their locally
+ *  decrypted ones.
  */
 case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
   val priority = 6
@@ -689,7 +689,6 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
     logger.info(s"Starting $this...")
 
     // get mixVotes
-    // PERM
     val lastMixAuth = Protocol.getTrusteeForMixPosition(ctx.config.trustees.size, item, ctx.config.trustees.size)
     val (mix, mixHash) = ctx.section.getMix(item, lastMixAuth).map(IO.readShuffleResult).get
 

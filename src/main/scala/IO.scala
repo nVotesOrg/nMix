@@ -68,7 +68,7 @@ object IO {
     ret
   }
 
-  /** Returns the contents of the given file a a byte array
+  /** Returns the contents of the given file as a byte array
    *
    *  FIXME Uses unsupported sun.misc.IOUtils, replace when java9 is available:
    *  http://download.java.net/java/jdk9/docs/api/java/io/InputStream.html#readAllBytes--
@@ -338,7 +338,7 @@ object IO {
 
   /** Helper to readlines from a HashingReader
    *
-   *  Uses an empty newline as a terminator of the sequence
+   *  Assumes an empty newline as a terminator of the sequence
    */
   private def getLines(reader: HashingReader) = {
     val ret = ListBuffer[String]()
