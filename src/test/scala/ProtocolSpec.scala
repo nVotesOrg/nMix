@@ -192,42 +192,30 @@ class ProtocolSpec extends FlatSpec with Names {
     assert(files.contains(BALLOTS_SIG(1)))
 
     // mix permutation
-    // auth 1 => first mix of question 2
-    // auth 2 => first mix of question 1, 3, second mix of 2
+    // auth 1 => first mix of question 1, 3
+    // auth 2 => first mix of question 2, second mix of 1,3
     Protocol.execute(bb, auth1cfg)
     Protocol.execute(bb, auth2cfg)
-    files = bb.getFileSet
-    assert(files.contains(MIX(2, 1)))
-    assert(files.contains(MIX(1, 2)))
-    assert(files.contains(MIX(3, 2)))
-    assert(files.contains(MIX(2, 2)))
-    assert(files.contains(MIX_SIG(2, 1, 1)))
-    assert(files.contains(MIX_SIG(1, 2, 2)))
-    assert(files.contains(MIX_SIG(3, 2, 2)))
-    assert(files.contains(MIX_SIG(2, 2, 2)))
-
-    // auth 1 => second mix of question 1, 3, verify mix 2 of auth 2
-    Protocol.execute(bb, auth1cfg)
     files = bb.getFileSet
     assert(files.contains(MIX(1, 1)))
     assert(files.contains(MIX(3, 1)))
-    assert(files.contains(MIX_SIG(1, 1, 1)))
-    assert(files.contains(MIX_SIG(3, 1, 1)))
-    assert(files.contains(MIX_SIG(2, 2, 1)))
+    assert(files.contains(MIX(2, 2)))
+    assert(files.contains(MIX(3, 2)))
+    assert(files.contains(MIX(1, 2)))
 
-    // auth2 verifies all auth 1 mixes
-    Protocol.execute(bb, auth2cfg)
-    files = bb.getFileSet
-    assert(files.contains(MIX_SIG(2, 1, 2)))
-    assert(files.contains(MIX_SIG(1, 1, 2)))
-    assert(files.contains(MIX_SIG(3, 1, 2)))
-
-    // auth1 verifies remaining auth 2 mixes and does first decryption
+    // auth 1 => second mix of question 2
     Protocol.execute(bb, auth1cfg)
     files = bb.getFileSet
-    assert(files.contains(MIX_SIG(1, 2, 1)))
-    assert(files.contains(MIX_SIG(3, 2, 1)))
-    assert(files.contains(DECRYPTION(2, 1)))
+    assert(files.contains(MIX(2, 1)))
+
+    // auth2 verifies mixes
+    Protocol.execute(bb, auth2cfg)
+    files = bb.getFileSet
+
+    // auth1 does first decryption
+    Protocol.execute(bb, auth1cfg)
+    files = bb.getFileSet
+    assert(files.contains(DECRYPTION(1, 1)))
 
     // auth2 does all decryptions
     Protocol.execute(bb, auth2cfg)
@@ -239,7 +227,7 @@ class ProtocolSpec extends FlatSpec with Names {
     // auth1 adds remaining decryptions
     Protocol.execute(bb, auth1cfg)
     files = bb.getFileSet
-    assert(files.contains(DECRYPTION(1, 1)))
+    assert(files.contains(DECRYPTION(2, 1)))
     assert(files.contains(DECRYPTION(3, 1)))
 
     // auth2 generates and signs plaintexts for 2
@@ -325,42 +313,30 @@ class ProtocolSpec extends FlatSpec with Names {
     files = bb.getFileSet
 
     // mix permutation
-    // auth 1 => first mix of question 2
-    // auth 2 => first mix of question 1, 3, second mix of 2
+    // auth 1 => first mix of question 1, 3
+    // auth 2 => first mix of question 2, second mix of 1,3
     Protocol.execute(bb, auth1cfg)
     Protocol.execute(bb, auth2cfg)
-    files = bb.getFileSet
-    assert(files.contains(MIX(2, 1)))
-    assert(files.contains(MIX(1, 2)))
-    assert(files.contains(MIX(3, 2)))
-    assert(files.contains(MIX(2, 2)))
-    assert(files.contains(MIX_SIG(2, 1, 1)))
-    assert(files.contains(MIX_SIG(1, 2, 2)))
-    assert(files.contains(MIX_SIG(3, 2, 2)))
-    assert(files.contains(MIX_SIG(2, 2, 2)))
-
-    // auth 1 => second mix of question 1, 3, verify mix 2 of auth 2
-    Protocol.execute(bb, auth1cfg)
     files = bb.getFileSet
     assert(files.contains(MIX(1, 1)))
     assert(files.contains(MIX(3, 1)))
-    assert(files.contains(MIX_SIG(1, 1, 1)))
-    assert(files.contains(MIX_SIG(3, 1, 1)))
-    assert(files.contains(MIX_SIG(2, 2, 1)))
+    assert(files.contains(MIX(2, 2)))
+    assert(files.contains(MIX(3, 2)))
+    assert(files.contains(MIX(1, 2)))
 
-    // auth2 verifies all auth 1 mixes
-    Protocol.execute(bb, auth2cfg)
-    files = bb.getFileSet
-    assert(files.contains(MIX_SIG(2, 1, 2)))
-    assert(files.contains(MIX_SIG(1, 1, 2)))
-    assert(files.contains(MIX_SIG(3, 1, 2)))
-
-    // auth1 verifies remaining auth 2 mixes and does first decryption
+    // auth 1 => second mix of question 2
     Protocol.execute(bb, auth1cfg)
     files = bb.getFileSet
-    assert(files.contains(MIX_SIG(1, 2, 1)))
-    assert(files.contains(MIX_SIG(3, 2, 1)))
-    assert(files.contains(DECRYPTION(2, 1)))
+    assert(files.contains(MIX(2, 1)))
+
+    // auth2 verifies mixes
+    Protocol.execute(bb, auth2cfg)
+    files = bb.getFileSet
+
+    // auth1 does first decryption
+    Protocol.execute(bb, auth1cfg)
+    files = bb.getFileSet
+    assert(files.contains(DECRYPTION(1, 1)))
 
     // auth2 does all decryptions
     Protocol.execute(bb, auth2cfg)
@@ -372,11 +348,10 @@ class ProtocolSpec extends FlatSpec with Names {
     // auth1 adds remaining decryptions
     Protocol.execute(bb, auth1cfg)
     files = bb.getFileSet
-
-    assert(files.contains(DECRYPTION(1, 1)))
+    assert(files.contains(DECRYPTION(2, 1)))
     assert(files.contains(DECRYPTION(3, 1)))
 
-    // auth2 signs plaintexts for 2
+    // auth2 generates and signs plaintexts for 2
     Protocol.execute(bb, auth2cfg)
     files = bb.getFileSet
     assert(files.contains(PLAINTEXTS(2, 2)))
