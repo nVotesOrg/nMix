@@ -17,6 +17,16 @@
 
 package org.nvotes.mix
 
+import java.io.File
+import java.io.InputStream
+import java.io.IOException
+import java.nio.file.Paths
+import java.nio.file.Path
+import java.nio.file.Files
+import java.net.URI
+import java.util.UUID
+import java.nio.file.StandardCopyOption.ATOMIC_MOVE
+
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.GitAPIException
 import org.eclipse.jgit.lib.Ref
@@ -29,21 +39,12 @@ import org.eclipse.jgit.lib.Constants
 import org.eclipse.jgit.lib.AnyObjectId
 import org.eclipse.jgit.transport._
 import org.eclipse.jgit.transport.OpenSshConfig.Host
-import com.jcraft.jsch.Session
 import org.eclipse.jgit.api.TransportConfigCallback
 import org.eclipse.jgit.api.ResetCommand.ResetType
 import org.eclipse.jgit.transport.RemoteRefUpdate
 import org.eclipse.jgit.transport.PushResult
+import com.jcraft.jsch.Session
 
-import java.io.File
-import java.io.InputStream
-import java.io.IOException
-import java.nio.file.Paths
-import java.nio.file.Path
-import java.nio.file.Files
-import java.net.URI
-import java.util.UUID
-import java.nio.file.StandardCopyOption.ATOMIC_MOVE
 import scala.collection.mutable.Map
 
 import org.slf4j.Logger

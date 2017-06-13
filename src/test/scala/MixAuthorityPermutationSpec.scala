@@ -88,5 +88,26 @@ class MixAuthorityPermutationSpec extends FlatSpec {
     position = Protocol.getMixPosition(auth, 3, 3)
     auth_match = Protocol.getTrusteeForMixPosition(position, 3, 3)
     assert(auth == auth_match)
+
+    println("**************")
+    print(Protocol.getMixPosition(1, 2, 3))
+    print(Protocol.getMixPosition(2, 2, 3))
+    println(Protocol.getMixPosition(3, 2, 3))
+
+    print(Protocol.getTrusteeForMixPosition(1, 2, 3))
+    print(Protocol.getTrusteeForMixPosition(2, 2, 3))
+    println(Protocol.getTrusteeForMixPosition(3, 2, 3))
+
+    print(Protocol.getMixPosition(1, 2, 4))
+    print(Protocol.getMixPosition(2, 2, 4))
+    print(Protocol.getMixPosition(3, 2, 4))
+    println(Protocol.getMixPosition(4, 2, 4))
+
+    print(Protocol.getTrusteeForMixPosition(1, 2, 4))
+    print(Protocol.getTrusteeForMixPosition(2, 2, 4))
+    print(Protocol.getTrusteeForMixPosition(3, 2, 4))
+    println(Protocol.getTrusteeForMixPosition(4, 2, 4))
+
+    println("**************")
   }
 }

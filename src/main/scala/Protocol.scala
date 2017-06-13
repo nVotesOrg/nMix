@@ -380,48 +380,62 @@ object Protocol extends Names {
     pks.indexOf(trusteeConfig.publicKey) + 1
   }
 
-  /** Returns the permuted mix position of the trustee for the given item.
+  /** Returns the mix position of the trustee for the given item.
    *
-   *  The permutation is a 1 shift left permutation
-   *
-   *  This 1-shift left is a generator of a cyclic permutation group of
-   *  order 'trustees'. For example
+   *  Mix positions are given by permutations. The permutation is a p-shift left,
+   *  where p is given by item - 1. For example
    *
    *  123 at item 1 => 123    (identity)
    *  123 at item 2 => 231    (auth 2 is at 1, 3 is at 2, 1 is at 3)
    *  123 at item 3 => 312
    *  123 at item 4 => 123
+   *
+   *  Can consider a 1-shift left as a generator of a cyclic permutation group of
+   *  order 'trustees'.
    */
-  def getMixPosition(auth: Int, item: Int, trustees: Int): Int = {
-    val permuted = (auth + (item - 1)) % trustees
+  def getMixPosition(trustee: Int, item: Int, trustees: Int): Int = {
+    /* subtract 1 from item to make item 1 yield the identity permutation
+     subtract 1 from trustee to make the trustees 0-based */
+    val permuted = (trustee - 1 + item - 1) % trustees
+    // add 1 to go backto 1-based trustees
     permuted + 1
   }
 
-  /** Returns the trustee responsible for the given mix position */
-  def getTrusteeForMixPosition(auth: Int, item: Int, trustees: Int): Int = {
-    /** for a cyclic group with generator g of order n we have
+  /** Returns the trustee responsible for the given mix position
+   *
+   *  This is the inverse of getMixPosition above
+   */
+  def getTrusteeForMixPosition(trustee: Int, item: Int, trustees: Int): Int = {
+    /** Yields the inverse permutation of getMixPosition. A p-shift
+     *  left has as its inverse a (n-p)-shift left. In terms of a
+     *  permutation group:
      *
-     *  FIXME revise
+     *  In a cyclic group with generator g of order n we have
      *
-     * g^n = 1. Applying g to some power p we have
+     *  g^n = 1. Applying g to some power p we have
      *
-     * g^p = x
+     *  g^p = x
      *
-     * since g^p * g^(n-p) = g^n = 1
+     *  since g^p * g^(n-p) = g^n = 1
      *
-     * the inverse of x=g^p is g^(n-p)
+     *  the inverse of x=g^p is g^(n-p)
      *
-     * Below, n-p is the "gap", and (item - 1) is p
+     *  Below, n-p is the "gap", where item is p, and # of trustees is n
+     *
+     *  Examples:
+     *
+     *  123 at item 1 => 123; inverse => 123 (identity is self inverse)
+     *  123 at item 2 => 231; inverse => 312
+     *  123 at item 3 => 312; inverse => 231
+     *  123 at item 4 => 123; inverse => 123 (identity is self inverse)
+     *
      */
-    val gap = trustees - item
-
-    val permuted = (auth + gap) % trustees
-    if(permuted == 0) {
-      trustees
-    }
-    else {
-      permuted
-    }
+    // subtract 1 from item to make item 1 yield the identity permutation
+    val gap = trustees - (item - 1)
+    // subtract 1 from trustee to make the trustees 0-based
+    val permuted = (trustee - 1 + gap) % trustees
+    // add 1 to go back to 1-based trustees
+    permuted + 1
   }
 
   /** Specifies which trustee will generate the plaintexts */
