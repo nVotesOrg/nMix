@@ -110,8 +110,8 @@ The bulletin board structure can be described in Backus-Naus form as
 
 ##### Example
 The following is an example of a populated bulletin board after the execution of the entire protocol
+![alt text](img/bb_files.png)
 
-TODO
 ### Installing
 As seen above, an nMix installation is composed of one machine acting as a bulletin board together with 2 or more machines acting as trustees. The trustees must have have ssh access connectivity to the bulletin board server.
 
