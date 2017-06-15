@@ -398,8 +398,7 @@ object MixerTrustee extends Mixer {
     logger.debug("Mixer shuffle..")
 
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
-    val keyPairGen = elGamal.getKeyPairGenerator()
-    val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
+    val pk = cSettings.group.getElementFrom(publicKey)
 
     logger.trace("Convert votes..")
 
@@ -419,9 +418,7 @@ object MixerTrustee extends Mixer {
 
     logger.debug("Mixer offline phase..")
 
-    val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
-    val keyPairGen = elGamal.getKeyPairGenerator()
-    val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
+    val pk = cSettings.group.getElementFrom(publicKey)
 
     preShuffle(voteCount, pk, cSettings, id)
   }
@@ -436,8 +433,7 @@ object MixerTrustee extends Mixer {
 
     logger.debug("Mixer online phase..")
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
-    val keyPairGen = elGamal.getKeyPairGenerator()
-    val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
+    val pk = cSettings.group.getElementFrom(publicKey)
     logger.trace("Convert votes..")
 
     val votes = votesString.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v) ).seq

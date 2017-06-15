@@ -6,6 +6,8 @@ import ch.bfh.unicrypt.math.algebra.general.interfaces.Element
 import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
 import ch.bfh.unicrypt.crypto.encoder.classes.ZModPrimeToGStarModSafePrime
 import java.math.BigInteger
+import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModElement
+import ch.bfh.unicrypt.math.algebra.dualistic.classes.ZModElement
 
 import org.scalatest.FlatSpec
 import org.nvotes.libmix._
@@ -22,8 +24,8 @@ class LibmixSpec extends FlatSpec {
   val gen = grp.getDefaultGenerator()
   val Csettings = CryptoSettings(grp, gen)
 
-  val shares = scala.collection.mutable.ArrayBuffer.empty[Element[_]]
-  val privates = scala.collection.mutable.ArrayBuffer.empty[Element[_]]
+  val shares = scala.collection.mutable.ArrayBuffer.empty[GStarModElement]
+  val privates = scala.collection.mutable.ArrayBuffer.empty[ZModElement]
 
   object KM extends KeyMaker
   object MX extends Mixer
@@ -32,7 +34,7 @@ class LibmixSpec extends FlatSpec {
     val elGamal = ElGamalEncryptionScheme.getInstance(Csettings.generator)
     val keyPair = elGamal.getKeyPairGenerator().generateKeyPair()
     val privateKey = keyPair.getFirst()
-    val publicKey = keyPair.getSecond()
+    val publicKey = keyPair.getSecond().asInstanceOf[GStarModElement]
 
     val plaintexts = Seq.fill(10)(scala.util.Random.nextInt(10))
     val votes = Util.encryptVotes(plaintexts, Csettings, publicKey)
@@ -99,14 +101,14 @@ class LibmixSpec extends FlatSpec {
     encKey
   }
 
-  def addShare(encryptionKeyShare: EncryptionKeyShareDTO, proverId: String, CSettings: CryptoSettings, privateK: String) = {
-    val result = Verifier.verifyKeyShare(encryptionKeyShare, Csettings, proverId: String)
+  def addShare(encryptionKeyShare: EncryptionKeyShareDTO, proverId: String, cSettings: CryptoSettings, privateK: String) = {
+    val result = Verifier.verifyKeyShare(encryptionKeyShare, cSettings, proverId: String)
     if(result) {
-      val elGamal = ElGamalEncryptionScheme.getInstance(Csettings.generator)
+      val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
       val keyPairGen: KeyPairGenerator = elGamal.getKeyPairGenerator()
-      val publicKey = keyPairGen.getPublicKeySpace().getElementFrom(encryptionKeyShare.keyShare)
+      val publicKey = cSettings.group.getElementFrom(encryptionKeyShare.keyShare)
       shares += publicKey
-      val privateKey = keyPairGen.getPrivateKeySpace().getElementFrom(privateK)
+      val privateKey = keyPairGen.getPrivateKeySpace().getElementFrom(privateK).asInstanceOf[ZModElement]
 
       privates += privateKey
     }

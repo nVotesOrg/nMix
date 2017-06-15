@@ -517,8 +517,7 @@ case class VerifyMix(ctx: Context, item: Int, auth: Int) extends Action {
     proverId: String, publicKey: String, cSettings: CryptoSettings): Boolean = {
 
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
-    val keyPairGen = elGamal.getKeyPairGenerator()
-    val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
+    val pk = cSettings.group.getElementFrom(publicKey)
 
     val shuffled = shuffledVotes.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v) ).seq
     val votes = parentVotes.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v) ).seq
@@ -795,8 +794,7 @@ case class AddOrSignPlaintexts(ctx: Context, item: Int) extends Action {
     cSettings: CryptoSettings, proverId: String, publicKey: String): Boolean = {
 
     val elGamal = ElGamalEncryptionScheme.getInstance(cSettings.generator)
-    val keyPairGen = elGamal.getKeyPairGenerator()
-    val pk = keyPairGen.getPublicKeySpace().getElementFrom(publicKey)
+    val pk = cSettings.group.getElementFrom(publicKey)
 
     val votes = mixedVotes.par.map( v => Util.fromString(elGamal.getEncryptionSpace, v).asInstanceOf[Pair] ).seq
 
