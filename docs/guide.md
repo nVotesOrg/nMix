@@ -86,6 +86,14 @@ Details related to voter registration and authentication are critical to a secur
 
 #### Bulletin board structure
 The bulletin board structure can be roughly divided into three parts, corresponding to root data, trustee data and ballotbox data. Root data defines the global configuration. The trustee and ballotbox areas contain data posted by their respective components.
+
+##### Example
+The following is an example of a populated bulletin board after the execution of the entire protocol:
+
+![alt text](img/bb_files.png)
+
+These bulletin board files correspond to an election protocol with two trustees and three questions (ballot sets). The two trustees have their own section of the board, with paths 'repo/1' and 'repo/2'. The files uploaded by the ballotbox, that is the encrypted votes and signatures, are present at the path 'repo/bb'. Because there are three questions, each of these paths is in turn subdivided into three sections.
+
 ##### BNF grammar
 The bulletin board structure can be described in Backus-Naus form as
 ```
@@ -108,15 +116,8 @@ The bulletin board structure can be described in Backus-Naus form as
 <item> ::= <integer>
 ```
 
-##### Example
-The following is an example of a populated bulletin board after the execution of the entire protocol:
-
-![alt text](img/bb_files.png)
-
-These bulletin board files correspond to an election protocol with two trustees and three questions (ballot sets). The two trustees have their own section of the board, with paths 'repo/1' and 'repo/2'. The files uploaded by the ballotbox, that is the encrypted votes and signatures, are present at the path 'repo/bb'. Because there are three questions, each of these paths is in turn subdivided into three sections.
-
 ### Installing
-As seen above, an nMix installation is composed of one machine acting as a bulletin board together with 2 or more machines acting as trustees. The trustees must have have ssh access connectivity to the bulletin board server.
+As seen above, an nMix installation is composed of one machine acting as a bulletin board together with 2 or more machines acting as trustees. The trustees must have have ssh connectivity to the bulletin board server.
 
 #### Requirements
 The following software is required to run nMix
@@ -261,7 +262,7 @@ The Election Configuration specifies the election information, the security para
 "trustees":["<a list of RSA public keys for each trustee>"]
 }
 ```
-Creating and posting this data to the bulletin board is the first step that kicks off the rest of the protocol execution. Besides the configuration itself, a statement file must be provided which will be signed by trustees indicating acceptance of its parameters. The statement config file has this structure
+Creating and posting this data to the bulletin board is the first step that kicks off the rest of the protocol execution. Besides the configuration itself, a statement file must be provided which will be signed by trustees indicating acceptance of its parameters. The configuration statement file has this structure
 
 ```
 {"configHash":"<the sha-512 hash of the configuration's json representation as a string>"}
@@ -277,7 +278,34 @@ will produce the Election Configuration, _config.json_, and the statement file, 
 These two files can then be posted to the bulletin board, executing step 1 of the protocol.
 
 ### Artifact reference
-TODO
+The following lists the artifacts produced during protocol execution. Multiplicity is specified in terms of the number of questions _q_, and trustees _t_.
+
+|Name   |Description|Multiplicity
+|---|---|---
+|config.json|The election configuration, as described in the Election Configuration [section](#election-configuration).|1
+|config.stmt.json|Election configuration statement.|1
+|config.sig.ucb|Signature of election configuration. The configuration must be signed by all trustees.|t
+|share.json|A trustee's share of the election key, together with a zero knowledge proof of correctness.|q x t
+|share.stmt.json|Trustee's share statement.|q x t
+|share.sig.ucb|Signature of share by its owning trustee.|q x t
+|public_key.ucs|The election public key, resulting from the combination of trustee public shares.|q
+|public_key.stmt.json|Election public key statement.|q
+|public_key.sig.ucb|Signature of election public key. The election public key must be signed by all trustees.|q x t
+|ballots.raw|The encrypted ballots (ciphertexts), as uploaded by the Ballot Box.|q
+|ballots.stmt.json|The encrypted ballots statement.|q
+|ballots.sig|Signature of the ballots, by the Ballot Box.|q
+|mix.raw|A ciphertext mix. Includes the mixed ciphertexts and zero knowledge proof of correctness.|q x t
+|mix.stmt.json|A mix statement.|q x t
+|mix.<t>.sig.ucb|Signature of a mix statement. All mixes must be signed by all trustees. The placeholder 't' refers to which mix this is a signature of, where t is the trustee number.|q x t x t
+|decryption.raw|A partial decryption of ciphertexts. Partial decryptions are produced by each trustee in order to jointly decrypt ballots once they have been shuffled. Includes zero knowledge proofs of correctness.|q x t
+|decryption.stmt.json|Partial decryption statement.|q x t
+|decryption.sig.ucb|Signature of partial decryption, by the creating trustee.|q x t
+|plaintexts.raw|Jointly decrypted plaintexts. This is the final output of the nMix protocol, from which election results can be extracted. It is obtained by combining partial decryptions.|q
+|plaintext.stmt.json|Plaintexts statement.|q
+|plaintext.sig.ucb|Signature of plaintexts. The plaintexts must be signed by all trustees.|q x t
+|pause|Global pause indicator. Used to pause the protocol at any point in its execution.|0..1
+|error|Error indicator. Created if an error occurs during execution. Errors can be posted by trustees or can be global.|0..(t + 1)
+
 ### FAQ
 ####  Is nMix 100% secure?
 No, no computer or software system is 100% secure. nMix is secure in the specific sense that it employs cryptographic techniques to achieve strong privacy and verifiability properties, as defined in the academic literature.
@@ -287,7 +315,7 @@ nMix provides the core cryptography to construct an end-to-end verifiable voting
 
 #### Where can I find a formal specification of the system?
 
-We are working on this. For now you can refer to the [univote specification](https://github.com/bfh-evg/univote2/raw/development/doc/report/report.pdf) that describes the core cryptography used in nMix. You may also follow the references on this [blog post](http://davidruescas.com/a-mixnet-based-secure-voting-protocol/).
+We are working on this. For now you can refer to the [univote specification](https://github.com/bfh-evg/univote2/raw/development/doc/report/report.pdf) that describes the core cryptography used in nMix. You may also follow the references in this [blog post](http://davidruescas.com/a-mixnet-based-secure-voting-protocol/).
 
 #### What about the use of SHA1 in the Git hash chain?
 The choice of git as a hash-chain was made with full awareness of the status of SHA-1, which will not be a problem because:

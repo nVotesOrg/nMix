@@ -87,7 +87,7 @@ trait Names {
   /** auth: the auth who produced the mix, signingAuth: the verifying auth */
   def MIX_SIG(item: Int, auth: Int, signingAuth: Int) = s"$signingAuth/$item/mix.$auth.sig.ucb"
 
-  def DECRYPTION(item: Int, auth: Int) = s"$auth/$item/decryption.json"
+  def DECRYPTION(item: Int, auth: Int) = s"$auth/$item/decryption.raw"
   def DECRYPTION_STMT(item: Int, auth: Int) = s"$auth/$item/decryption.stmt.json"
   def DECRYPTION_SIG(item: Int, auth: Int) = s"$auth/$item/decryption.sig.ucb"
 
