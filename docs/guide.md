@@ -115,6 +115,7 @@ The bulletin board structure can be described in Backus-Naus form as
 <trustee> ::= <integer>
 <item> ::= <integer>
 ```
+Please refer to the artifact [reference](#artifact-reference) for a description of each artifact.
 
 ### Installing
 As seen above, an nMix installation is composed of one machine acting as a bulletin board together with 2 or more machines acting as trustees. The trustees must have have ssh connectivity to the bulletin board server.
@@ -246,7 +247,37 @@ Activates automatic extraction and parallelization of modular exponentiation cal
 Activates parallel computation of generators used in Terelius-Wikstrom proofs (experimental)
 
 ### Running an election
-TODO
+The timeline for an election on the nMix side is as follows
+
+1. Set up election repository on the bulletin board
+
+    Setting up the bulletin board server prepares it for running elections. To run a particular election it is necessary to create the election-specific repository that will host all its protocol artifacts. Following the example in the tutorial, we create a repository with
+    ```
+    mkdir /srv/data/git/myelection.git
+    git --bare init /srv/data/git/myelection.git
+    ```
+2. Specify and post election configuration
+    For the purposes of the nMix protocol, an election is fundamentally described by the following attributes
+    * Election public key security level
+    * Set of participating authorities (trustees + ballotbox authority)
+    * Number of questions
+
+    This information is specified in the election configuration file, _config.json_. Once this file has been created (and an associated statement file) it is uploaded to the election repository, for example with
+
+    ```
+    git clone /srv/data/git/myelection.git
+    git add config.json config.stmt.json
+    git commit config.json config.stmt.json -m "Election configuration"
+    git push origin master
+    ```
+    Refer to the election configuration [section](#election-configuration) below for details about the configuration format how to create it.
+
+3. Execute key generation phase
+
+4. Wait for encrypted ballots
+
+5. Execute mixing and joint decryption
+
 
 #### Election configuration
 The Election Configuration specifies the election information, the security parameters of the election public key, and the participating trustees and ballotbox agents. It has this json encoded structure
@@ -255,8 +286,8 @@ The Election Configuration specifies the election information, the security para
 {
 "id":"<an alphanumeric id for the election>",
 "name":"<a human readable name for the election>",
-"modulus":"<the safe prime modulus p of the multiplicative subgroup G*p used for ElGamal encryption>",
-"generator":"<the generator g of the multiplicative subgroup G*p used for ElGamal encryption>",
+"modulus":"<the safe prime modulus p of the multiplicative subgroup G*q used for ElGamal encryption>",
+"generator":"<the generator g of the multiplicative subgroup G*q used for ElGamal encryption>",
 "items":<the number of ballot sets (for example, questions) in the election>,
 "ballotbox":"<the RSA public key of the ballotbox>",
 "trustees":["<a list of RSA public keys for each trustee>"]
