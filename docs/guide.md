@@ -257,6 +257,7 @@ The timeline for an election on the nMix side is as follows
     git --bare init /srv/data/git/myelection.git
     ```
 2. Specify and post election configuration
+
     For the purposes of the nMix protocol, an election is fundamentally described by the following attributes
     * Election public key security level
     * Set of participating authorities (trustees + ballotbox authority)
@@ -273,6 +274,7 @@ The timeline for an election on the nMix side is as follows
     Refer to the election configuration [section](#election-configuration) below for details about the configuration format and how to create it.
 
 3. Execute key generation phase
+
     At this point the nMix mixnet is run to execute the protocol. Trustees execute the _run.sh_ script found in the src/main/shell directory. For example
     ```
     cp src/main/shell/run.sh .
