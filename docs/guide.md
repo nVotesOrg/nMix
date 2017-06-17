@@ -270,14 +270,28 @@ The timeline for an election on the nMix side is as follows
     git commit config.json config.stmt.json -m "Election configuration"
     git push origin master
     ```
-    Refer to the election configuration [section](#election-configuration) below for details about the configuration format how to create it.
+    Refer to the election configuration [section](#election-configuration) below for details about the configuration format and how to create it.
 
 3. Execute key generation phase
+    At this point the nMix mixnet is run to execute the protocol. Trustees execute the _run.sh_ script found in the src/main/shell directory. For example
+    ```
+    cp src/main/shell/run.sh .
+    ./run.sh myelection
+    ```
+    The run script takes the election repository name as argument. This name was specified in step 1. Please review the run.sh script prior to executing. In particular, it may be necessary to adjust the java heap size when running elections with large numbers of ballots.
 
+    When the trustees are first run (following the posting of election configuration) they will run the protocol up to the key generation phase. This will produce artifacts for the election public key, together with signatures for each trustee.
+
+    Note that the nMix process does not stop, once it has completed the key generation phase it will simply idle, with no work to do. To check whether the key generation phase is complete one can either check for all required artifacts on the bulletin board, or check whether the trustees are idling.
 4. Wait for encrypted ballots
+
+    Having produced the election public key file, the election can now be open for ballot casting by voters. Typically, some software component (possibly even the voting client) will retrieve the public key from the bulletin board server and provide it to the voting client. The client software (not part of nMix) uses the public key to encrypt ballots and cast them securely. These encrypted ballots are collected by the ballot box. When the election closes, the ballot box (or some other software component) will post these encrypted ballots to the bulletin board server. The bulletin board then contains the necessary data to proceed with the mixing and joint decryption phase of the protocol.
 
 5. Execute mixing and joint decryption
 
+    If the trustees are still running nMix (they were not stopped after the key generation phase) they will automatically resume execution of the protocol when they detect the presence of ballots on the bulletin board. If not, the nMix process is started the same way as in step 3. The trustees will begin the mixing process and continue operating up to the joint decryption and signing of plaintexts. This may take a while [depending](benchmarks.md) on the number of ballots cast in the vote.
+
+    Note that the nMix process does not stop, once it has completed the key generation phase it will simply idle, with no work to do. To check whether the protocol is complete one can either check for all required artifacts on the bulletin board, or check whether the trustees are idling.
 
 #### Election configuration
 The Election Configuration specifies the election information, the security parameters of the election public key, and the participating trustees and ballotbox agents. It has this json encoded structure
