@@ -258,7 +258,8 @@ The timeline for an election on the nMix side is as follows
     ```
 2. Specify and post election configuration
 
-    For the purposes of the nMix protocol, an election is fundamentally described by the following attributes
+    For the purposes of the nMix protocol, an election is fundamentally described by the following attributes:
+
     * Election public key security level
     * Set of participating authorities (trustees + ballotbox authority)
     * Number of questions
@@ -271,7 +272,7 @@ The timeline for an election on the nMix side is as follows
     git commit config.json config.stmt.json -m "Election configuration"
     git push origin master
     ```
-    Refer to the election configuration [section](#election-configuration) below for details about the configuration format and how to create it.
+    Refer to the election configuration [section](#election-configuration) below for details about the configuration format and how to create the file correctly.
 
 3. Execute key generation phase
 
@@ -282,7 +283,7 @@ The timeline for an election on the nMix side is as follows
     ```
     The run script takes the election repository name as argument. This name was specified in step 1. Please review the run.sh script prior to executing. In particular, it may be necessary to adjust the java heap size when running elections with large numbers of ballots.
 
-    When the trustees are first run (following the posting of election configuration) they will run the protocol up to the key generation phase. This will produce artifacts for the election public key, together with signatures for each trustee.
+    When the trustees are first run (following the posting of election configuration) they will run the protocol up to the key generation phase. This will produce artifacts for the election public key, together with signatures for each trustee. For this to complete, all trustees must run, although not necessarily simultaneously.
 
     Note that the nMix process does not stop, once it has completed the key generation phase it will simply idle, with no work to do. To check whether the key generation phase is complete one can either check for all required [artifacts](#artifact-reference) on the bulletin board, or check whether the trustees are idling.
 
