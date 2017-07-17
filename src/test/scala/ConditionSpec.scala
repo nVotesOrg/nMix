@@ -11,22 +11,42 @@ import java.util.UUID
  */
 class ConditionSpec extends FlatSpec {
 
-  val files = Set("config.json", "config_1.stmt", "config_1.sig", "1/error")
+  val files = Set("a", "b", "c", "d")
 
   "matching expression" should "return true" in {
-    val result = Condition.yes("config.json").eval(files)
-
-    assert(result)
+    assert(Condition.yes("a").eval(files))
+    assert(Condition.no("z").eval(files))
   }
 
   "non-matching expression" should "return false" in {
-    val result = Condition.yes("config.json").no("config_1.stmt").no("config_1.sig").eval(files)
+    assert(!Condition.yes("a").no("b").no("c").eval(files))
+    assert(!Condition.yes("z").eval(files))
+  }
+
+  "expression using demorgan" should "works correctly" in {
+    // demorgan:
+    //  !(!a and !b and !c) == (a or b or c)
+
+    // at least one is true
+    var result = Condition.no("d").no("x").no("y").neg.eval(files)
+    assert(result)
+
+    // none of these are true
+    result = Condition.no("x").no("y").no("z").neg.eval(files)
     assert(!result)
   }
 
-  "matching expression using negation" should "return true" in {
-    val result = Condition.no("1/error").no("2/error").no("3/error").neg.eval(files)
+  "expression with and composition" should "works correctly" in {
+    val one = Condition.yes("a").yes("b")
+    val two = Condition.yes("c").yes("d")
 
-    assert(result)
+    assert(one.and(two).eval(files))
+  }
+
+  "expression with literal and composition" should "works correctly" in {
+    val one = Condition.yes("a").yes("b")
+
+    assert(one.and("b").and("c").eval(files))
+    assert(one.and("b").andNot("x").eval(files))
   }
 }
