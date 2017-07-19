@@ -24,7 +24,7 @@ import java.math.BigInteger
 import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
 import org.nvotes.libmix._
-  import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
+import ch.bfh.unicrypt.math.algebra.multiplicative.classes.GStarModSafePrime
 
 /** Generates demo votes and posts them to the bulletin board
  *
