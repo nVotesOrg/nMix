@@ -3,27 +3,31 @@
 <!-- MarkdownTOC depth="3" autolink="true" bracket="round"-->
 
 - [nMix User Guide](#nmix-user-guide)
-	- [Overview](#overview)
-		- [Components](#components)
-		- [Protocol](#protocol)
-		- [Bulletin board structure](#bulletin-board-structure)
-	- [Installing](#installing)
-		- [Requirements](#requirements)
-		- [Keys](#keys)
-		- [Bulletin Board setup](#bulletin-board-setup)
-		- [Trustee setup](#trustee-setup)
-	- [Running an election](#running-an-election)
-		- [Election configuration](#election-configuration)
-	- [Artifact reference](#artifact-reference)
-	- [FAQ](#faq)
-		- [Is nMix 100% secure?](#is-nmix-100%25-secure)
-		- [Is nMix end-to-end verifiable?](#is-nmix-end-to-end-verifiable)
-		- [Where can I find a formal specification of the system?](#where-can-i-find-a-formal-specification-of-the-system)
-		- [What about the use of SHA1 in the Git hash chain?](#what-about-the-use-of-sha1-in-the-git-hash-chain)
-		- [What about the Registry, Ballotbox and Voting Booth? Where can I find them?](#what-about-the-registry-ballotbox-and-voting-booth-where-can-i-find-them)
-		- [Does nMix include a threshold cryptosystem?](#does-nmix-include-a-threshold-cryptosystem)
-		- [Could you replace the Git bulletin board with a Blockchain/IPFS/Tahoe-Lafs/Swarm?](#could-you-replace-the-git-bulletin-board-with-a-blockchainipfstahoe-lafsswarm)
-		- [Where can I ask more questions?](#where-can-i-ask-more-questions)
+    - [Overview](#overview)
+        - [Components](#components)
+        - [Protocol](#protocol)
+        - [Bulletin board structure](#bulletin-board-structure)
+    - [Installing](#installing)
+        - [Requirements](#requirements)
+        - [Keys](#keys)
+        - [Bulletin Board setup](#bulletin-board-setup)
+        - [Trustee setup](#trustee-setup)
+    - [Running an election](#running-an-election)
+        - [Election configuration](#election-configuration)
+    - [Artifact reference](#artifact-reference)
+    - [Errors](#errors)
+        - [Malformed ballots](#malformed-ballots)
+        - [Cannot connect to bulletin board](#cannot-connect-to-bulletin-board)
+        - [Merge and retry fail](#merge-and-retry-fail)
+    - [FAQ](#faq)
+        - [Is nMix 100% secure?](#is-nmix-100%25-secure)
+        - [Is nMix end-to-end verifiable?](#is-nmix-end-to-end-verifiable)
+        - [Where can I find a formal specification of the system?](#where-can-i-find-a-formal-specification-of-the-system)
+        - [What about the use of SHA1 in the Git hash chain?](#what-about-the-use-of-sha1-in-the-git-hash-chain)
+        - [What about the Registry, Ballotbox and Voting Booth? Where can I find them?](#what-about-the-registry-ballotbox-and-voting-booth-where-can-i-find-them)
+        - [Does nMix include a threshold cryptosystem?](#does-nmix-include-a-threshold-cryptosystem)
+        - [Could you replace the Git bulletin board with a Blockchain/IPFS/Tahoe-Lafs/Swarm?](#could-you-replace-the-git-bulletin-board-with-a-blockchainipfstahoe-lafsswarm)
+        - [Where can I ask more questions?](#where-can-i-ask-more-questions)
 
 <!-- /MarkdownTOC -->
 
@@ -354,6 +358,48 @@ The following lists the artifacts produced during protocol execution. Multiplici
 |plaintext.sig.ucb|Signature of plaintexts. The plaintexts must be signed by all trustees.|q x t
 |pause|Global pause indicator. Used to pause the protocol at any point in its execution.|0..1
 |error|Error indicator. Created if an error occurs during execution. Errors can be posted by trustees or can be global.|0..(t + 1)
+
+### Errors
+
+This is a limited list of errors that can arise during protocol execution. Please contribute by posting issues.
+
+#### Malformed ballots
+
+Malformed ballots will trigger an error during the shuffle phase. The mixing trustees that identifies the error will post an error message with text:
+
+```
+An exception occurred during processing: class ch.bfh.unicrypt.UniCryptException
+```
+
+Other trustees will detect the error and skip processing at every cycle until the error is removed. The mixing trustees will log a full exception.
+
+#### Cannot connect to bulletin board
+
+This can occur if the bulletin board cannot be contacted, or if there is an authentication failure. This condition will cause the trustee process to exit with an exception, such as
+
+```
+Exception in thread "main" org.eclipse.jgit.api.errors.TransportException: ssh:/git@<host>:22/~/repo
+    at org.eclipse.jgit.api.FetchCommand.call(FetchCommand.java:245)
+    at org.nvotes.mix.GitRepo.sync(Board.scala:705)
+    at org.nvotes.mix.BoardSection.sync(Board.scala:436)
+    at org.nvotes.mix.BoardSection.sync(Board.scala:199)
+    at org.nvotes.mix.Protocol$.execute(Protocol.scala:78)
+    at org.nvotes.mix.TrusteeLoop$.delayedEndpoint$org$nvotes$mix$TrusteeLoop$1(App.scala:66)
+```
+
+#### Merge and retry fail
+
+When posting information to the bulletin board it is possible for there to be conflicts due to contention. A merge will occur followed by retrying the post of the information. This will be tried 20 times. The following message is reported
+
+```
+[main] INFO GitRepo - Sync time: 0.947808299 s
+[main] INFO GitRepo - Committing 3 additions and 0 modifications
+[main] INFO GitRepo - push status: REJECTED_NONFASTFORWARD
+[main] WARN GitRepo - Push status was not OK: REJECTED_NONFASTFORWARD
+[main] WARN GitRepo - Attempting to recover non fast forward
+```
+
+If the retries fail 20 times, the trustee will give up and enter the next protocol execution cycle. This will reset the repository and discard the computed information, which will have to be recalculated again. The protocol will then continue executing normally.
 
 ### FAQ
 ####  Is nMix 100% secure?

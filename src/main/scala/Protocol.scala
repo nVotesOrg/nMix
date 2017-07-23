@@ -72,9 +72,7 @@ object Protocol extends Names {
    */
   def execute(section: BoardSectionInterface, trusteeCfg: TrusteeConfig): Result = {
 
-    logger.info(s"Begin executing protocol for section '${section.name}'...")
-    logger.info(s"Syncing '${section.name}'")
-
+    logger.info(s"Begin executing protocol for section '${section.name}', sync...")
     section.sync()
     val files = section.getFileSet
 
@@ -91,9 +89,8 @@ object Protocol extends Names {
     }
 
     val config = parseConfig.right.get
-    logger.info(s"Found config: $config")
     val position = getMyPosition(config, trusteeCfg)
-    logger.info(s"This authority at position $position")
+    logger.info(s"Found config: $config, this authority at position = $position")
 
     if(position == 0) {
       logger.info(s"could not find self in list of trustees for config $config")
