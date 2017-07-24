@@ -26,8 +26,6 @@ import java.security.interfaces.RSAPublicKey
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 import java.nio.file.Files
-import java.net.InetAddress
-import java.net.ServerSocket
 
 import org.slf4j.LoggerFactory
 
@@ -54,7 +52,6 @@ object TrusteeLoop extends App {
   } else {
 
     val trusteeCfg = TrusteeConfig.load
-    ensureSingleInstance(trusteeCfg.singletonPort)
 
     System.setProperty("nmix.git.disable-compression", trusteeCfg.gitNoCompression.toString)
     System.setProperty("nmix.git.remove-lock", trusteeCfg.gitRemoveLock.toString)
@@ -64,28 +61,6 @@ object TrusteeLoop extends App {
     while(true) {
       Thread.sleep(5000)
       Protocol.execute(section, trusteeCfg)
-    }
-  }
-
-  /** Terminates the vm if another intance is running
-   *
-   *  Attempts to open a socket to the specified port, if a bind
-   *  exception occurs this means another instance of the application
-   *  is already running.
-   */
-  def ensureSingleInstance(port: Int) = {
-    val address = Array[Byte](127, 0, 0, 1)
-    if(port != 0) {
-      println(s"port is $port")
-      try {
-        val socket = new ServerSocket(port,0,InetAddress.getByAddress(address))
-      }
-      catch {
-        case b:java.net.BindException => {
-          logger.error("*** It appears another instance of the application is running ***")
-          sys.exit(1)
-        }
-      }
     }
   }
 }

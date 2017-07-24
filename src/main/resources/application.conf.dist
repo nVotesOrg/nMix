@@ -54,7 +54,3 @@ git-no-compression=false
 # This setting allows starting nMix without having to
 # manually delete the lock.
 git-remove-lock=true
-
-# The tcp port to bind to in order to detect
-# previous running instances of nMix.
-singleton-port=9999
