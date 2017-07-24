@@ -38,11 +38,6 @@ import ch.bfh.unicrypt.math.algebra.general.classes.FiniteByteArrayElement
   *  The trustee polls the bulletin board every n seconds
   *  and reactively executes work. This runs indefinitely,
   *  a trustee does not terminate unless an error occurs.
-  *
-  *  Before executing, a check is made to ensure this is the only
-  *  instance running on this machine. This is implemented via
-  *  binding to a port, specified by the 'singleton-port'
-  *  configuration value. Set to 0 to disable this check.
   */
 object TrusteeLoop extends App {
   val logger = LoggerFactory.getLogger(TrusteeLoop.getClass)
@@ -70,14 +65,14 @@ object TrusteeLoop extends App {
   */
 case class TrusteeConfigRaw(dataStorePath: Path, repoBaseUri: URI, bootstrapRepoUri: Option[URI],
   publicKey: Path, privateKey:Path, aesKey: Path, peers: Path, offlineSplit: Option[Boolean],
-  gitNoCompression: Option[Boolean], gitRemoveLock: Option[Boolean], singletonPort: Option[Int])
+  gitNoCompression: Option[Boolean], gitRemoveLock: Option[Boolean])
 
 /** The trustee configuration, converted to objects
   *
   */
 case class TrusteeConfig(dataStorePath: Path, repoBaseUri: URI, bootstrapRepoUri: Option[URI],
   publicKey: RSAPublicKey, privateKey: RSAPrivateKey, aesKey: FiniteByteArrayElement, peers: Seq[RSAPublicKey],
-  offlineSplit: Boolean, gitNoCompression: Boolean, gitRemoveLock: Boolean, singletonPort: Int) {
+  offlineSplit: Boolean, gitNoCompression: Boolean, gitRemoveLock: Boolean) {
 
    override def toString() = s"TrusteeConfig($dataStorePath $repoBaseUri $bootstrapRepoUri ${peers.length})"
 }
@@ -104,9 +99,8 @@ object TrusteeConfig {
     val offline = c.offlineSplit.getOrElse(false)
     val gitNoCompression = c.gitNoCompression.getOrElse(false)
     val gitRemoveLock = c.gitRemoveLock.getOrElse(true)
-    val singletonPort = c.singletonPort.getOrElse(9999)
 
     TrusteeConfig(c.dataStorePath, c.repoBaseUri, c.bootstrapRepoUri, publicKey,
-      privateKey, aesKey, peers, offline, gitNoCompression, gitRemoveLock, singletonPort)
+      privateKey, aesKey, peers, offline, gitNoCompression, gitRemoveLock)
   }
 }
