@@ -88,6 +88,69 @@ class SerializationSpec extends FlatSpec {
     assert(plaintexts == plaintexts_)
   }
 
+  "config statement" should "serialize/deserialize ok" in {
+    val configS = randomConfigS
+    val path = IO.writeTemp(configS.asJson.noSpaces)
+    val read = IO.asString(path)
+    val configS_ = decode[ConfigStatement](read).right.get
+
+    assert(configS == configS_)
+  }
+
+  "share statement" should "serialize/deserialize ok" in {
+    val data = randomShareS
+    val path = IO.writeTemp(data.asJson.noSpaces)
+    val read = IO.asString(path)
+    val data_ = decode[ShareStatement](read).right.get
+
+    assert(data == data_)
+  }
+
+  "public key statement" should "serialize/deserialize ok" in {
+    val data = randomPublicKeyS
+    val path = IO.writeTemp(data.asJson.noSpaces)
+    val read = IO.asString(path)
+    val data_ = decode[PublicKeyStatement](read).right.get
+
+    assert(data == data_)
+  }
+
+  "ballots statement" should "serialize/deserialize ok" in {
+    val data = randomBallotsS
+    val path = IO.writeTemp(data.asJson.noSpaces)
+    val read = IO.asString(path)
+    val data_ = decode[BallotsStatement](read).right.get
+
+    assert(data == data_)
+  }
+
+  "mix statement" should "serialize/deserialize ok" in {
+    val data = randomMixS
+    val path = IO.writeTemp(data.asJson.noSpaces)
+    val read = IO.asString(path)
+    val data_ = decode[MixStatement](read).right.get
+
+    assert(data == data_)
+  }
+
+  "decryption statement" should "serialize/deserialize ok" in {
+    val data = randomDecryptionS
+    val path = IO.writeTemp(data.asJson.noSpaces)
+    val read = IO.asString(path)
+    val data_ = decode[DecryptionStatement](read).right.get
+
+    assert(data == data_)
+  }
+
+  "plaintexts statement" should "serialize/deserialize ok" in {
+    val data = randomPlaintextsS
+    val path = IO.writeTemp(data.asJson.noSpaces)
+    val read = IO.asString(path)
+    val data_ = decode[PlaintextsStatement](read).right.get
+
+    assert(data == data_)
+  }
+
   /** Helper functions to generate random test data
    *
    */
@@ -127,6 +190,34 @@ class SerializationSpec extends FlatSpec {
   }
 
   def randomPlaintexts: Plaintexts = Plaintexts(strs)
+
+  def randomConfigS: ConfigStatement = {
+    ConfigStatement(str)
+  }
+
+  def randomShareS: ShareStatement = {
+    ShareStatement(str, str, int_)
+  }
+
+  def randomPublicKeyS: PublicKeyStatement = {
+    PublicKeyStatement(str, str, str, int_)
+  }
+
+  def randomBallotsS: BallotsStatement = {
+    BallotsStatement(str, str, int_)
+  }
+
+  def randomMixS: MixStatement = {
+    MixStatement(str, str, str, int_, int_)
+  }
+
+  def randomDecryptionS: DecryptionStatement = {
+    DecryptionStatement(str, str, str, int_)
+  }
+
+  def randomPlaintextsS: PlaintextsStatement = {
+    PlaintextsStatement(str, str, str, int_)
+  }
 
   def str: String = {
     val length = 20 + Random.nextInt(200)

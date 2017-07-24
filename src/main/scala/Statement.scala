@@ -70,7 +70,7 @@ case class PublicKeyStatement(publicKeyHash: String, sharesHash: String, configH
  *
  *  The ballots B belong to configuration C
  */
- case class BallotsStatement(ballotsHash: String, configHash: String, item: Int) extends Statement
+case class BallotsStatement(ballotsHash: String, configHash: String, item: Int) extends Statement
 
  /** Produced by each authority. Each authority signs their mix, as well as other mixes. Cardinality = (n, n)
  *
@@ -78,7 +78,7 @@ case class PublicKeyStatement(publicKeyHash: String, sharesHash: String, configH
  *  The mix/ballot P belongs to configuration C
  *  Mixing P yields mix M
  */
- case class MixStatement(mixHash: String, parentHash: String, configHash: String, item: Int, auth: Int) extends Statement
+case class MixStatement(mixHash: String, parentHash: String, configHash: String, item: Int, auth: Int) extends Statement
 
 
 /** Produced by each authority. Each authority signs their decryption. Cardinality = (n, 1)
