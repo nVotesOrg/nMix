@@ -380,27 +380,27 @@ class ProtocolSpec extends FlatSpec with Names {
   }
 
   def getCfg1 = {
-    TrusteeConfig(bogusPath, bogusUri, None, auth1pubRsa, auth1privRsa, aesKey, peers, false, false, false, 0)
+    TrusteeConfig(bogusPath, bogusUri, None, auth1pubRsa, auth1privRsa, aesKey, peers, false, false, false)
   }
 
   def getCfg2 = {
-    TrusteeConfig(bogusPath, bogusUri, None, auth2pubRsa, auth2privRsa, aesKey, peers, false, false, false, 0)
+    TrusteeConfig(bogusPath, bogusUri, None, auth2pubRsa, auth2privRsa, aesKey, peers, false, false, false)
   }
 
   def getCfg1Split = {
-    TrusteeConfig(bogusPath, bogusUri, None, auth1pubRsa, auth1privRsa, aesKey, peers, true, false, false, 0)
+    TrusteeConfig(bogusPath, bogusUri, None, auth1pubRsa, auth1privRsa, aesKey, peers, true, false, false)
   }
 
   def getCfg2Split = {
-    TrusteeConfig(bogusPath, bogusUri, None, auth2pubRsa, auth2privRsa, aesKey, peers, true, false, false, 0)
+    TrusteeConfig(bogusPath, bogusUri, None, auth2pubRsa, auth2privRsa, aesKey, peers, true, false, false)
   }
 
   def getBadCfg = {
-    TrusteeConfig(bogusPath, bogusUri, None, auth2pubRsa, auth2privRsa, aesKey, Array(ballotboxpubRsa), false, false, false, 0)
+    TrusteeConfig(bogusPath, bogusUri, None, auth2pubRsa, auth2privRsa, aesKey, Array(ballotboxpubRsa), false, false, false)
   }
 
   def getBadCfg2 = {
-    TrusteeConfig(bogusPath, bogusUri, None, ballotboxpubRsa, auth2privRsa, aesKey, peers, false, false, false, 0)
+    TrusteeConfig(bogusPath, bogusUri, None, ballotboxpubRsa, auth2privRsa, aesKey, peers, false, false, false)
   }
 
   val auth1pub = "-----BEGIN PUBLIC KEY-----\nMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAzDavZyxk38eTbilzTena\nB5xEqCMGyKgT3/cJ3gUWxFli/aTh3Rs5gjd5PKf/aefljBVcR8OsDTKxeBT6DXT9\nwdbPaGtF9nG0+Wi8KtQ15SiZdg72KX+NMGx6HVuqWZvojxRRmPCDar8oSFrcRIuV\ndimOCvmKQAjUaG9j2ZXfbcA0l9QA1nMTG/3BL/VFmBeCdiSyROjtmpCKgCgeb2HH\nfNA/E/FUipOT7fLzWFVohnzSY65gjkG3U2h1vEHwzqkWVo4vuOXX/WZcRmrIlQDq\njAwG6piiNHhUmxAk5/2LWaZL2mfVV4peXpHjEUrCSe/DSkuMraac6lYMshWXfDQc\nsos9CxdbaBHxvvzRH+ja0Wt+QSAooQMVXX+fFQrJUCK2TTIWZKfFQR2Js1XfhfE4\n3Mn1l/TKQadq2a3F50gAy5JrXDPc9LcSzRexwIfUMzjQ7QvIWsmmShD9rwnWuAti\nwWWxG0ReB7d6qUkZGCtzoYNb9BqKEI39lScMhfY+wfAN4d7Mi6EcD1yPra8sOqR1\n04cyH5dn3DUZtHzZF9EWx5BPPhyYxI40DFXFn2UAb1bb/R89YuFcKyxgyrZjPlHe\nv5UnfA0XsbfUPiBVz7cEuf23R7sgxYJJSyZaf5Yqw4bOoYELAGokppA3yPc+6pNN\n8lp0ycZbowlpSz+SAXMFFdsCAwEAAQ==\n-----END PUBLIC KEY-----"
