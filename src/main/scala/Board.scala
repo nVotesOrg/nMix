@@ -437,11 +437,6 @@ case class BoardSection (val gitRepo: GitRepo) extends BoardSectionInterface wit
     this
   }
 
-  /** Sends (posts) to the repository, see the GitRepo implementation for details */
-  private def send(message: String): Unit = {
-    gitRepo.send(message)
-  }
-
   /** Returns an inputstream for a file if it exists. Caller must close the stream */
   private def getFileStream(file: String): Option[InputStream] = synchronized {
     gitRepo.getFileInputStream(file)
@@ -578,11 +573,11 @@ case class GitRepo(val repoPath: Path) {
     if(!Files.isRegularFile(sourceFile)) {
       throw new IllegalArgumentException(s"sourceFile '$sourceFile' is invalid")
     }
-    if(targetFile.isAbsolute()) {
+    if(target.isAbsolute()) {
       throw new IllegalArgumentException(s"targetPath '$targetFile' is invalid")
     }
     /** no up-directory paths nonsense */
-    if(!targetFile.startsWith(repoPath)) {
+    if(!targetFile.normalize().startsWith(repoPath)) {
       throw new IllegalArgumentException(s"file name '$targetFile' is invalid")
     }
 
