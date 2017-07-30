@@ -1,7 +1,7 @@
 name := "nMix"
 version := "0.2-SNAPSHOT"
 
-scalaVersion := "2.12.1"
+scalaVersion := "2.12.3"
 
 resolvers ++= Seq(
   Resolver.sonatypeRepo("releases"),
@@ -31,5 +31,5 @@ cancelable in Global := true
 fork in run := false
 fork in Test := false
 
-scalacOptions ++= Seq("-feature", "-language:existentials", "-deprecation", "-opt:l:classpath")
+scalacOptions ++= Seq("-feature", "-language:existentials", "-deprecation", "-opt:l:inline")
 javacOptions ++= Seq("-deprecation")
