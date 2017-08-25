@@ -36,7 +36,7 @@ import java.security.DigestInputStream
 import javax.xml.bind.DatatypeConverter
 
 
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.ArrayBuffer
 import util.control.Breaks._
 import scala.io.Source
 import scala.collection.JavaConverters._
@@ -341,7 +341,7 @@ object IO {
    *  Assumes an empty newline as a terminator of the sequence
    */
   private def getLines(reader: HashingReader) = {
-    val ret = ListBuffer[String]()
+    val ret = ArrayBuffer[String]()
     breakable {
       while(true) {
         val line = reader.readLine()
