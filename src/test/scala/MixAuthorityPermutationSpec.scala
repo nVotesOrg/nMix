@@ -89,7 +89,7 @@ class MixAuthorityPermutationSpec extends FlatSpec {
     auth_match = Protocol.getTrusteeForMixPosition(position, 3, 3)
     assert(auth == auth_match)
 
-    println("**************")
+    println("MixAuthorityPermutationSpec **************")
     print(Protocol.getMixPosition(1, 2, 3))
     print(Protocol.getMixPosition(2, 2, 3))
     println(Protocol.getMixPosition(3, 2, 3))
@@ -108,6 +108,6 @@ class MixAuthorityPermutationSpec extends FlatSpec {
     print(Protocol.getTrusteeForMixPosition(3, 2, 4))
     println(Protocol.getTrusteeForMixPosition(4, 2, 4))
 
-    println("**************")
+    println("MixAuthorityPermutationSpec **************")
   }
 }
